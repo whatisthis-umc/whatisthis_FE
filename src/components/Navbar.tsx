@@ -1,10 +1,20 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import menu from "/src/assets/menu.png";
 import profile from "/src/assets/profile.png";
 import favorite from "/src/assets/favorite.png";
 import bookmark from "/src/assets/bookmark.png";
+
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const getButton = (path: string) => {
+    const isActive = currentPath === path;
+    return `text-xl w-[116px] h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
+    ${isActive ? "bg-black text-white" : "bg-white text-black"}`;
+  };
+
   return (
     <div className="sticky w-full">
       <div className="flex justify-end w-full gap-3">
@@ -19,7 +29,7 @@ const Navbar = () => {
         <img src={menu} alt="메뉴" className="w-[42px] h-[36px]"></img>
         <div className="flex gap-3 justify-center items-center">
           <button
-            className="bg-black text-xl text-white w-[116px] h-[54px]  rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer"
+            className={getButton("/tips")}
             onClick={() => {
               navigate("/tips");
             }}
@@ -27,7 +37,7 @@ const Navbar = () => {
             생활꿀팁
           </button>
           <button
-            className="bg-black text-xl text-white w-[116px] h-[54px]  rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer"
+            className={getButton("/items")}
             onClick={() => {
               navigate("/items");
             }}
@@ -35,7 +45,7 @@ const Navbar = () => {
             생활꿀템
           </button>
           <button
-            className="bg-black text-xl text-white w-[116px] h-[54px]  rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer"
+            className={getButton("/community")}
             onClick={() => {
               navigate("/community");
             }}
