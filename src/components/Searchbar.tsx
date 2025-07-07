@@ -28,7 +28,7 @@ const Searchbar = () => {
       </div>
       {/*인기검색어 목록*/}
       {isOpen && (
-        <ul className="relative flex flex-col items-start text-left bg-white text-[#999999] border-[#E6E6E6] border-t-white w-full shadow z-10">
+        <ul className="absolute flex flex-col items-start text-left bg-white text-[#999999] border-[#E6E6E6] border-t-white w-full shadow z-10">
           {keywords.map((word, index) => (
             <li
               key={index}
