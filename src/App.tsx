@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+import { Route, Routes, Navigate } from 'react-router-dom';
+import LoginPage from '../pages/LoginPage';
+import AdminDashboard from '../pages/AdminDashboard'; 
+import AdminPostPage from '../pages/AdminPost';       
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/posts" element={<AdminPostPage />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
+=======
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import MainPage from "./pages/MainPage";
@@ -53,3 +69,4 @@ function App() {
 =======
 >>>>>>> main
 export default App;
+>>>>>>> main
