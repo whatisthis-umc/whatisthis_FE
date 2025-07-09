@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+import Searchbar from "../components/Searchbar";
+
+const MainPage = () => {
+  return (
+    <div>
+      <Searchbar />
+=======
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -270,8 +278,13 @@ const MainPage = () => {
           </div>
         </div>
       </div>
+>>>>>>> main
     </div>
   );
 };
 
+<<<<<<< HEAD
 export default MainPage;
+=======
+export default MainPage;
+>>>>>>> main

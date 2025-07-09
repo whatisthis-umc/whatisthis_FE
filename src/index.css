@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+@import "tailwindcss";
+=======
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -18,3 +21,4 @@ body,
 =======
 @import "tailwindcss";
 >>>>>>> Stashed changes
+>>>>>>> main
