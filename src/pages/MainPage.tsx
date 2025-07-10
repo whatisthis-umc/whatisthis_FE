@@ -1,4 +1,3 @@
-
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -29,7 +28,7 @@ const MainPage = () => {
   );
   return (
     <div>
-      <div className="flex justify-between items-center px-4 mt-4">
+      <div className="w-full max-w-[1440px]  mx-auto flex justify-between items-center px-4 mt-4">
         <Searchbar />
       </div>
       <div className="flex justify-between items-center w-full mt-27 h-[435px]">
@@ -125,11 +124,8 @@ const MainPage = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };
 
-
 export default MainPage;
-
