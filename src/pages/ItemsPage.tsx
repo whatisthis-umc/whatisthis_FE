@@ -6,11 +6,12 @@ import { dummyPosts } from "../data/dummyPosts";
 import type { ItemCardProps } from "../types/post";
 import CategoryBar from "../components/CategoryBar";
 import { useState } from "react";
-import { tipCategories } from "../data/categoryList";
+import { itemCategories } from "../data/categoryList";
 
-const TipsPage = () => {
+const ItemsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
+
   const filteredPosts =
     selectedCategory === "전체"
       ? dummyPosts
@@ -26,9 +27,9 @@ const TipsPage = () => {
   );
   return (
     <div>
-      <div className="flex justify-between items-center px-4 mt-4">
+      <div className="flex justify-between items-center px-4 mt-4 ">
         <CategoryBar
-          categories={["전체", ...tipCategories]}
+          categories={["전체", ...itemCategories]}
           selected={selectedCategory}
           onSelect={setSelectedCategory}
         />
@@ -38,7 +39,7 @@ const TipsPage = () => {
         <div className="flex justify-between h-12 ">
           <span className="font-[700] text-[32px]">인기 게시물</span>
           <button
-            onClick={() => navigate("/tips/list?sort=popular")}
+            onClick={() => navigate("/items/list?sort=popular")}
             className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
           >
             <span className="ml-2">더보기</span>
@@ -60,7 +61,7 @@ const TipsPage = () => {
           <div className="flex justify-between h-12 ">
             <span className="font-[700] text-[32px]">AI 추천 게시물</span>
             <button
-              onClick={() => navigate("./detail")}
+              onClick={() => navigate("./recommend")}
               className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
             >
               <span className="ml-2">더보기</span>
@@ -82,7 +83,7 @@ const TipsPage = () => {
             <div className="flex justify-between h-12 ">
               <span className="font-[700] text-[32px]">최신 게시물</span>
               <button
-                onClick={() => navigate("/tips/list?sort=latest")}
+                onClick={() => navigate("/items/list?sort=latest")}
                 className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
               >
                 <span className="ml-2">더보기</span>
@@ -106,12 +107,4 @@ const TipsPage = () => {
   );
 };
 
-<<<<<<< HEAD
-export default TipsPage;
-=======
-<<<<<<< HEAD
-export default TipsPage;
-=======
-export default TipsPage;
->>>>>>> main
->>>>>>> main
+export default ItemsPage;
