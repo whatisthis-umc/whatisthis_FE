@@ -16,10 +16,10 @@ import QnaPage from "./pages/customer/QnaPage"; // 1:1 문의
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/CommunityPage";
 import MyInfoPage from "./pages/MyInfoPage";
+import TipsDetailPage from './pages/TipsDetailPage';
+import ItemsPage from './pages/ItemsPage';
+import ItemsDetailPage from './pages/ItemsDetailPage';
 
-import ItemsPage from "./pages/ItemsPage";
-import TipsDetailPage from "./pages/TipsDetailPage";
-import ItemsDetailPage from "./pages/ItemsDetailPage";
 
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
             <Route path="/myinfo" element={<MyInfoPage />} />
             <Route path="/tips/list" element={<TipsDetailPage />} />
             <Route path="/items" element={<ItemsPage />} />
-            <Route path="/items/list" element={<ItemsDetailPage />} />
+            <Route path="/items/list" element={<ItemsDetailPage/>} />
             <Route path="/customer" element={<CustomerPage />} />
           <Route path="/customer/notice" element={<NoticeListPage />} />
           <Route path="/customer/notice/:id" element={<NoticeDetailPage />} />
