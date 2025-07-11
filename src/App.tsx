@@ -20,6 +20,9 @@ import MyInfoPage from "./pages/MyInfoPage";
 import TipsDetailPage from "./pages/TipsDetailPage";
 import ItemsPage from "./pages/ItemsPage";
 import ItemsDetailPage from "./pages/ItemsDetailPage";
+import MyPage from "./pages/MyPage";
+import LikesPage from "./pages/LikesPage";
+import ScrapPage from "./pages/ScrapPage";
 
 function App() {
   return (
@@ -31,11 +34,14 @@ function App() {
             <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/my" element={<MyPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/posts" element={<AdminPostPage />} />
               <Route path="*" element={<Navigate to="/login" />} />
               <Route path="/tips" element={<TipsPage />} />
               <Route path="/post" element={<PostDetailPage />} />
+              <Route path="/likes" element={<LikesPage />} />
+              <Route path="/scrap" element={<ScrapPage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/myinfo" element={<MyInfoPage />} />
               <Route path="/tips/list" element={<TipsDetailPage />} />
@@ -44,10 +50,7 @@ function App() {
               <Route path="/customer/notice" element={<NoticeListPage />} />
               <Route path="/customer/qna" element={<QnaPage />} />
               <Route path="/customer/inquiry" element={<InquiryPage />} />
-              <Route
-                path="/customer/inquiry/write"
-                element={<InquiryWritePage />}
-              />
+              <Route path="/customer/inquiry/write" element={<InquiryWritePage />}/>
             </Routes>
           </main>
           <Footer />
