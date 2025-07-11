@@ -4,7 +4,6 @@ import menu from "/src/assets/menu.png";
 import profile from "/src/assets/profile.png";
 import favorite from "/src/assets/favorite.png";
 import bookmark from "/src/assets/bookmark.png";
-
 import logo from "/src/assets/logo.png";
 
 const Navbar = () => {

@@ -14,6 +14,7 @@ import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/CommunityPage";
 import MyInfoPage from "./pages/MyInfoPage";
+import { InquiryProvider } from "./contexts/InquiryContext";
 
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import AdminPostPage from "./pages/AdminPages/AdminPost/AdminPostPage";
@@ -31,49 +32,56 @@ import ItemsDetailPage from "./pages/items/ItemsDetailPage";
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <div className="w-full max-w-[1440px] px-4 flex flex-col flex-grow">
-          <Navbar />
-          <main className="flex-grow pb-[1300px]">
-            <Routes>
-              <Route path="/" element={<MainPage />} />
-              <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/posts" element={<AdminPostPage />} />
-              <Route path="/tips" element={<TipsPage />} />
-              <Route path="/post" element={<PostDetailPage />} />
-              <Route path="/community" element={<CommunityPage />} />
-              <Route path="/myinfo" element={<MyInfoPage />} />
-              <Route path="/tips/list" element={<TipsDetailPage />} />
-              <Route path="/tips/:id" element={<TipsPostDetailPage />} />
+      <InquiryProvider>
+        <div className="min-h-screen flex flex-col">
+          <div className="w-full max-w-[1440px] px-4 flex flex-col flex-grow">
+            <Navbar />
+            <main className="flex-grow pb-[1300px]">
+              <Routes>
+                <Route path="/" element={<MainPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/posts" element={<AdminPostPage />} />
 
-              <Route path="/items" element={<ItemsPage />} />
-              <Route path="/items/list" element={<ItemsDetailPage />} />
-              <Route path="/items/:id" element={<ItemsPostDetailPage />} />
+                <Route path="/post" element={<PostDetailPage />} />
+                <Route path="/community" element={<CommunityPage />} />
+                <Route path="/myinfo" element={<MyInfoPage />} />
 
-              <Route path="/customer/notice" element={<NoticeListPage />} />
-              <Route path="/customer/qna" element={<QnaPage />} />
-              <Route path="/customer/inquiry" element={<InquiryPage />} />
-              <Route
-                path="/customer/inquiry/write"
-                element={<InquiryWritePage />}
-              />
-              <Route path="/admin/notice" element={<AdminNoticePage />} />
-              <Route path="/admin/post" element={<AdminPostPage />} />
-              <Route path="/admin/post/:id" element={<AdminPostDetailPage />} />
-              <Route
-                path="/admin/post/:id/edit"
-                element={<AdminPostEditPage />}
-              />
-              <Route
-                path="/customer/inquiry/write"
-                element={<InquiryWritePage />}
-              />
-            </Routes>
-          </main>
-          <Footer />
+                <Route path="/tips" element={<TipsPage />} />
+                <Route path="/tips/list" element={<TipsDetailPage />} />
+                <Route path="/tips/:id" element={<TipsPostDetailPage />} />
+
+                <Route path="/items" element={<ItemsPage />} />
+                <Route path="/items/list" element={<ItemsDetailPage />} />
+                <Route path="/items/:id" element={<ItemsPostDetailPage />} />
+
+                <Route path="/customer/notice" element={<NoticeListPage />} />
+                <Route path="/customer/qna" element={<QnaPage />} />
+                <Route path="/customer/inquiry" element={<InquiryPage />} />
+                <Route
+                  path="/customer/inquiry/write"
+                  element={<InquiryWritePage />}
+                />
+                <Route path="/admin/notice" element={<AdminNoticePage />} />
+                <Route path="/admin/post" element={<AdminPostPage />} />
+                <Route
+                  path="/admin/post/:id"
+                  element={<AdminPostDetailPage />}
+                />
+                <Route
+                  path="/admin/post/:id/edit"
+                  element={<AdminPostEditPage />}
+                />
+                <Route
+                  path="/customer/inquiry/write"
+                  element={<InquiryWritePage />}
+                />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
         </div>
-      </div>
+      </InquiryProvider>
     </BrowserRouter>
   );
 }
