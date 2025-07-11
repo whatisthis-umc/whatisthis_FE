@@ -8,10 +8,10 @@ import Navbar from "./components/Navbar";
 import TipsPage from "./pages/TipsPage";
 import Footer from "./components/Footer";
 
-import CustomerPage from "./pages/customer/CustomerPage"; // 고객센터 메인
 import NoticeListPage from "./pages/customer/NoticeListPage"; // 공지사항 목록
-import NoticeDetailPage from "./pages/customer/NoticeDetailPage"; // 공지사항 상세
-import QnaPage from "./pages/customer/QnaPage"; // 1:1 문의
+import InquiryPage from "./pages/customer/InquiryPage"; // 1:1 문의
+import InquiryWritePage from "./pages/customer/InquiryWritePage"; // 1:1 문의 작성
+import QnaPage from "./pages/customer/QnaPage"; // Q&A
 
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/CommunityPage";
@@ -40,13 +40,10 @@ function App() {
               <Route path="/tips/list" element={<TipsDetailPage />} />
               <Route path="/items" element={<ItemsPage />} />
               <Route path="/items/list" element={<ItemsDetailPage />} />
-              <Route path="/customer" element={<CustomerPage />} />
               <Route path="/customer/notice" element={<NoticeListPage />} />
-              <Route
-                path="/customer/notice/:id"
-                element={<NoticeDetailPage />}
-              />
               <Route path="/customer/qna" element={<QnaPage />} />
+              <Route path="/customer/inquiry" element={<InquiryPage />} />
+              <Route path="/customer/inquiry/write" element={<InquiryWritePage />} />
             </Routes>
           </main>
           <Footer />
