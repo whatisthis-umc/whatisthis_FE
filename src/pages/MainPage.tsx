@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -7,6 +10,8 @@ import more from "/src/assets/more.png";
 import { useNavigate } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
 import { useState } from "react";
+import { dummyPosts } from "../data/dummyPosts";
+import { dummyPosts2 } from "../data/dummyPosts2";
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -21,163 +26,15 @@ const MainPage = () => {
     );
   };
 
-  const dummyPosts2 = [
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      nickname: "닉네임",
-      date: new Date(),
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 106,
-      likes: 32,
-      comments: 32,
-    },
-  ];
-  const dummyPosts = [
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 100,
-      scraps: 100,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 90,
-      scraps: 90,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 80,
-      scraps: 80,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 70,
-      scraps: 70,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 60,
-      scraps: 60,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 50,
-      scraps: 50,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 40,
-      scraps: 40,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 30,
-      scraps: 30,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 20,
-      scraps: 20,
-    },
-    {
-      hashtag: "해시태그",
-      imageUrl: "",
-      title: "국가원로자문회의의 의장은 그렇",
-      description: "다만, 직전대통령이 없을 때에는 대신해서",
-      views: 10,
-      scraps: 10,
-    },
-  ];
   const visiblePosts = dummyPosts.slice(
     currentIndex,
     currentIndex + postsPerPage
   );
   return (
     <div>
-      <Searchbar />
+      <div className="w-full max-w-[1440px]  mx-auto flex justify-between items-center px-4 mt-4">
+        <Searchbar />
+      </div>
       <div className="flex justify-between items-center w-full mt-27 h-[435px]">
         {/*넘어가는게시물*/}
         <div>
@@ -276,4 +133,7 @@ const MainPage = () => {
 };
 
 export default MainPage;
+<<<<<<< HEAD
 
+=======
+>>>>>>> main

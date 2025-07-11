@@ -1,14 +1,6 @@
+import type { ItemCardProps } from "../types/post";
 import eye from "/src/assets/eye.png";
 import scrap from "/src/assets/scrap.png";
-
-interface ItemCardProps {
-  hashtag: string;
-  imageUrl: string;
-  title: string;
-  description: string;
-  views: number;
-  scraps: number;
-}
 
 const ItemCard = ({
   hashtag,
@@ -17,11 +9,12 @@ const ItemCard = ({
   description,
   views,
   scraps,
+  date,
 }: ItemCardProps) => {
   return (
     <div className="flex flex-col justify-center w-57 h-96 bg-transparent gap-2 ml-2 mr-2 mt-7">
       {/*해시태그*/}
-      <div className="w-[85px] h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[#666666]">
+      <div className=" w-fit px-3  h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[#666666]">
         #{hashtag}
       </div>
       {/*썸네일*/}
