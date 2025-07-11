@@ -1,3 +1,4 @@
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import menu from "/src/assets/menu.png";
 import profile from "/src/assets/profile.png";

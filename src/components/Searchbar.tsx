@@ -1,3 +1,4 @@
+import React from "react";
 import search from "/src/assets/search.png";
 import arrow_down from "/src/assets/arrow_down.png";
 import { useState } from "react";
