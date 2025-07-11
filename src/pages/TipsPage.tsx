@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import Searchbar from "../components/Searchbar";
 import more from "/src/assets/more.png";
@@ -107,4 +108,3 @@ const TipsPage = () => {
 };
 
 export default TipsPage;
-

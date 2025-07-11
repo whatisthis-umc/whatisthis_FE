@@ -1,5 +1,6 @@
 import insta from "/src/assets/insta.png";
 import X from "/src/assets/x.png";
+import React from "react";
 
 const Footer = () => {
   return (
