@@ -1,5 +1,7 @@
+import sampleImage from "/src/assets/sampleImage.png"
 export const dummyPosts = [
     {
+        id:1,
       hashtag: "자취 필수템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -9,6 +11,7 @@ export const dummyPosts = [
       date:new Date("2025-07-01"),
     },
     {
+        id:2,
       hashtag: "주방템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -18,6 +21,7 @@ export const dummyPosts = [
       date:new Date("2025-07-02"),
     },
     {
+        id:3,
       hashtag: "조리/주방",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -27,6 +31,7 @@ export const dummyPosts = [
       date:new Date("2025-07-03"),
     },
     {
+        id:4,
       hashtag: "청소/분리수거",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -36,6 +41,7 @@ export const dummyPosts = [
       date:new Date("2025-07-04"),
     },
     {
+        id:5,
       hashtag: "청소템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -45,6 +51,7 @@ export const dummyPosts = [
       date:new Date("2025-07-5"),
     },
     {
+        id:6,
       hashtag: "주방템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -54,6 +61,7 @@ export const dummyPosts = [
       date:new Date("2025-07-06"),
     },
     {
+        id:7,
       hashtag: "해시태그",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -63,6 +71,7 @@ export const dummyPosts = [
       date:new Date("2025-07-07"),
     },
     {
+        id:8,
       hashtag: "해시태그",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -72,6 +81,7 @@ export const dummyPosts = [
       date:new Date("2025-07-08"),
     },
     {
+        id:9,
       hashtag: "해시태그",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
@@ -81,8 +91,9 @@ export const dummyPosts = [
       date:new Date("2025-07-09"),
     },
     {
+        id:10,
       hashtag: "해시태그",
-      imageUrl: "",
+      imageUrl: sampleImage,
       title: "국가원로자문회의의 의장은 그렇",
       description: "다만, 직전대통령이 없을 때에는 대신해서",
       views: 10,
@@ -90,6 +101,7 @@ export const dummyPosts = [
       date:new Date("2025-07-10"),
     },
     {
+        id:11,
         hashtag: "해시태그",
         imageUrl: "",
         title: "국가원로자문회의의 의장은 그렇",
@@ -99,6 +111,7 @@ export const dummyPosts = [
         date:new Date("2025-07-10"),
       },
       {
+        id:12,
         hashtag: "해시태그",
         imageUrl: "",
         title: "국가원로자문회의의 의장은 그렇",

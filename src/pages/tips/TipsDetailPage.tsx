@@ -1,10 +1,10 @@
 import React from "react";
 import { useMemo, useState } from "react";
-import CategoryBar from "../components/CategoryBar";
-import Searchbar from "../components/Searchbar";
-import { tipCategories } from "../data/categoryList";
-import { dummyPosts } from "../data/dummyPosts";
-import ItemCard from "../components/ItemCard";
+import CategoryBar from "../../components/CategoryBar";
+import Searchbar from "../../components/Searchbar";
+import { tipCategories } from "../../data/categoryList";
+import { dummyPosts } from "../../data/dummyPosts";
+import ItemCard from "../../components/ItemCard";
 import { useSearchParams } from "react-router-dom";
 import backward from "/src/assets/backward.png";
 import forward from "/src/assets/forward.png";
