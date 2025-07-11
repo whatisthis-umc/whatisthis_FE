@@ -1,4 +1,6 @@
-import React from "react";
+
+
+
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";

@@ -14,3 +14,12 @@ export const itemCategories = [
     "살림도구템",
     "브랜드 꿀템",
   ];
+
+  export const adminPostCategories = [
+    { id: 'all', name: '전체' },
+    { id: 'tip1', name: '생활꿀템' },
+    { id: 'tip2', name: '생활꿀팁' }
+  ];
+  
+
+  

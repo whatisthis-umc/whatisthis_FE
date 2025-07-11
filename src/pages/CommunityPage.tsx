@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FaHeart } from "react-icons/fa";
 
 // 📌 게시물 타입 정의
 interface Post {
