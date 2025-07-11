@@ -1,4 +1,5 @@
 export interface ItemCardProps {
+    id:number;
     hashtag: string;
     imageUrl: string;
     title: string;

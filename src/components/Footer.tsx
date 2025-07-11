@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";// 관리자 페이지에서는 푸터 안 보이게
 import insta from "/src/assets/insta.png";
 import X from "/src/assets/x.png";
+import React from "react";
 
 const Footer = () => {
   const location = useLocation();//// 관리자 페이지에서는 푸터 안 보이게

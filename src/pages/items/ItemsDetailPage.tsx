@@ -1,11 +1,11 @@
 import React from "react";
 import { useState } from "react";
-import CategoryBar from "../components/CategoryBar";
-import Searchbar from "../components/Searchbar";
-import { tipCategories } from "../data/categoryList";
-import ItemCard from "../components/ItemCard";
+import CategoryBar from "../../components/CategoryBar";
+import Searchbar from "../../components/Searchbar";
+import { tipCategories } from "../../data/categoryList";
+import ItemCard from "../../components/ItemCard";
 import { useSearchParams } from "react-router-dom";
-import { dummyPosts } from "../data/dummyPosts";
+import { dummyPosts } from "../../data/dummyPosts";
 import backward from "/src/assets/backward.png";
 import forward from "/src/assets/forward.png";
 

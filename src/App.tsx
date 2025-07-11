@@ -1,13 +1,9 @@
-
-
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-
-
+import React from "react";
 import "./App.css";
 import MainPage from "./pages/MainPage";
 import Navbar from "./components/Navbar";
-import TipsPage from "./pages/TipsPage";
+
 import Footer from "./components/Footer";
 
 import NoticeListPage from "./pages/customer/NoticeListPage"; // 공지사항 목록
@@ -18,15 +14,19 @@ import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/CommunityPage";
 import MyInfoPage from "./pages/MyInfoPage";
-import TipsDetailPage from "./pages/TipsDetailPage";
-import ItemsPage from "./pages/ItemsPage";
-import ItemsDetailPage from "./pages/ItemsDetailPage";
+
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 import AdminPostPage from "./pages/AdminPages/AdminPost/AdminPostPage";
 import AdminLoginPage from "./pages/AdminPages/AdminLogin";
 import AdminPostDetailPage from "./pages/AdminPages/AdminPost/AdminPostDetailPage";
 import AdminPostEditPage from "./pages/AdminPages/AdminPost/AdminPostEditPage";
 import AdminNoticePage from "./pages/AdminPages/AdminNotice/AdminNoticePage";
+import ItemsPage from "./pages/items/ItemsPage";
+import TipsPage from "./pages/tips/TipsPage";
+import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
+import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
+import TipsDetailPage from "./pages/tips/TipsDetailPage";
+import ItemsDetailPage from "./pages/items/ItemsDetailPage";
 
 function App() {
   return (
@@ -45,23 +45,30 @@ function App() {
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/myinfo" element={<MyInfoPage />} />
               <Route path="/tips/list" element={<TipsDetailPage />} />
+              <Route path="/tips/:id" element={<TipsPostDetailPage />} />
+
               <Route path="/items" element={<ItemsPage />} />
               <Route path="/items/list" element={<ItemsDetailPage />} />
+              <Route path="/items/:id" element={<ItemsPostDetailPage />} />
+
               <Route path="/customer/notice" element={<NoticeListPage />} />
               <Route path="/customer/qna" element={<QnaPage />} />
               <Route path="/customer/inquiry" element={<InquiryPage />} />
-              <Route path="/customer/inquiry/write" element={<InquiryWritePage />} />
-              <Route path="/admin/notice" element={<AdminNoticePage />} />
-              <Route path="/admin/post" element={<AdminPostPage />} />
-              <Route path="/admin/post/:id" element={<AdminPostDetailPage />} />
-              <Route path="/admin/post/:id/edit" element={<AdminPostEditPage />} />
-
-
               <Route
                 path="/customer/inquiry/write"
                 element={<InquiryWritePage />}
               />
-
+              <Route path="/admin/notice" element={<AdminNoticePage />} />
+              <Route path="/admin/post" element={<AdminPostPage />} />
+              <Route path="/admin/post/:id" element={<AdminPostDetailPage />} />
+              <Route
+                path="/admin/post/:id/edit"
+                element={<AdminPostEditPage />}
+              />
+              <Route
+                path="/customer/inquiry/write"
+                element={<InquiryWritePage />}
+              />
             </Routes>
           </main>
           <Footer />
@@ -71,7 +78,4 @@ function App() {
   );
 }
 
-
-export default App; 
-
-
+export default App;

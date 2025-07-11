@@ -1,6 +1,4 @@
-
-
-
+import React from "react";
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -45,8 +43,14 @@ const MainPage = () => {
           ></img>
         </div>
         <div className="flex w-[1218px] h-[435px] rounded-4xl bg-[#E6E6E6] gap-17 overflow-hidden">
-          {visiblePosts.map((post, index) => (
-            <ItemCard key={index} {...post} />
+          {visiblePosts.map((post) => (
+            <div
+              key={post.id}
+              onClick={() => navigate(`/items/${post.id}`)}
+              className="cursor-pointer"
+            >
+              <ItemCard {...post} />
+            </div>
           ))}
         </div>
         <div>
@@ -76,8 +80,14 @@ const MainPage = () => {
         </div>
         {/*게시글 목록*/}
         <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-          {dummyPosts.map((post, index) => (
-            <ItemCard key={index} {...post} />
+          {dummyPosts.map((post) => (
+            <div
+              key={post.id}
+              onClick={() => navigate(`/tips/${post.id}`)}
+              className="cursor-pointer"
+            >
+              <ItemCard {...post} />
+            </div>
           ))}
         </div>
         {/*오늘의 생활꿀템*/}
@@ -98,8 +108,14 @@ const MainPage = () => {
           </div>
           {/*게시글 목록*/}
           <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-            {dummyPosts.map((post, index) => (
-              <ItemCard key={index} {...post} />
+            {dummyPosts.map((post) => (
+              <div
+                key={post.id}
+                onClick={() => navigate(`/items/${post.id}`)}
+                className="cursor-pointer"
+              >
+                <ItemCard {...post} />
+              </div>
             ))}
           </div>
         </div>

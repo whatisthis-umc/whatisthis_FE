@@ -4,6 +4,7 @@ import eye from "/src/assets/eye.png";
 import scrap from "/src/assets/scrap.png";
 
 const ItemCard = ({
+  id,
   hashtag,
   imageUrl,
   title,
