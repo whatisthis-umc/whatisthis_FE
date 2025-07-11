@@ -1,3 +1,4 @@
+import React from "react";
 import search from "/src/assets/search.png";
 import arrow_down from "/src/assets/arrow_down.png";
 import { useState } from "react";
@@ -15,7 +16,6 @@ const Searchbar = () => {
   ];
 
   return (
-
     <div className="relative w-[240px] ml-auto mt-4">
       <div className="flex w-full h-[40px] border-b border-[#333333]">
         <div className="w-[152px] text-start ">1. 인기검색어</div>

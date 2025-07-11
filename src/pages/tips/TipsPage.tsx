@@ -1,12 +1,13 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import Searchbar from "../components/Searchbar";
+import Searchbar from "../../components/Searchbar";
 import more from "/src/assets/more.png";
-import ItemCard from "../components/ItemCard";
-import { dummyPosts } from "../data/dummyPosts";
-import type { ItemCardProps } from "../types/post";
-import CategoryBar from "../components/CategoryBar";
+import ItemCard from "../../components/ItemCard";
+import { dummyPosts } from "../../data/dummyPosts";
+import type { ItemCardProps } from "../../types/post";
+import CategoryBar from "../../components/CategoryBar";
 import { useState } from "react";
-import { tipCategories } from "../data/categoryList";
+import { tipCategories } from "../../data/categoryList";
 
 const TipsPage = () => {
   const navigate = useNavigate();
@@ -51,8 +52,14 @@ const TipsPage = () => {
         </div>
         {/*게시글 목록*/}
         <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-          {popularPosts.map((post, index) => (
-            <ItemCard key={index} {...post} />
+          {popularPosts.map((post) => (
+            <div
+              key={post.id}
+              onClick={() => navigate(`/tips/${post.id}`)}
+              className="cursor-pointer"
+            >
+              <ItemCard {...post} />
+            </div>
           ))}
         </div>
         {/*AI 추천 게시물*/}
@@ -73,8 +80,14 @@ const TipsPage = () => {
           </div>
           {/*게시글 목록*/}
           <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-            {recommendedPosts.map((post, index) => (
-              <ItemCard key={index} {...post} />
+            {recommendedPosts.map((post) => (
+              <div
+                key={post.id}
+                onClick={() => navigate(`/tips/${post.id}`)}
+                className="cursor-pointer"
+              >
+                <ItemCard {...post} />
+              </div>
             ))}
           </div>
           {/*최신 게시물*/}
@@ -95,8 +108,14 @@ const TipsPage = () => {
             </div>
             {/*게시글 목록*/}
             <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-              {recentPosts.map((post, index) => (
-                <ItemCard key={index} {...post} />
+              {recentPosts.map((post) => (
+                <div
+                  key={post.id}
+                  onClick={() => navigate(`/tips/${post.id}`)}
+                  className="cursor-pointer"
+                >
+                  <ItemCard {...post} />
+                </div>
               ))}
             </div>
           </div>
@@ -107,4 +126,3 @@ const TipsPage = () => {
 };
 
 export default TipsPage;
-
