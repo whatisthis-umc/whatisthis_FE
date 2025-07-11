@@ -1,5 +1,6 @@
 import AdminLayout from '../layouts/AdminLayout';
 
+
 export default function AdminPostPage() {
   const dummyData = Array(6).fill({
     type: '생활팁',

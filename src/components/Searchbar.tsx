@@ -15,13 +15,7 @@ const Searchbar = () => {
   ];
 
   return (
-<<<<<<< HEAD
     <div className="relative w-[240px] ml-auto mt-4">
-=======
-
-    <div className="relative w-[240px] ml-auto mt-4">
-
->>>>>>> main
       <div className="flex w-full h-[40px] border-b border-[#333333]">
         <div className="w-[152px] text-start ">1. 인기검색어</div>
         <img

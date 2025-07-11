@@ -1,6 +1,10 @@
 <<<<<<< HEAD
 
 =======
+<<<<<<< HEAD
+
+=======
+>>>>>>> main
 >>>>>>> main
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
@@ -128,12 +132,21 @@ const MainPage = () => {
           </div>
         </div>
       </div>
+<<<<<<< HEAD
+
+=======
+>>>>>>> main
     </div>
   );
 };
 
+<<<<<<< HEAD
+
+export default MainPage;
+=======
 export default MainPage;
 <<<<<<< HEAD
 
 =======
+>>>>>>> main
 >>>>>>> main
