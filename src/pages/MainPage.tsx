@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -133,7 +129,3 @@ const MainPage = () => {
 };
 
 export default MainPage;
-<<<<<<< HEAD
-
-=======
->>>>>>> main
