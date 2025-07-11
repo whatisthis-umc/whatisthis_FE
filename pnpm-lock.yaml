@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 lockfileVersion: '9.0'
 
 settings:
@@ -5,6 +9,10 @@ settings:
   excludeLinksFromLockfile: false
 
 importers:
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 
   .:
     dependencies:
@@ -23,15 +31,33 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
+<<<<<<< HEAD
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
+=======
+    dependencies:
+      '@tailwindcss/vite':
+        specifier: ^4.1.11
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.13
+
+>>>>>>> main
       react:
         specifier: ^19.1.0
         version: 19.1.0
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
+<<<<<<< HEAD
+=======
+      react-router-dom:
+        specifier: ^7.6.3
+        version: 7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    devDependencies:
+
+>>>>>>> main
       react-icons:
         specifier: ^5.5.0
         version: 5.5.0(react@19.1.0)
@@ -42,6 +68,7 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11
     devDependencies:
+<<<<<<< HEAD
       '@eslint/js':
         specifier: ^9.29.0
         version: 9.30.1
@@ -57,6 +84,26 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
+=======
+
+      "@eslint/js":
+        specifier: ^9.29.0
+        version: 9.30.1
+      "@types/react":
+        specifier: ^19.1.8
+        version: 19.1.8
+      "@types/react-dom":
+        specifier: ^19.1.6
+        version: 19.1.6(@types/react@19.1.8)
+      "@vitejs/plugin-react":
+        specifier: ^4.5.2
+        version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
+
+      '@vitejs/plugin-react':
+        specifier: ^4.5.2
+        version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
+
+>>>>>>> main
       eslint:
         specifier: ^9.29.0
         version: 9.30.1(jiti@2.4.2)

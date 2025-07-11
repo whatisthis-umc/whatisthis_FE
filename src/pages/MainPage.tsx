@@ -1,3 +1,6 @@
+
+
+
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import left from "/src/assets/left.png";
@@ -127,6 +130,5 @@ const MainPage = () => {
     </div>
   );
 };
-
 
 export default MainPage;

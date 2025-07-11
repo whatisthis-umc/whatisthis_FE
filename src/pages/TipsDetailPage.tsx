@@ -1,3 +1,4 @@
+import React from "react";
 import { useMemo, useState } from "react";
 import CategoryBar from "../components/CategoryBar";
 import Searchbar from "../components/Searchbar";

@@ -1,5 +1,9 @@
+
+
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-;
+
+
 import "./App.css";
 import MainPage from "./pages/MainPage";
 import Navbar from "./components/Navbar";
@@ -52,6 +56,12 @@ function App() {
               <Route path="/admin/post/:id" element={<AdminPostDetailPage />} />
               <Route path="/admin/post/:id/edit" element={<AdminPostEditPage />} />
 
+
+              <Route
+                path="/customer/inquiry/write"
+                element={<InquiryWritePage />}
+              />
+
             </Routes>
           </main>
           <Footer />
@@ -61,4 +71,7 @@ function App() {
   );
 }
 
+
 export default App; 
+
+
