@@ -6,6 +6,7 @@ import bookmark from "/src/assets/bookmark.png";import logo from "/src/assets/lo
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin") || location.pathname === "/adminlogin";//admin관리자 부분은 navbar 숨겨야해서 
   const currentPath = location.pathname;
 
   const getButton = (path: string) => {
@@ -13,7 +14,7 @@ const Navbar = () => {
     return `text-xl w-[116px] h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
     ${isActive ? "bg-black text-white" : "bg-white text-black"}`;
   };
-
+  if (isAdmin) return null;//admin 관리자 부분 은 navbar 적용 안해야함
   return (
     <div className="sticky w-full">
       <div className="flex justify-end w-full gap-3">
