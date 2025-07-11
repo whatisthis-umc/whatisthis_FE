@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
@@ -43,7 +44,10 @@ function App() {
               <Route path="/customer/notice" element={<NoticeListPage />} />
               <Route path="/customer/qna" element={<QnaPage />} />
               <Route path="/customer/inquiry" element={<InquiryPage />} />
-              <Route path="/customer/inquiry/write" element={<InquiryWritePage />} />
+              <Route
+                path="/customer/inquiry/write"
+                element={<InquiryWritePage />}
+              />
             </Routes>
           </main>
           <Footer />

@@ -1,3 +1,4 @@
+import React from "react";
 import eye from "/src/assets/eye.png";
 import like from "/src/assets/likes.png";
 import comment from "/src/assets/comments.png";

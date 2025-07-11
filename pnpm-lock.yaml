@@ -1,25 +1,12 @@
-<<<<<<< HEAD
+
 lockfileVersion: '9.0'
-=======
-<<<<<<< HEAD
-lockfileVersion: '9.0'
-=======
-<<<<<<< HEAD
-lockfileVersion: "9.0"
-=======
-lockfileVersion: '9.0'
->>>>>>> main
->>>>>>> main
->>>>>>> main
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 importers:
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
+
 
   .:
     dependencies:
@@ -35,47 +22,24 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
-=======
-<<<<<<< HEAD
-  .:
-    dependencies:
-      "@tailwindcss/vite":
-        specifier: ^4.1.11
-        version: 4.1.11(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
-=======
->>>>>>> main
-
-  .:
     dependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.11
-<<<<<<< HEAD
-        version: 4.1.11(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
-=======
-        version: 4.1.11(vite@7.0.2(jiti@2.4.2)(lightningcss@1.30.1))
->>>>>>> main
->>>>>>> main
->>>>>>> main
+
       react:
         specifier: ^19.1.0
         version: 19.1.0
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
       react-router-dom:
         specifier: ^7.6.3
         version: 7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
-=======
-<<<<<<< HEAD
-=======
->>>>>>> main
+
       react-icons:
         specifier: ^5.5.0
         version: 5.5.0(react@19.1.0)
@@ -86,9 +50,7 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11
     devDependencies:
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
+
       "@eslint/js":
         specifier: ^9.29.0
         version: 9.30.1
@@ -101,35 +63,11 @@ importers:
       "@vitejs/plugin-react":
         specifier: ^4.5.2
         version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
-=======
->>>>>>> main
->>>>>>> main
-      '@eslint/js':
-        specifier: ^9.29.0
-        version: 9.30.1
-      '@types/react':
-        specifier: ^19.1.8
-        version: 19.1.8
-      '@types/react-dom':
-        specifier: ^19.1.6
-        version: 19.1.6(@types/react@19.1.8)
-<<<<<<< HEAD
-      '@types/react-router-dom':
-        specifier: ^5.3.3
-        version: 5.3.3
+
       '@vitejs/plugin-react':
         specifier: ^4.5.2
         version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
-=======
-      '@vitejs/plugin-react':
-        specifier: ^4.5.2
-<<<<<<< HEAD
-        version: 4.6.0(vite@7.0.3(jiti@2.4.2)(lightningcss@1.30.1))
-=======
-        version: 4.6.0(vite@7.0.2(jiti@2.4.2)(lightningcss@1.30.1))
->>>>>>> main
->>>>>>> main
->>>>>>> main
+
       eslint:
         specifier: ^9.29.0
         version: 9.30.1(jiti@2.4.2)

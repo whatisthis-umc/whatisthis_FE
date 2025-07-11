@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import CategoryBar from "../components/CategoryBar";
 import Searchbar from "../components/Searchbar";
