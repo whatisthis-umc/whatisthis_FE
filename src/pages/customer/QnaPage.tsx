@@ -1,5 +1,7 @@
 import { useState } from "react";
 import CustomerNav from "../../components/customer/CustomerNav";
+import Searchbar from "../../components/Searchbar";
+import Pagination from "../../components/customer/Pagination";
 
 interface QnaItem {
   id: number;
@@ -92,27 +94,46 @@ const QnaPage = () => {
 
   return (
     <div className="flex-1 bg-white">
-      <div className="w-full pt-16 pb-8">
+      <div className="w-full pb-8">
+        {/* 검색바 */}
+        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
+          <Searchbar />
+        </div>
+        
         {/* 고객센터 네비게이션 */}
         <CustomerNav />
 
         {/* Q&A 목록 */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-10">
           {currentItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden transition-shadow hover:shadow-md"
-            >
-              {/* 질문 영역 */}
+            <div key={item.id} className="flex flex-col gap-4">
+              {/* 질문 블록 */}
               <div
-                className={`p-6 cursor-pointer transition-colors ${
+                className={`flex flex-col items-start gap-6 w-[1392px] p-6 cursor-pointer transition-colors ${
                   expandedId === item.id ? "bg-gray-50" : "bg-white"
                 }`}
+                style={{
+                  borderRadius: '32px',
+                  border: '1px solid #E6E6E6'
+                }}
                 onClick={() => toggleExpanded(item.id)}
               >
-                <div className="flex items-center">
+                <div className="flex items-center w-full">
                   <span className="text-gray-400 mr-3 font-medium">Q</span>
-                  <p className="text-gray-800 text-sm flex-1">{item.question}</p>
+                  <p 
+                    className="flex-1"
+                    style={{
+                      color: '#333',
+                      fontFamily: 'Pretendard',
+                      fontSize: '20px',
+                      fontStyle: 'normal',
+                      fontWeight: 700,
+                      lineHeight: '150%',
+                      letterSpacing: '-0.4px'
+                    }}
+                  >
+                    {item.question}
+                  </p>
                   {/* 펼침/접힘 아이콘 */}
                   <div className="ml-4">
                     <svg
@@ -134,12 +155,29 @@ const QnaPage = () => {
                 </div>
               </div>
 
-              {/* 답변 영역 (펼쳐질 때만 표시) */}
+              {/* 답변 블록 - 별도의 독립적인 블록 */}
               {expandedId === item.id && (
-                <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                  <div className="flex items-start">
-                    <span className="text-gray-400 mr-3 font-medium mt-0.5">A</span>
-                    <p className="text-gray-700 text-sm leading-relaxed flex-1">
+                <div
+                  className="flex flex-col items-start gap-6 w-[1392px] p-6 bg-white"
+                  style={{
+                    borderRadius: '32px',
+                    border: '1px solid #E6E6E6'
+                  }}
+                >
+                  <div className="flex items-start w-full">
+                    <span className="text-blue-600 mr-3 font-medium mt-0.5">A</span>
+                    <p 
+                      className="flex-1"
+                      style={{
+                        color: '#333',
+                        fontFamily: 'Pretendard',
+                        fontSize: '20px',
+                        fontStyle: 'normal',
+                        fontWeight: 500,
+                        lineHeight: '150%',
+                        letterSpacing: '-0.4px'
+                      }}
+                    >
                       {item.answer}
                     </p>
                   </div>
@@ -150,46 +188,13 @@ const QnaPage = () => {
         </div>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex space-x-1">
-              {/* 이전 페이지 버튼 */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className="w-8 h-8 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors flex items-center justify-center"
-                >
-                  ‹
-                </button>
-              )}
-              
-              {/* 페이지 번호들 */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                    page === currentPage
-                      ? "bg-black text-white"
-                      : "bg-white text-gray-500 hover:bg-gray-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              {/* 다음 페이지 버튼 */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className="w-8 h-8 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors flex items-center justify-center"
-                >
-                  ›
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <div className="mt-20">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
 
         {/* 빈 상태일 때 */}
         {qnaItems.length === 0 && (

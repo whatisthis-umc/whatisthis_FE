@@ -1,5 +1,7 @@
 import { useState } from "react";
 import CustomerNav from "../../components/customer/CustomerNav";
+import Searchbar from "../../components/Searchbar";
+import Pagination from "../../components/customer/Pagination";
 
 interface Notice {
   id: number;
@@ -12,6 +14,8 @@ interface Notice {
 
 const NoticeListPage = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // 더미 데이터 (상세 내용 추가)
   const notices: Notice[] = [
@@ -113,7 +117,166 @@ const NoticeListPage = () => {
 
 변경된 처리방침은 홈페이지에서 확인하실 수 있습니다.`
     },
+    {
+      id: 6,
+      title: "서비스 이용약관 개정 안내",
+      date: "4주 전",
+      author: "관리자",
+      isRequired: true,
+      content: `서비스 이용약관이 개정되었습니다.
+
+📋 주요 개정사항
+• 서비스 제공 범위 확대
+• 회원 권리 및 의무 명시
+• 분쟁 해결 절차 개선
+
+자세한 내용은 이용약관을 확인해주세요.`
+    },
+    {
+      id: 7,
+      title: "할인 이벤트 종료 안내",
+      date: "1달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `겨울 할인 이벤트가 종료됩니다.
+
+🎁 이벤트 내용
+• 전 상품 10-30% 할인
+• 무료배송 혜택
+• 추가 적립금 지급
+
+많은 관심과 참여 감사드립니다.`
+    },
+    {
+      id: 8,
+      title: "고객센터 운영시간 변경 안내",
+      date: "1달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `고객센터 운영시간이 변경됩니다.
+
+⏰ 변경 전: 평일 09:00 ~ 18:00
+⏰ 변경 후: 평일 09:00 ~ 19:00
+
+더 나은 서비스 제공을 위한 변경사항입니다.`
+    },
+    {
+      id: 9,
+      title: "모바일 앱 업데이트 안내",
+      date: "1달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `모바일 앱이 업데이트되었습니다.
+
+🆕 새로운 기능
+• 푸시 알림 개선
+• 검색 기능 강화
+• UI/UX 개선
+
+앱스토어에서 업데이트해주세요.`
+    },
+    {
+      id: 10,
+      title: "배송 정책 변경 안내",
+      date: "2달 전",
+      author: "관리자",
+      isRequired: true,
+      content: `배송 정책이 변경됩니다.
+
+📦 주요 변경사항
+• 무료배송 기준 상향 조정
+• 당일배송 지역 확대
+• 배송비 일부 조정
+
+자세한 내용은 배송정책을 확인해주세요.`
+    },
+    {
+      id: 11,
+      title: "회원 등급제 도입 안내",
+      date: "2달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `회원 등급제가 도입됩니다.
+
+⭐ 등급별 혜택
+• 브론즈: 5% 할인
+• 실버: 10% 할인  
+• 골드: 15% 할인
+• 플래티넘: 20% 할인
+
+구매 금액에 따라 등급이 결정됩니다.`
+    },
+    {
+      id: 12,
+      title: "신상품 출시 안내",
+      date: "3달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `새로운 상품이 출시되었습니다.
+
+🆕 신상품 라인업
+• 생활용품 카테고리 확장
+• 친환경 제품 라인 추가
+• 한정판 컬렉션 출시
+
+많은 관심 부탁드립니다.`
+    },
+    {
+      id: 13,
+      title: "결제 수단 추가 안내",
+      date: "3달 전",
+      author: "관리자",
+      isRequired: true,
+      content: `새로운 결제 수단이 추가되었습니다.
+
+💳 추가 결제 수단
+• 카카오페이
+• 토스페이
+• 페이코
+• 네이버페이
+
+더 편리한 결제 서비스를 이용해보세요.`
+    },
+    {
+      id: 14,
+      title: "여름 휴가철 배송 안내",
+      date: "4달 전",
+      author: "관리자",
+      isRequired: false,
+      content: `여름 휴가철 배송 일정 안내입니다.
+
+🏖️ 배송 지연 예상 기간
+• 8월 1일 ~ 8월 15일
+• 평소보다 1-2일 지연 예상
+
+양해 부탁드립니다.`
+    },
+    {
+      id: 15,
+      title: "사이트 리뉴얼 완료 안내",
+      date: "5달 전",
+      author: "관리자",
+      isRequired: true,
+      content: `사이트 리뉴얼이 완료되었습니다.
+
+✨ 주요 개선사항
+• 전체적인 디자인 개선
+• 검색 기능 강화
+• 모바일 최적화
+• 속도 개선
+
+새로워진 사이트를 경험해보세요!`
+    },
   ];
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(notices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = notices.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const toggleExpanded = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
@@ -121,38 +284,65 @@ const NoticeListPage = () => {
 
   return (
     <div className="flex-1 bg-white">
-      <div className="w-full pt-16 pb-8">
+      <div className="w-full pb-8">
+        {/* 검색바 */}
+        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
+          <Searchbar />
+        </div>
+        
         {/* 고객센터 네비게이션 */}
         <CustomerNav />
 
         {/* 공지사항 목록 */}
-        <div className="space-y-4">
-          {notices.map((notice) => (
-            <div
-              key={notice.id}
-              className="bg-white border border-gray-200 rounded-4xl overflow-hidden transition-shadow hover:shadow-md"
-            >
-              {/* 공지사항 헤더 (클릭 가능) */}
+        <div className="flex flex-col gap-6">
+          {currentItems.map((notice) => (
+            <div key={notice.id} className="flex flex-col gap-4">
+              {/* 공지사항 헤더 - 클릭 가능한 제목 블록 */}
               <div
-                className="p-6 cursor-pointer"
+                className={`border border-[#E6E6E6] rounded-[32px] flex flex-col items-start gap-6 p-6 cursor-pointer transition-all hover:shadow-md ${
+                  expandedId === notice.id ? "bg-gray-200" : "bg-white"
+                }`}
                 onClick={() => toggleExpanded(notice.id)}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between w-full">
                   <div className="flex-1">
-                    <div className="mb-6 text-left">
+                    <div className="flex flex-col gap-6">
                       {notice.isRequired && (
-                        <span className="bg-white text-gray-700 text-sm px-3 py-1 font-medium border border-gray-200 rounded-4xl mb-6 inline-block">
+                        <span 
+                          className={`px-3 py-1 border border-gray-200 rounded-[32px] self-start ${
+                            expandedId === notice.id ? "bg-gray-200" : "bg-white"
+                          }`}
+                          style={{
+                            color: '#333',
+                            fontFamily: 'Pretendard',
+                            fontSize: '20px',
+                            fontStyle: 'normal',
+                            fontWeight: 500,
+                            lineHeight: '150%',
+                            letterSpacing: '-0.4px'
+                          }}
+                        >
                           필독
                         </span>
                       )}
-                      <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors">
+                      <h3 
+                        className="transition-colors text-left"
+                        style={{
+                          color: '#333',
+                          fontFamily: 'Pretendard',
+                          fontSize: '20px',
+                          fontStyle: 'normal',
+                          fontWeight: 500,
+                          lineHeight: '150%',
+                          letterSpacing: '-0.4px'
+                        }}
+                      >
                         {notice.title}
                       </h3>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500 space-x-2">
-                      <span>{notice.author}</span>
-                      <span>•</span>
-                      <span>{notice.date}</span>
+                      <div className="flex items-center text-sm text-gray-500 space-x-2">
+                        <span>{notice.author}</span>
+                        <span>{notice.date}</span>
+                      </div>
                     </div>
                   </div>
                   {/* 펼침/접힘 아이콘 */}
@@ -176,18 +366,36 @@ const NoticeListPage = () => {
                 </div>
               </div>
 
-              {/* 공지사항 상세 내용 (펼쳐질 때만 표시) */}
+              {/* 공지사항 상세 내용 - 별도의 독립적인 블록 */}
               {expandedId === notice.id && (
-                <div className="px-6 pb-6 border-t border-gray-100">
-                  <div className="pt-6">
-                    <div className="prose max-w-none text-gray-700 whitespace-pre-line text-sm leading-relaxed">
-                      {notice.content}
-                    </div>
+                <div className="flex flex-col justify-end items-end gap-6 w-[1392px] p-6 bg-white border border-[#E6E6E6] rounded-[32px]">
+                  <div 
+                    className="w-full text-left whitespace-pre-line"
+                    style={{
+                      color: '#333',
+                      fontFamily: 'Pretendard',
+                      fontSize: '20px',
+                      fontStyle: 'normal',
+                      fontWeight: 500,
+                      lineHeight: '150%',
+                      letterSpacing: '-0.4px'
+                    }}
+                  >
+                    {notice.content}
                   </div>
                 </div>
               )}
             </div>
           ))}
+        </div>
+
+        {/* 페이지네이션 */}
+        <div className="mt-20">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
 
         {/* 빈 상태일 때 */}
