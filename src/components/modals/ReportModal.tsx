@@ -1,0 +1,105 @@
+import { useState } from "react";
+import reportIcon from "../../assets/report.png";
+import checkCircle from "../../assets/check_circle.png";
+import checkedCircle from "../../assets/checked_circle.png";
+
+interface ReportModalProps {
+  onClose: () => void;
+}
+
+const reasonsList = [
+  "욕설 및 비하 표현",
+  "음란성/선정적 내용",
+  "광고/홍보성",
+  "도배 또는 중복",
+  "잘못된 정보/허위 사실",
+  "기타(직접입력)",
+];
+
+const ReportModal = ({ onClose }: ReportModalProps) => {
+  const [selected, setSelected] = useState<string>("");
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-[Pretendard]">
+      <div className="bg-white rounded-2xl p-12 w-full max-w-[640px]">
+        <h2 className="text-[24px] font-bold mb-6 text-left text-[#333333] leading-[32px]">
+          이 댓글을 신고하시겠습니까?
+        </h2>
+
+        <p className="text-[16px] text-[#333333] mb-10 text-left leading-[24px]">
+          신고는 운영팀에 전달되며, 허위 신고 시 이용에 제재가 있을 수 있습니다.
+          <br />
+          신고 사유를 선택해주세요.
+        </p>
+
+        <div className="flex flex-col gap-6 mb-12">
+          {reasonsList.map((reason, idx) => (
+            <label
+              key={idx}
+              onClick={() => setSelected(reason)}
+              className="flex items-center gap-3 cursor-pointer text-[16px] text-[#333333] leading-[24px]"
+            >
+              <img
+                src={selected === reason ? checkedCircle : checkCircle}
+                alt="check"
+                className="w-6 h-6"
+              />
+              {reason === "기타(직접입력)" ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <span>{reason}</span>
+                  <input
+                    type="text"
+                    placeholder="입력"
+                    className="w-[70%] border-b text-[16px] leading-[24px] py-1 pl-1 outline-none"
+                    style={{
+                      borderColor: "#999999",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "#333333")}
+                    onBlur={(e) => (e.target.style.borderColor = "#999999")}
+                  />
+                </div>
+              ) : (
+                <span>{reason}</span>
+              )}
+            </label>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="text-white flex items-center justify-center text-[18px] font-normal"
+            style={{
+              backgroundColor: "#0080FF",
+              width: "160px",
+              height: "54px",
+              borderRadius: "32px",
+              padding: "12px 32px",
+              fontFamily: "Pretendard",
+            }}
+          >
+            취소
+          </button>
+
+          <button
+            onClick={onClose}
+            className="text-white flex items-center justify-center text-[18px] font-normal gap-2"
+            style={{
+              backgroundColor: "#0080FF",
+              width: "160px",
+              height: "54px",
+              borderRadius: "32px",
+              padding: "12px 32px",
+              fontFamily: "Pretendard",
+            }}
+          >
+            <img src={reportIcon} alt="report" className="w-5 h-5" />
+            신고하기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ReportModal;
