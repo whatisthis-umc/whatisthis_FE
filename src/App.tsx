@@ -36,7 +36,7 @@ function App() {
         <div className="min-h-screen flex flex-col">
           <div className="w-full max-w-[1440px] px-4 flex flex-col flex-grow">
             <Navbar />
-            <main className="flex-grow pb-[1300px]">
+            <main className="flex-grow pb-40">
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />

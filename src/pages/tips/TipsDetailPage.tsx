@@ -5,11 +5,12 @@ import Searchbar from "../../components/Searchbar";
 import { tipCategories } from "../../data/categoryList";
 import { dummyPosts } from "../../data/dummyPosts";
 import ItemCard from "../../components/ItemCard";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import backward from "/src/assets/backward.png";
 import forward from "/src/assets/forward.png";
 
 const TipsDetailPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [searchParams, setSearchParams] = useSearchParams();
   const sort = searchParams.get("sort") || "popular";
@@ -62,12 +63,18 @@ const TipsDetailPage = () => {
         </select>
       </div>
       <div className="w-full grid grid-cols-5 gap-8 pt-5">
-        {paginatedPosts.map((post, index) => (
-          <ItemCard key={index} {...post} />
+        {paginatedPosts.map((post) => (
+          <div
+            key={post.id}
+            onClick={() => navigate(`/tips/${post.id}`)}
+            className="cursor-pointer"
+          >
+            <ItemCard {...post} />
+          </div>
         ))}
       </div>
       {/*페이지네이션*/}
-      <div className=" flex justify-center items-center mt-30 mb-[-1100px] gap-2">
+      <div className=" flex justify-center items-center mt-30 mb-20 gap-2 ">
         <img
           src={backward}
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
