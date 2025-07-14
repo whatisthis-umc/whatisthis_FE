@@ -11,9 +11,8 @@ import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/CommunityPage";
 import MyInfoPage from "./pages/MyInfoPage";
-import TipsDetailPage from "./pages/TipsDetailPage";
-import ItemsPage from "./pages/ItemsPage";
-import ItemsDetailPage from "./pages/ItemsDetailPage";
+import ItemsPage from "./pages/items/ItemsPage";
+import ItemsDetailPage from "./pages/items/ItemsDetailPage";
 import MyPage from "./pages/MyPage";
 import LikesPage from "./pages/LikesPage";
 import ScrapPage from "./pages/ScrapPage";
@@ -27,13 +26,15 @@ import AdminNoticePage from "./pages/AdminPages/AdminNotice/AdminNoticePage";
 import TipsPage from "./pages/tips/TipsPage";
 import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
 import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
+import TipsDetailPage from "./pages/tips/TipsDetailPage";
+
 
 function App() {
   return (
     <BrowserRouter>
       <InquiryProvider>
         <div className="min-h-screen flex flex-col">
-          <div className="w-full max-w-[1440px] px-4 flex flex-col flex-grow">
+          <div className="w-full max-w-[1440px] px-4 mx-auto flex flex-col flex-grow">
             <Navbar />
             <main className="flex-grow pb-[1300px]">
               <Routes>
