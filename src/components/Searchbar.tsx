@@ -3,8 +3,12 @@ import search from "/src/assets/search.png";
 import arrow_down from "/src/assets/arrow_down.png";
 import { useState } from "react";
 
-const Searchbar = () => {
+const Searchbar = ({ onSearch }: { onSearch: (keyword: string) => void }) => {
+  const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const handleSearch = () => {
+    onSearch(input);
+  };
   // 인기 검색어 목록 임시목록
   const keywords = [
     "다이소 티슈",
@@ -16,18 +20,27 @@ const Searchbar = () => {
   ];
 
   return (
-
     <div className="relative w-[240px] ml-auto mt-4">
-
       <div className="flex w-full h-[40px] border-b border-[#333333]">
-        <div className="w-[152px] text-start ">1. 인기검색어</div>
+        <div className="w-[152px] text-start ">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="1. 인기검색어"
+          />
+        </div>
         <img
           src={arrow_down}
           alt="보기"
           className="w-[24px] h-[24px] cursor-pointer ml-auto"
           onClick={() => setIsOpen(!isOpen)}
         />
-        <img src={search} alt="검색" className="w-[24px] h-[24px] ml-auto" />
+        <img
+          src={search}
+          alt="검색"
+          onClick={handleSearch}
+          className="w-[24px] h-[24px] ml-auto cursor-pointer"
+        />
       </div>
       {/*인기검색어 목록*/}
       {isOpen && (

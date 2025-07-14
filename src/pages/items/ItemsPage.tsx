@@ -1,17 +1,18 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Searchbar from "../components/Searchbar";
+import Searchbar from "../../components/Searchbar";
 import more from "/src/assets/more.png";
-import ItemCard from "../components/ItemCard";
-import { dummyPosts } from "../data/dummyPosts";
-import type { ItemCardProps } from "../types/post";
-import CategoryBar from "../components/CategoryBar";
+import ItemCard from "../../components/ItemCard";
+import { dummyPosts } from "../../data/dummyPosts";
+import type { ItemCardProps } from "../../types/post";
+import CategoryBar from "../../components/CategoryBar";
 import { useState } from "react";
-import { tipCategories } from "../data/categoryList";
+import { itemCategories } from "../../data/categoryList";
 
-const TipsPage = () => {
+const ItemsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
+
   const filteredPosts =
     selectedCategory === "전체"
       ? dummyPosts
@@ -27,19 +28,19 @@ const TipsPage = () => {
   );
   return (
     <div>
-      <div className="flex justify-between items-center px-4 mt-4">
+      <div className="flex justify-between items-center px-4 mt-4 ">
         <CategoryBar
-          categories={["전체", ...tipCategories]}
+          categories={["전체", ...itemCategories]}
           selected={selectedCategory}
           onSelect={setSelectedCategory}
         />
         <Searchbar />
       </div>
-      <div className="w-[1392px] h-[475px] mt-36">
+      <div className="w-[1392px] h-[475px] mt-36 mb-300">
         <div className="flex justify-between h-12 ">
           <span className="font-[700] text-[32px]">인기 게시물</span>
           <button
-            onClick={() => navigate("/tips/list?sort=popular")}
+            onClick={() => navigate("/items/list?sort=popular")}
             className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
           >
             <span className="ml-2">더보기</span>
@@ -52,8 +53,14 @@ const TipsPage = () => {
         </div>
         {/*게시글 목록*/}
         <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-          {popularPosts.map((post, index) => (
-            <ItemCard key={index} {...post} />
+          {popularPosts.map((post) => (
+            <div
+              key={post.id}
+              onClick={() => navigate(`/items/${post.id}`)}
+              className="cursor-pointer"
+            >
+              <ItemCard {...post} />
+            </div>
           ))}
         </div>
         {/*AI 추천 게시물*/}
@@ -61,7 +68,7 @@ const TipsPage = () => {
           <div className="flex justify-between h-12 ">
             <span className="font-[700] text-[32px]">AI 추천 게시물</span>
             <button
-              onClick={() => navigate("./detail")}
+              onClick={() => navigate("./recommend")}
               className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
             >
               <span className="ml-2">더보기</span>
@@ -74,8 +81,14 @@ const TipsPage = () => {
           </div>
           {/*게시글 목록*/}
           <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-            {recommendedPosts.map((post, index) => (
-              <ItemCard key={index} {...post} />
+            {recommendedPosts.map((post) => (
+              <div
+                key={post.id}
+                onClick={() => navigate(`/items/${post.id}`)}
+                className="cursor-pointer"
+              >
+                <ItemCard {...post} />
+              </div>
             ))}
           </div>
           {/*최신 게시물*/}
@@ -83,7 +96,7 @@ const TipsPage = () => {
             <div className="flex justify-between h-12 ">
               <span className="font-[700] text-[32px]">최신 게시물</span>
               <button
-                onClick={() => navigate("/tips/list?sort=latest")}
+                onClick={() => navigate("/items/list?sort=latest")}
                 className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
               >
                 <span className="ml-2">더보기</span>
@@ -96,8 +109,14 @@ const TipsPage = () => {
             </div>
             {/*게시글 목록*/}
             <div className="w-full h-110 flex felx-row gap-20 overflow-hidden">
-              {recentPosts.map((post, index) => (
-                <ItemCard key={index} {...post} />
+              {recentPosts.map((post) => (
+                <div
+                  key={post.id}
+                  onClick={() => navigate(`/items/${post.id}`)}
+                  className="cursor-pointer"
+                >
+                  <ItemCard {...post} />
+                </div>
               ))}
             </div>
           </div>
@@ -107,4 +126,4 @@ const TipsPage = () => {
   );
 };
 
-export default TipsPage;
+export default ItemsPage;

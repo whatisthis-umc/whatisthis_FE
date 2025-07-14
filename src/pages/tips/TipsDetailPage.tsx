@@ -1,15 +1,16 @@
 import React from "react";
-import { useState } from "react";
-import CategoryBar from "../components/CategoryBar";
-import Searchbar from "../components/Searchbar";
-import { tipCategories } from "../data/categoryList";
-import ItemCard from "../components/ItemCard";
-import { useSearchParams } from "react-router-dom";
-import { dummyPosts } from "../data/dummyPosts";
+import { useMemo, useState } from "react";
+import CategoryBar from "../../components/CategoryBar";
+import Searchbar from "../../components/Searchbar";
+import { tipCategories } from "../../data/categoryList";
+import { dummyPosts } from "../../data/dummyPosts";
+import ItemCard from "../../components/ItemCard";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import backward from "/src/assets/backward.png";
 import forward from "/src/assets/forward.png";
 
-const ItemsDetailPage = () => {
+const TipsDetailPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [searchParams, setSearchParams] = useSearchParams();
   const sort = searchParams.get("sort") || "popular";
@@ -20,25 +21,26 @@ const ItemsDetailPage = () => {
     selectedCategory === "전체"
       ? dummyPosts
       : dummyPosts.filter((post) => post.hashtag === selectedCategory);
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sort === "popular") {
-      return b.views - a.views;
-    } else if (sort === "latest") {
-      return b.date.getTime() - a.date.getTime();
-    }
-    return 0;
-  });
-  // selectbox
-  const sortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSort = e.target.value;
-    setSearchParams({ sort: newSort });
-  };
+  const sortedPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      if (sort === "popular") {
+        return b.views - a.views;
+      }
+      if (sort === "latest") return b.date.getTime() - a.date.getTime();
+      return 0;
+    });
+  }, [filteredPosts, sort]);
   const startIndex = (currentPage - 1) * postsPerPage;
   const paginatedPosts = sortedPosts.slice(
     startIndex,
     startIndex + postsPerPage
   );
   const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
+  // 셀렉트박스
+  const sortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSort = e.target.value;
+    setSearchParams({ sort: newSort });
+  };
 
   return (
     <div>
@@ -61,12 +63,18 @@ const ItemsDetailPage = () => {
         </select>
       </div>
       <div className="w-full grid grid-cols-5 gap-8 pt-5">
-        {paginatedPosts.map((post, index) => (
-          <ItemCard key={index} {...post} />
+        {paginatedPosts.map((post) => (
+          <div
+            key={post.id}
+            onClick={() => navigate(`/tips/${post.id}`)}
+            className="cursor-pointer"
+          >
+            <ItemCard {...post} />
+          </div>
         ))}
       </div>
       {/*페이지네이션*/}
-      <div className=" flex justify-center items-center mt-30 mb-[-1100px] gap-2">
+      <div className=" flex justify-center items-center mt-30 mb-20 gap-2 ">
         <img
           src={backward}
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -97,4 +105,4 @@ const ItemsDetailPage = () => {
   );
 };
 
-export default ItemsDetailPage;
+export default TipsDetailPage;

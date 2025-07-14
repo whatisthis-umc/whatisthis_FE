@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
+import Searchbar from "../../components/Searchbar";
+import Pagination from "../../components/customer/Pagination";
 import { useInquiry } from "../../contexts/InquiryContext";
 
 const InquiryPage = () => {
@@ -69,7 +71,12 @@ const InquiryPage = () => {
 
   return (
     <div className="flex-1 bg-white">
-      <div className="w-full pt-16 pb-8">
+      <div className="w-full pb-8">
+        {/* 검색바 */}
+        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
+          <Searchbar />
+        </div>
+        
         {/* 고객센터 네비게이션 */}
         <CustomerNav />
 
@@ -104,7 +111,20 @@ const InquiryPage = () => {
                         </span>
                       )}
                     </div>
-                    <h3 className="text-gray-800 text-sm mb-3 leading-relaxed">{item.title}</h3>
+                    <h3 
+                      className="mb-3"
+                      style={{
+                        color: '#333',
+                        fontFamily: 'Pretendard',
+                        fontSize: '20px',
+                        fontStyle: 'normal',
+                        fontWeight: 700,
+                        lineHeight: '150%',
+                        letterSpacing: '-0.4px'
+                      }}
+                    >
+                      {item.title}
+                    </h3>
                     <p className="text-gray-500 text-xs">{item.date}</p>
                   </div>
                   
@@ -199,46 +219,13 @@ const InquiryPage = () => {
         </div>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-1">
-              {/* 이전 페이지 버튼 */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className="w-8 h-8 rounded-full text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors flex items-center justify-center"
-                >
-                  ‹
-                </button>
-              )}
-              
-              {/* 페이지 번호들 */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                    page === currentPage
-                      ? "bg-black text-white"
-                      : "bg-white text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              {/* 다음 페이지 버튼 */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className="w-8 h-8 rounded-full text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors flex items-center justify-center"
-                >
-                  ›
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <div className="mt-20">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
 
       {/* 로그인된 사용자의 비밀글 접근 불가 모달 */}
