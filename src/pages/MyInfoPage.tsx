@@ -1,132 +1,171 @@
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
+import addPhotoIcon from "../assets/add_photo.png";
+import cancelIcon from "../assets/cancel.png";
 
-const MyInfoPage = () => {
-  const [email, setEmail] = useState("");
-  const [emailDomain, setEmailDomain] = useState("");
-  const [inputs, setInputs] = useState({
-    username: "",
-    input1: "",
-    input2: "",
-  });
-  const [preview, setPreview] = useState<string | null>(null);
+const MyInfoEditPage = () => {
+  const [image, setImage] = useState<string | null>(null);
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setInputs({ ...inputs, [name]: value });
-  };
-
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleDelete = () => {
+    setImage(null);
+  };
+
   return (
-    <div className="w-full max-w-6xl mx-auto py-12 px-4">
-      <h1 className="text-2xl font-semibold mb-8">마이페이지</h1>
-      <div className="bg-white p-8 rounded-xl shadow-md flex flex-col lg:flex-row gap-6">
-        {/* 📸 프로필 사진 */}
-        <div className="flex flex-col items-center w-full lg:w-[60%]">
-          <div className="w-56 h-56 rounded-xl bg-gray-200 overflow-hidden relative">
-            {preview ? (
+    <div className="min-h-screen w-full flex justify-center items-center bg-white font-[Pretendard] overflow-x-hidden">
+      <div
+        className="flex gap-[80px] rounded-[32px] bg-white"
+        style={{
+          width: "772.8px",
+          height: "550px",
+          padding: "24px",
+          border: "1px solid #E6E6E6",
+        }}
+      >
+        {/* 이미지 영역 */}
+        <div className="flex flex-col mt-2 items-center relative">
+          <div
+            className="bg-[#E6E6E6] rounded-[32px] relative"
+            style={{ width: "290px", height: "291px" }}
+          >
+            {image && (
               <img
-                src={preview}
-                alt="preview"
-                className="w-full h-full object-cover"
+                src={image}
+                alt="uploaded"
+                className="w-full h-full object-cover rounded-[32px]"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
-                이미지
-              </div>
             )}
-          </div>
-          <label className="mt-6 bg-blue-500 text-white text-base px-6 py-2 rounded-full cursor-pointer">
-            📂 파일에서 업로드
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
+            <img
+              src={cancelIcon}
+              alt="cancel"
+              onClick={handleDelete}
+              className="absolute top-2 right-2 w-6 h-6 opacity-80 cursor-pointer"
             />
+          </div>
+
+          <label
+            htmlFor="fileInput"
+            className="flex items-center justify-center bg-[#0080FF] text-white text-[20px] mt-4 rounded-[32px] cursor-pointer"
+            style={{ width: "290px", height: "54px", fontWeight: 500 }}
+          >
+            <img src={addPhotoIcon} alt="add" className="w-5 h-5 mr-2" />
+            파일에서 업로드
           </label>
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
 
-        {/* 📝 입력 폼 */}
-        <div className="w-full lg:w-[40%] space-y-4">
-          {/* 이름 */}
-          <label className="text-sm text-gray-500 block">이름</label>
-          <div className="relative">
-            <input
-              type="text"
-              name="username"
-              placeholder="입력"
-              className="border-b w-full py-1 px-2 pr-24 text-sm focus:outline-none"
-              value={inputs.username}
-              onChange={handleInputChange}
-            />
+        {/* 입력폼 영역 */}
+        <div
+          className="flex flex-col mt-2 justify-between"
+          style={{ width: "300px" }}
+        >
+          <div>
+            {/* 이름 */}
+            <div className="text-[16px] mb-4">이름</div>
+            <div className="flex items-center gap-2 mb-10">
+              <input
+                type="text"
+                placeholder="입력"
+                style={{
+                  width: "328px",
+                  borderBottom: "1px solid #999999",
+                  outline: "none",
+                  fontSize: "16px",
+                }}
+              />
+              <button
+                className="text-[12px] rounded-[32px] bg-[#E6E6E6] px-3 py-1"
+                style={{ width: "90px", height: "29px", fontWeight: 400 }}
+              >
+                중복확인
+              </button>
+            </div>
+
+            {/* 이메일 */}
+            <div className="text-[16px] mb-4">이메일</div>
+            <div className="flex items-center gap-2 mb-10">
+              <input
+                type="text"
+                placeholder="이메일 주소"
+                style={{
+                  width: "150px",
+                  borderBottom: "1px solid #999999",
+                  outline: "none",
+                  fontSize: "16px",
+                }}
+              />
+              <span className="text-[16px]">@</span>
+              <input
+                type="text"
+                placeholder="선택"
+                style={{
+                  width: "150px",
+                  borderBottom: "1px solid #999999",
+                  outline: "none",
+                  fontSize: "16px",
+                }}
+              />
+            </div>
+
+            {/* 전화번호 */}
+            <div className="text-[16px] mb-4">전화번호</div>
+            <div className="flex items-center gap-2 mb-10">
+              <input
+                type="text"
+                placeholder="입력"
+                style={{
+                  width: "328px",
+                  borderBottom: "1px solid #999999",
+                  outline: "none",
+                  fontSize: "16px",
+                }}
+              />
+            </div>
+
+            {/* 주소(선택) */}
+            <div className="text-[16px] mb-4">주소(선택)</div>
+            <div className="flex items-center gap-2 mb-10">
+              <input
+                type="text"
+                placeholder="입력"
+                style={{
+                  width: "328px",
+                  borderBottom: "1px solid #999999",
+                  outline: "none",
+                  fontSize: "16px",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 저장버튼 */}
+          <div className="flex justify-end mt-4">
             <button
-              className="absolute right-1 top-1/2 -translate-y-1/2 text-sm bg-gray-200 px-3 py-1 rounded-full text-gray-700"
-              type="button"
+              className="bg-[#0080FF] text-white text-[20px] rounded-[32px]"
+              style={{ width: "160px", height: "54px", fontWeight: 500 }}
             >
-              중복확인
+              저장
             </button>
           </div>
-
-          {/* 이메일 */}
-          <label className="text-sm text-gray-500 block">이메일</label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              placeholder="입력"
-              className="border-b flex-1 py-1 px-2 text-sm focus:outline-none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <span className="text-gray-500 text-sm">@</span>
-            <input
-              type="text"
-              placeholder="선택"
-              className="border-b flex-1 py-1 px-2 text-sm focus:outline-none"
-              value={emailDomain}
-              onChange={(e) => setEmailDomain(e.target.value)}
-            />
-          </div>
-
-          {/* 전화번호 */}
-          <label className="text-sm text-gray-500 block">휴대폰 번호</label>
-          <input
-            type="text"
-            name="input1"
-            placeholder="입력"
-            className="border-b w-full py-1 px-2 text-sm focus:outline-none"
-            value={inputs.input1}
-            onChange={handleInputChange}
-          />
-
-          {/* 주소 */}
-          <label className="text-sm text-gray-500 block">주소 (선택)</label>
-          <input
-            type="text"
-            name="input2"
-            placeholder="입력"
-            className="border-b w-full py-1 px-2 text-sm focus:outline-none"
-            value={inputs.input2}
-            onChange={handleInputChange}
-          />
-
-          {/* 저장 버튼 */}
-          <button className="bg-blue-500 text-white w-full py-2 rounded-full mt-4 text-sm">
-            저장
-          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default MyInfoPage;
+export default MyInfoEditPage;
