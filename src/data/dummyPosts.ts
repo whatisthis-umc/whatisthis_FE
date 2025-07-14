@@ -1,9 +1,12 @@
 import sampleImage from "/src/assets/sampleImage.png"
+import sample from "/src/assets/sample.png"
+import example from "/src/assets/example.png"
+import example2 from "/src/assets/example2.png"
 export const dummyPosts = [
     {
         id:1,
       hashtag: "자취 필수템",
-      imageUrl: "",
+      imageUrl: [sample,example, example2],
       title: "국가원로자문회의의 의장은 그렇",
       description: "다만, 직전대통령이 없을 때에는 대신해서",
       views: 100,
@@ -62,7 +65,7 @@ export const dummyPosts = [
     },
     {
         id:7,
-      hashtag: "해시태그",
+      hashtag: "살림도구템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
       description: "다만, 직전대통령이 없을 때에는 대신해서",
@@ -72,7 +75,7 @@ export const dummyPosts = [
     },
     {
         id:8,
-      hashtag: "해시태그",
+      hashtag: "브랜드 꿀템",
       imageUrl: "",
       title: "국가원로자문회의의 의장은 그렇",
       description: "다만, 직전대통령이 없을 때에는 대신해서",

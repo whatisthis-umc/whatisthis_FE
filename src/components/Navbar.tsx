@@ -26,7 +26,10 @@ const Navbar = () => {
         <button className="cursor-pointer" onClick={() => navigate("/login")}>
           로그인/회원가입
         </button>
-        <button className="cursor-pointer" onClick={() => navigate("/center")}>
+        <button
+          className="cursor-pointer"
+          onClick={() => navigate("/customer/notice")}
+        >
           고객센터
         </button>
       </div>

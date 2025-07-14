@@ -36,7 +36,7 @@ const ItemsPage = () => {
         />
         <Searchbar />
       </div>
-      <div className="w-[1392px] h-[475px] mt-36">
+      <div className="w-[1392px] h-[475px] mt-36 mb-300">
         <div className="flex justify-between h-12 ">
           <span className="font-[700] text-[32px]">인기 게시물</span>
           <button
