@@ -1,177 +1,193 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import SortDropdown from "../components/common/SortDropdown";
+import eyeIcon from "../assets/eye.png";
+import heartIcon from "../assets/likes.png";
+import commentIcon from "../assets/comments.png";
+import bestBadge from "../assets/best.png";
+import writeIcon from "../assets/pencil.png";
 
-// 📌 게시물 타입 정의
-interface Post {
-  id: number;
-  category: string;
-  tags: string[];
-  title: string;
-  desc: string;
-  writer: string;
-  date: string;
-  views: number;
-  likes: number;
-  comments: number;
-}
+const categories = ["전체", "인기글", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"];
 
-// 📌 정렬 옵션
-const sortOptions: string[] = ["인기순", "최신순"];
-
-// 📌 더미 게시물 데이터
-const dummyPosts: Post[] = [
+const dummyData = [
   {
     id: 1,
     category: "생활꿀팁",
-    tags: ["#생활꿀팁"],
-    title: "전자레인지에 용기 돌렸는데 녹았어요",
-    desc: "PP보다 PS같기도 모르고 그냥 돌렸다가 바닥에 구멍 뚫어져...",
-    writer: "강주영",
-    date: "3일 전",
+    title: "전자레인지에 물기 흘렸는데 녹았어요 등등 등등 등등 등등...",
+    content: "PPT까지 PPS까지 모르고 그냥 물티슈랑 키친타올만 구입 넣어야...",
+    nickname: "강주영",
+    time: "3일 전",
     views: 106,
     likes: 244,
     comments: 32,
+    hashtags: ["#전자레인지", "#물기처리", "#생활꿀팁"],
+    isBest: true,
   },
   {
     id: 2,
     category: "생활꿀팁",
-    tags: ["#자취생팁"],
-    title: "세탁기 돌릴 때 섬유유연제 따로 넣는 법?",
-    desc: "처음 자취하는데 세탁기 설정 어렵네요... 순서 좀 알려주세요.",
-    writer: "이채은",
-    date: "2일 전",
-    views: 87,
-    likes: 134,
-    comments: 18,
+    title: "냉장고 청소 쉽게 하는 방법 알려드림",
+    content: "식초랑 물만 있으면 됩니다. 정말 간단해요.",
+    nickname: "생활고수",
+    time: "2일 전",
+    views: 54,
+    likes: 122,
+    comments: 10,
+    hashtags: ["#냉장고", "#청소", "#생활팁"],
+    isBest: false,
   },
   {
     id: 3,
-    category: "생활꿀팁",
-    tags: ["Best", "#청소꿀팁"],
-    title: "배수구 청소할 때 이 조합 진짜 미쳤어요",
-    desc: "베이킹소다 + 식초 조합으로 싹 해결됨. 냄새도 없어졌어요.",
-    writer: "박세현",
-    date: "1일 전",
-    views: 193,
-    likes: 289,
-    comments: 45,
-  },
-  {
-    id: 4,
-    category: "생활꿀팁",
-    tags: ["Best", "#반려동물"],
-    title: "고양이 털 제거하는 장갑 후기!",
-    desc: "고양이 키우면 이거 무조건 사세요. 천국됩니다.",
-    writer: "황유빈",
-    date: "5시간 전",
-    views: 222,
-    likes: 301,
-    comments: 56,
-  },
-  {
-    id: 5,
-    category: "생활꿀팁",
-    tags: ["#자취방정리"],
-    title: "자취방 좁은데 수납공간 늘리는 꿀팁",
-    desc: "벽 선반 설치하면 진짜 깔끔해져요. 추천템 링크도 있어요!",
-    writer: "이승리",
-    date: "1시간 전",
-    views: 152,
-    likes: 167,
-    comments: 23,
-  },
-  {
-    id: 6,
-    category: "생활꿀팁",
-    tags: ["#알뜰쇼핑", "#쿠팡"],
-    title: "쿠팡에서 반값 득템한 후기 🔥",
-    desc: "진짜 싸게 산 것 같아서 공유해요~ 다들 득템하세요!",
-    writer: "김민정",
-    date: "방금 전",
-    views: 73,
-    likes: 91,
-    comments: 12,
+    category: "꿀템 추천",
+    title: "다이소에서 산 USB 선풍기 개좋음",
+    content: "진짜 조용하고 강력해요. 5000원이면 개이득.",
+    nickname: "꿀템수집가",
+    time: "5시간 전",
+    views: 78,
+    likes: 210,
+    comments: 18,
+    hashtags: ["#다이소", "#선풍기", "#추천템"],
+    isBest: false,
   },
 ];
 
 const CommunityPage = () => {
-  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [sortType, setSortType] = useState("인기순");
 
-  const [sort, setSort] = useState<string>("인기순");
-  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-
-  const selectSort = (option: string) => {
-    setSort(option);
-    setDropdownOpen(false);
-  };
-
-  // 정렬된 게시물 목록
-  const sortedPosts: Post[] = [...dummyPosts].sort((a, b) => {
-    if (sort === "인기순") return b.likes - a.likes;
-    if (sort === "최신순") return b.id - a.id; // id 기준으로 최신 판단
-    return 0;
+  const filteredData = dummyData.filter((item) => {
+    if (selectedCategory === "전체") return true;
+    if (selectedCategory === "인기글") return item.isBest;
+    if (selectedCategory === "생활꿀팁") return item.category === "생활꿀팁";
+    if (selectedCategory === "꿀템 추천") return item.category === "꿀템 추천";
+    if (selectedCategory === "살까말까?") return item.category === "살까말까?";
+    if (selectedCategory === "궁금해요!") return item.category === "궁금해요!";
+    return false;
   });
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6">
-      {/* 🔽 드롭다운 정렬 메뉴 */}
-      <div className="relative inline-block mb-6">
-        <button
-          onClick={toggleDropdown}
-          className="bg-white border border-gray-400 rounded-full px-4 py-1 text-sm font-semibold flex items-center gap-2"
-        >
-          {sort} ▼
-        </button>
-        {dropdownOpen && (
-          <div className="absolute mt-2 w-full bg-white border rounded shadow z-10">
-            {sortOptions.map((option) => (
-              <div
-                key={option}
-                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => selectSort(option)}
-              >
-                {option}
-              </div>
-            ))}
+    <div className="font-[Pretendard] px-8 py-6 w-full">
+      {/* 카테고리 탭 */}
+      <div className="flex gap-3 mb-6">
+        {categories.map((cat) => (
+          <div
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`cursor-pointer px-4 py-2 rounded-full border ${
+              selectedCategory === cat
+                ? "border-[#0080FF] text-[#0080FF]"
+                : "border-[#E6E6E6] text-[#999999]"
+            }`}
+            style={{ fontSize: "14px" }}
+          >
+            {cat}
           </div>
+        ))}
+      </div>
+
+      {/* 드롭다운 */}
+      <div className="flex justify-end mb-4">
+        <SortDropdown
+          defaultValue="인기순"
+          onChange={(value) => setSortType(value)}
+        />
+      </div>
+
+      {/* 게시글 목록 */}
+      <div className="flex flex-col gap-4">
+        {filteredData.length === 0 ? (
+          <div className="text-center text-[#999] text-[14px] mt-10">
+            게시글이 없습니다.
+          </div>
+        ) : (
+          filteredData.map((item) => (
+            <div
+              key={item.id}
+              className={`flex flex-col ${
+                item.isBest
+                  ? "bg-[#CCE5FF] border-none"
+                  : "bg-white border border-[#CCCCCC]"
+              } rounded-[32px] p-6 gap-4`}
+              style={{ width: "1132px" }}
+            >
+              {/* 카테고리 & 해시태그 & Best 뱃지 */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center px-3 py-1 border rounded-[32px] text-[14px] border-[#999999] text-[#333333]">
+                  {item.category}
+                </div>
+                {item.isBest && (
+                  <div
+                    className="flex items-center px-3 py-1 rounded-[32px] text-[14px] bg-[#66B2FF] text-white"
+                  >
+                    Best
+                  </div>
+                )}
+                {item.hashtags.map((tag, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center px-3 py-1 rounded-[32px] text-[14px] bg-[#CCE5FF] text-[#666666]"
+                  >
+                    {tag}
+                  </div>
+                ))}
+              </div>
+
+              {/* 제목 */}
+              <div className="text-[18px] font-medium">{item.title}</div>
+
+              {/* 내용 */}
+              <div className="text-[14px] text-[#666666]">{item.content}</div>
+
+              {/* 아이콘 영역 */}
+              <div className="flex items-center gap-3 text-[14px] text-[#999]">
+                <span className="flex items-center gap-1 text-[#333333]">
+                  {item.isBest && (
+                    <img
+                      src={bestBadge}
+                      alt="best"
+                      className="w-[16px] h-[16px]"
+                    />
+                  )}
+                  {item.nickname} · {item.time}
+                </span>
+                <div className="flex items-center gap-1">
+                  <img src={eyeIcon} alt="views" className="w-4 h-4" />
+                  <span>{item.views}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <img src={heartIcon} alt="likes" className="w-4 h-4" />
+                  <span>{item.likes}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <img src={commentIcon} alt="comments" className="w-4 h-4" />
+                  <span>{item.comments}</span>
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
 
-      {/* 📝 게시물 리스트 */}
-      <div className="flex flex-col gap-4">
-        {sortedPosts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-blue-50 rounded-xl p-4 shadow cursor-pointer hover:bg-blue-100 transition"
-            onClick={() => navigate(`/post/${post.id}`)}
-          >
-            <div className="flex gap-2 mb-2">
-              <span className="bg-gray-200 px-2 py-1 rounded text-xs">
-                {post.category}
-              </span>
-              {post.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 rounded text-xs"
-                  style={{ backgroundColor: "#CCFF00" }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <h2 className="text-lg font-semibold truncate">{post.title}</h2>
-            <p className="text-gray-600 text-sm truncate">{post.desc}</p>
-            <div className="text-gray-500 text-xs mt-2 flex gap-4">
-              <span>👤 {post.writer}</span>
-              <span>📅 {post.date}</span>
-              <span>👁 {post.views}</span>
-              <span>❤️ {post.likes}</span>
-              <span>💬 {post.comments}</span>
-            </div>
-          </div>
+      {/* 글쓰기 버튼 */}
+      <div className="flex justify-end mt-10 relative">
+        <button
+          onClick={() => alert("글쓰기 버튼 클릭됨")}
+          className="bg-[#0080FF] text-white flex items-center gap-2 rounded-[32px]"
+          style={{ width: "156px", height: "54px", padding: "12px 32px" }}
+        >
+          <img src={writeIcon} alt="write" className="w-5 h-5" />
+          글쓰기
+        </button>
+      </div>
+
+      {/* 페이지네이션 */}
+      <div className="flex justify-center mt-4 gap-2 text-[#999] text-[14px]">
+        <span>&lt;</span>
+        {[1, 2, 3, 4, 5, 6].map((n) => (
+          <span key={n} className="mx-1 cursor-pointer">
+            {n}
+          </span>
         ))}
+        <span>&gt;</span>
       </div>
     </div>
   );
