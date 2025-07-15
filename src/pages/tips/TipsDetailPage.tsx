@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
-import { itemCategories, tipCategories } from "../../data/categoryList";
+import { tipCategories } from "../../data/categoryList";
 import ItemCard from "../../components/ItemCard";
 import { useNavigate } from "react-router-dom";
 import { dummyPosts } from "../../data/dummyPosts";
