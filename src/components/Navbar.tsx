@@ -80,7 +80,7 @@ const Navbar = () => {
             alt="프로필"
             className="w-14 h-14 cursor-pointer"
             onClick={() => {
-              navigate("/mypage");
+              navigate("/my");
             }}
           />
           <img
@@ -88,7 +88,7 @@ const Navbar = () => {
             alt="좋아요"
             className="w-14 h-14 cursor-pointer"
             onClick={() => {
-              navigate("/likepage");
+              navigate("/likes");
             }}
           />
           <img
@@ -96,7 +96,7 @@ const Navbar = () => {
             alt="스크랩"
             className="w-14 h-14 cursor-pointer"
             onClick={() => {
-              navigate("/scrappage");
+              navigate("/scrap");
             }}
           />
         </div>
