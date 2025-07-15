@@ -5,6 +5,7 @@ import scrap from "/src/assets/scrap.png";
 
 const ItemCard = ({
   id,
+  category,
   hashtag,
   imageUrl,
   title,
@@ -12,15 +13,30 @@ const ItemCard = ({
   views,
   scraps,
   date,
+  type,
 }: ItemCardProps) => {
   const firstImage =
     typeof imageUrl === "string" ? imageUrl : imageUrl[0] || "";
   return (
     <div className="flex flex-col justify-center w-57 h-96 bg-transparent gap-2 ml-2 mr-2 mt-7">
-      {/*해시태그*/}
-      <div className=" w-fit px-3  h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[#666666]">
-        #{hashtag}
+      {/* 해시태그 */}
+      <div className="flex flex-row gap-2 ml-2 mt-1">
+        {Array.isArray(hashtag) ? (
+          hashtag.slice(0, 2).map((tag, idx) => (
+            <div
+              key={idx}
+              className="w-fit px-3 h-[29px] items-start rounded-4xl mt-1 bg-[#CCE5FF] text-[#666666]"
+            >
+              #{tag}
+            </div>
+          ))
+        ) : (
+          <div className=" w-fit px-3  h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[#666666]">
+            #{hashtag}
+          </div>
+        )}
       </div>
+
       {/*썸네일*/}
       <div className="w-57 h-57 bg-black rounded-4xl mt-2 mb-1 ml-2">
         <img

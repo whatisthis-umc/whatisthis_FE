@@ -33,9 +33,14 @@ const MainPage = () => {
   );
   const filteredPosts = keyword
     ? dummyPosts.filter((post) =>
-        [post.title, post.description, post.hashtag].some((field) =>
-          field.toLowerCase().includes(keyword.toLowerCase())
-        )
+        [
+          post.title,
+          post.description,
+          ...(Array.isArray(post.hashtag) ? post.hashtag : [post.hashtag]),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase())
       )
     : dummyPosts;
 
@@ -53,7 +58,7 @@ const MainPage = () => {
               {filteredPosts.map((post) => (
                 <div
                   key={post.id}
-                  onClick={() => navigate(`/items/${post.id}`)}
+                  onClick={() => navigate(`/${post.type}/${post.id}`)}
                   className="cursor-pointer"
                 >
                   <ItemCard {...post} />
