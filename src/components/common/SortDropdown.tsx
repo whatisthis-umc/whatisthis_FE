@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import arrowDownIcon from "../../assets/arrow_down.png";
 
-const SortDropdown = ({ sortType, setSortType }) => {
-  const [open, setOpen] = useState(false);
+interface SortDropdownProps {
+  defaultValue?: string;
+  onChange: (value: string) => void;
+}
 
-  const handleSelect = (type) => {
-    setSortType(type);
+const SortDropdown = ({ defaultValue = "인기순", onChange }: SortDropdownProps) => {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(defaultValue);
+
+  useEffect(() => {
+    // 초기값 전달
+    onChange(defaultValue);
+  }, [defaultValue, onChange]);
+
+  const handleSelect = (type: string) => {
+    setSelected(type);
+    onChange(type);
     setOpen(false);
   };
 
@@ -15,8 +27,12 @@ const SortDropdown = ({ sortType, setSortType }) => {
         className="flex items-center border border-[#999999] rounded-[32px] px-3 py-2 gap-1 text-sm text-[#333] cursor-pointer"
         onClick={() => setOpen(!open)}
       >
-        {sortType}
-        <img src={arrowDownIcon} alt="arrow" className={`w-4 h-4 transform ${open ? "rotate-180" : ""}`} />
+        {selected}
+        <img
+          src={arrowDownIcon}
+          alt="arrow"
+          className={`w-4 h-4 transform ${open ? "rotate-180" : ""}`}
+        />
       </div>
 
       {open && (
@@ -24,16 +40,16 @@ const SortDropdown = ({ sortType, setSortType }) => {
           <div
             onClick={() => handleSelect("인기순")}
             className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-              sortType === "인기순" ? "text-[#0080FF]" : "text-[#333]"
-            }`}
+              selected === "인기순" ? "text-[#0080FF]" : "text-[#333]"}
+            `}
           >
             인기순
           </div>
           <div
             onClick={() => handleSelect("최신순")}
             className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-              sortType === "최신순" ? "text-[#0080FF]" : "text-[#333]"
-            }`}
+              selected === "최신순" ? "text-[#0080FF]" : "text-[#333]"}
+            `}
           >
             최신순
           </div>
