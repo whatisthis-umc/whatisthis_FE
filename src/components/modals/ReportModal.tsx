@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import reportIcon from "../../assets/report.png";
 import checkCircle from "../../assets/check_circle.png";
@@ -5,6 +6,7 @@ import checkedCircle from "../../assets/checked_circle.png";
 
 interface ReportModalProps {
   onClose: () => void;
+  targetType?: "댓글" | "게시물";
 }
 
 const reasonsList = [
@@ -16,14 +18,14 @@ const reasonsList = [
   "기타(직접입력)",
 ];
 
-const ReportModal = ({ onClose }: ReportModalProps) => {
+const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
   const [selected, setSelected] = useState<string>("");
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-[Pretendard]">
       <div className="bg-white rounded-2xl p-12 w-full max-w-[640px]">
         <h2 className="text-[24px] font-bold mb-6 text-left text-[#333333] leading-[32px]">
-          이 댓글을 신고하시겠습니까?
+          이 {targetType}을 신고하시겠습니까?
         </h2>
 
         <p className="text-[16px] text-[#333333] mb-10 text-left leading-[24px]">
