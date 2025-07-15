@@ -3,11 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
-import { itemCategories, tipCategories } from "../../data/categoryList";
+import { tipCategories } from "../../data/categoryList";
 import whitescrap from "/src/assets/whitescrap.png";
 import report from "/src/assets/report.png";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
+import LoginModal from "../../components/modals/LoginModal";
 
 const TipsPostDetailPage = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const TipsPostDetailPage = () => {
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false); //신고모달
+  const [showLoginModal, setShowLoginModal] = useState(false); //로그인모달
   const relatedPosts = dummyPosts.slice(0, 5); // 관련 게시물
   const images = Array.isArray(post?.imageUrl)
     ? post.imageUrl
@@ -132,7 +134,10 @@ const TipsPostDetailPage = () => {
               </div>
               {/*스크랩, 신고버튼*/}
               <div className="flex gap-4 mt-8 justify-between">
-                <button className="w-[156px] h-[54px] text-white text-[20px] font-[500] gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center">
+                <button
+                  className="w-[156px] h-[54px] text-white text-[20px] font-[500] gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
+                  onClick={() => setShowLoginModal(true)}
+                >
                   <img src={whitescrap} alt="스크랩" className="w-5 h-5 mr-2" />
                   스크랩
                 </button>
@@ -143,16 +148,18 @@ const TipsPostDetailPage = () => {
                   <img src={report} alt="신고하기" className="w-5 h-5 mr-2" />
                   신고하기
                 </button>
-                {showReportModal && (
-                  <ReportModal
-                    onClose={() => setShowReportModal(false)}
-                    targetType="게시물"
-                  />
-                )}
               </div>
             </div>
           </div>
-
+          {showReportModal && (
+            <ReportModal
+              onClose={() => setShowReportModal(false)}
+              targetType="게시물"
+            />
+          )}
+          {showLoginModal && (
+            <LoginModal onClose={() => setShowLoginModal(false)} />
+          )}
           {/* 관련 게시물 */}
           <div className="mt-25">
             <h3 className="text-[24px] font-bold mb-6 ">관련 꿀팁 게시물</h3>

@@ -7,7 +7,7 @@ import { dummyPosts } from "../../data/dummyPosts";
 import type { ItemCardProps } from "../../types/post";
 import CategoryBar from "../../components/CategoryBar";
 import { useState } from "react";
-import { itemCategories, tipCategories } from "../../data/categoryList";
+import { tipCategories } from "../../data/categoryList";
 
 const TipsPage = () => {
   const navigate = useNavigate();
