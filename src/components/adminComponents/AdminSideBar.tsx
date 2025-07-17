@@ -1,15 +1,15 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { label: '신고내역', path: '/admin/reports' },
-    { label: '문의내역', path: '/admin/inquiries' },
-    { label: '게시글 관리', path: '/admin/posts' },
-    { label: '공지사항 관리', path: '/admin/notice' },
-    { label: 'Q&A 관리', path: '/admin/qna' },
+    { label: "신고내역", path: "/admin/reports" },
+    { label: "문의내역", path: "/admin/inquiries" },
+    { label: "게시글 관리", path: "/admin/post" },
+    { label: "공지사항 관리", path: "/admin/notice" },
+    { label: "Q&A 관리", path: "/admin/qna" },
   ];
 
   return (
@@ -22,7 +22,7 @@ export default function AdminSidebar() {
       {/* 메뉴 리스트 */}
       <div className="flex flex-col gap-4 mt-4 text-[18px] font-medium">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname.startsWith(item.path); //시작경로 일치하면 사이드바 메뉴 활성화되게 수정했어요
 
           return (
             <button
@@ -30,8 +30,8 @@ export default function AdminSidebar() {
               onClick={() => navigate(item.path)}
               className={`transition-all duration-200 px-4 py-2 ${
                 isActive
-                  ? 'bg-zinc-800 text-white rounded-full mx-auto'
-                  : 'text-black text-left'
+                  ? "bg-zinc-800 text-white rounded-full mx-auto"
+                  : "text-black text-left"
               }`}
             >
               {item.label}

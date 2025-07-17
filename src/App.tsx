@@ -27,7 +27,7 @@ import TipsPage from "./pages/tips/TipsPage";
 import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
 import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
 import TipsDetailPage from "./pages/tips/TipsDetailPage";
-
+import AdminNewPostPage from "./pages/AdminPages/AdminPost/AdminNewPostPage";
 
 function App() {
   return (
@@ -58,15 +58,24 @@ function App() {
                 <Route path="/customer/notice" element={<NoticeListPage />} />
                 <Route path="/customer/qna" element={<QnaPage />} />
                 <Route path="/customer/inquiry" element={<InquiryPage />} />
-                <Route path="/customer/inquiry/write" element={<InquiryWritePage />}/>
+                <Route
+                  path="/customer/inquiry/write"
+                  element={<InquiryWritePage />}
+                />
 
                 <Route path="/admin/login" element={<AdminLoginPage />} />
-                <Route path="/admin" element={<AdminDashboard />} /> 
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/notice" element={<AdminNoticePage />} />
                 <Route path="/admin/post" element={<AdminPostPage />} />
-                <Route path="/admin/post/:id" element={<AdminPostDetailPage />}/>
-                <Route path="/admin/post/:id/edit" element={<AdminPostEditPage />}/> 
-                
+                <Route
+                  path="/admin/post/:id"
+                  element={<AdminPostDetailPage />}
+                />
+                <Route
+                  path="/admin/post/:id/edit"
+                  element={<AdminPostEditPage />}
+                />
+                <Route path="/admin/post/new" element={<AdminNewPostPage />} />
               </Routes>
             </main>
             <Footer />
@@ -77,10 +86,4 @@ function App() {
   );
 }
 
-export default App;   
-                 
-                 
-                 
-                
-                
-              
+export default App;
