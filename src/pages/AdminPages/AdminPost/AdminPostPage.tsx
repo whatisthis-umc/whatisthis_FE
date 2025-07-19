@@ -10,7 +10,6 @@ import {
   TableRow,
   Button,
   InputBase,
-  Paper,
   IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -18,6 +17,9 @@ import { dummyPosts3 } from "../../../data/dummyPosts3";
 import { adminPostCategories } from "../../../data/categoryList";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
+import arrowDown from "../../../assets/arrow_down.png";
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 export default function AdminPostPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -63,51 +65,177 @@ export default function AdminPostPage() {
         </Box>
 
         {/* 필터 + 검색 */}
-        <Box className="flex justify-between items-center mb-6">
-          <Select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setCurrentPage(1);
-            }}
-            size="small"
-            sx={{ minWidth: 140, backgroundColor: "#f1f1f1", borderRadius: 3 }}
-          >
-            {adminPostCategories.map((cat) => (
-              <MenuItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </MenuItem>
-            ))}
-          </Select>
+        {/* 필터 + 검색 */}
+<Box 
+  className="mb-6"
+  sx={{
+    width: 921,
+    height: 72,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  }}
+>
+  {/* Select 박스 wrapper */}
+  <Box
+    sx={{
+      width: 567,
+      height: 72,
+      borderRadius: "32px",
+      backgroundColor: "#E6E6E6",
+      px: "24px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+    }}
+  >
+    <Select
+      value={selectedCategory}
+      onChange={(e) => {
+        setSelectedCategory(e.target.value);
+        setCurrentPage(1);
+      }}
+      disableUnderline
+      variant="standard"
+      IconComponent={() => null}
+      sx={{
+        fontFamily: "Pretendard",
+        fontWeight: 700,
+        fontSize: "16px",
+        color: "#333333",
+        lineHeight: "150%",
+        flexGrow: 1,
+        backgroundColor: "transparent",
+      }}
+    >
+      {adminPostCategories.map((cat) => (
+        <MenuItem key={cat.id} value={cat.id}>
+          {cat.name}
+        </MenuItem>
+      ))}
+    </Select>
 
-          <Paper
-            component="form"
-            onSubmit={handleSearchSubmit}
-            className="flex items-center px-2 w-64 h-10 shadow-none border"
-          >
-            <InputBase
-              className="ml-2 flex-1"
-              placeholder="검색어를 입력하세요."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <IconButton type="submit">
-              <SearchIcon />
-            </IconButton>
-          </Paper>
-        </Box>
+    {/* 화살표 아이콘 */}
+    <img
+      src={arrowDown}
+      alt="arrow"
+      width={24}
+      height={24}
+      style={{ opacity: 0.8 }}
+    />
+  </Box>
+
+  {/* 검색창 */}
+  <Box
+    component="form"
+    onSubmit={handleSearchSubmit}
+    sx={{
+      width: 216,
+      height: 40,
+      display: "flex",
+      alignItems: "center",
+      borderBottom: "1px solid #333333",
+      justifyContent: "space-between",
+    }}
+  >
+    <InputBase
+      fullWidth
+      placeholder="검색어를 입력하세요."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      sx={{
+        fontFamily: "Pretendard",
+        fontWeight: 500,
+        fontSize: "16px",
+        color: "#333333",
+        lineHeight: "150%",
+        letterSpacing: "-1%",
+        px: 1,
+
+         "&::placeholder": {
+            color: "#333333",
+            opacity: 1,
+            fontFamily: "Pretendard",
+            fontWeight: 500,
+            fontSize: "16px",
+            lineHeight: "150%",
+            letterSpacing: "-1%",
+          "& input::placeholder": {
+      color: "#333333 !important",
+      opacity: 1, // ← input 내부 placeholder까지 확실하게!
+    },
+      },
+      }}
+    />
+    <IconButton type="submit">
+      <SearchIcon sx={{ color: "#333333" }} />
+    </IconButton>
+  </Box>
+</Box>
+
 
         {/* 게시글 테이블 */}
-        <Table>
+        <Table
+        sx={{
+          borderCollapse: "separate", // ← 이거 있어야 일부 보더 제거 가능
+    "& th": {
+      borderBottom: "none", // 헤더 셀 밑줄 제거
+    },
+        }}>
           <TableHead>
             <TableRow>
-              <TableCell>구분</TableCell>
-              <TableCell>게시글 제목</TableCell>
-              <TableCell>신고일</TableCell>
-              <TableCell>처리 상태</TableCell>
+              <TableCell
+              sx={{
+                fontFamily: "Pretendard",
+    fontWeight: 700,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left",
+              }}>유형</TableCell>
+              <TableCell
+              sx={{
+                fontFamily: "Pretendard",
+    fontWeight: 700,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left",
+              }}>게시글 제목</TableCell>
+              <TableCell
+              sx={{
+                fontFamily: "Pretendard",
+    fontWeight: 700,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left",
+              }}>신고일</TableCell>
+              <TableCell
+              sx={{
+                fontFamily: "Pretendard",
+    fontWeight: 700,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left",
+              }}>처리 상태</TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody
+          sx={{
+            fontFamily: "Pretendard",
+    fontWeight: 500,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left", 
+          }}>
             {paginatedPosts.map((post) => (
               <TableRow
                 key={post.id}
@@ -115,20 +243,65 @@ export default function AdminPostPage() {
                 style={{ cursor: "pointer" }}
               >
                 <TableCell>
-                  <span className="border px-2 py-1 rounded-full text-xs inline-block">
+                  <Box
+    sx={{
+      display: "inline-block",
+      padding: "4px 12px",
+      border: "1px solid #999999",
+      borderRadius: "32px",
+      fontFamily: "Pretendard",
+      fontWeight: 500,
+      fontSize: "20px",
+      lineHeight: "150%",
+      letterSpacing: "-2%",
+      color: "#333333",
+    }}
+  >
+
                     {adminPostCategories.find((cat) => cat.id === post.category)
                       ?.name ?? post.category}
-                  </span>
+                
+                  </Box>
                 </TableCell>
-                <TableCell>{post.title}</TableCell>
-                <TableCell>{post.date}</TableCell>
+                <TableCell
+                sx={{
+    fontFamily: "Pretendard",
+    fontWeight: 500,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "left", // ← 필요시 center로 조정 가능
+  }}>{post.title}</TableCell>
+                <TableCell
+                sx={{
+    fontFamily: "Pretendard",
+    fontWeight: 500,
+    fontSize: "20px",
+    lineHeight: "150%",
+    letterSpacing: "-2%",
+    color: "#333333",
+    textAlign: "center",
+  }}>{post.date}</TableCell>
                 <TableCell>
                   <button
-                    className="bg-blue-500 text-white px-4 py-1 rounded shadow"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(post.id);
                     }}
+                    style={{
+      backgroundColor: "#0080FF",
+      color: "#FFFFFF",
+      fontFamily: "Pretendard",
+      fontSize: "14px",
+      fontWeight: 500,
+      lineHeight: "150%",
+      letterSpacing: "-1%",
+      padding: "4px 12px",
+      borderRadius: "32px",
+      border: "none",
+      cursor: "pointer",
+    }}
                   >
                     삭제
                   </button>
@@ -139,34 +312,61 @@ export default function AdminPostPage() {
         </Table>
 
         {/* 등록 버튼 + 페이지네이션 */}
-        <Box className="flex justify-between items-center mt-8">
+        <Box 
+        sx={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '20px', // 필요 시 여백 조정
+  }}>
           <Button
             variant="contained"
-            color="primary"
             onClick={() => navigate("/admin/post/new")}
+            sx={{
+      width: '160px',
+      height: '54px',
+      backgroundColor: '#0080FF',
+      borderRadius: '32px',
+      padding: '12px 16px',
+      color: '#FFFFFF',
+      fontFamily: 'Pretendard',
+      fontWeight: 500,
+      fontSize: '20px',
+      lineHeight: '150%',
+      letterSpacing: '-0.02em',
+      '&:hover': {
+        backgroundColor: '#0066CC',
+      },
+    }}
           >
             등록
           </Button>
+</Box>
+          <Box className="flex justify-center mt-6 gap-2 items-center">
+            <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
+    <ChevronLeftIcon sx={{ color: '#999999' }} />
+  </button>
 
-          <Box className="flex justify-center gap-2 flex-1">
             {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
               (num) => (
                 <button
                   key={num}
                   onClick={() => setCurrentPage(num)}
-                  className={`px-2 py-1 rounded-full text-sm ${
-                    num === currentPage
-                      ? "bg-blue-500 text-white font-bold"
-                      : "text-gray-500 hover:text-black"
-                  }`}
-                >
+                  className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
+        num === currentPage
+          ? 'bg-[#0080FF] text-white'
+          : 'text-[#999999] hover:text-black'
+      }`}
+      style={{ fontFamily: 'Pretendard' }}
+    >
                   {num}
                 </button>
               )
             )}
+            <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}>
+  <ChevronRightIcon sx={{ color: '#999999' }} />
+</button>
           </Box>
         </Box>
-      </Box>
     </AdminLayout>
   );
 }

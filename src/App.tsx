@@ -28,6 +28,7 @@ import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
 import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
 import TipsDetailPage from "./pages/tips/TipsDetailPage";
 import AdminNewPostPage from "./pages/AdminPages/AdminPost/AdminNewPostPage";
+import AdminNewNoticePage from "./pages/AdminPages/AdminNotice/AdminNewNoticePage";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/notice" element={<AdminNoticePage />} />
+                <Route path="/admin/notice/new" element={<AdminNewNoticePage />} />
                 <Route path="/admin/post" element={<AdminPostPage />} />
                 <Route
                   path="/admin/post/:id"
