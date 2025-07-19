@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 export default function AdminNewNoticePage() {
-  
+  const navigate = useNavigate();
   return (
     <AdminLayout>
     <div className="absolute top-[230px] left-[377px] w-[1023px] flex flex-col gap-[40px]">
