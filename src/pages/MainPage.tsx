@@ -1,9 +1,9 @@
 import React from "react";
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
-import left from "/src/assets/left.png";
-import right from "/src/assets/right.png";
-import more from "/src/assets/more.png";
+import { left } from "../assets";
+import { right } from "../assets";
+import { more } from "../assets";
 import { useNavigate } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
 import { useState } from "react";

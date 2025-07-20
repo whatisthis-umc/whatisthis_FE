@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import eyeIcon from "../assets/eye.png";
-import heartIcon from "../assets/likes.png";
-import commentIcon from "../assets/comments.png";
+import { eye } from "../assets";
+import { like } from "../assets";
+import { commentIcon } from "../assets";
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -49,7 +49,9 @@ const MyPage = () => {
   return (
     <div className="w-full max-w-[1440px] mx-auto mt-20 p-8 font-[Pretendard]">
       {/* 상단 제목 */}
-      <div className="text-[32px] font-bold text-[#333333] mb-10">마이페이지</div>
+      <div className="text-[32px] font-bold text-[#333333] mb-10">
+        마이페이지
+      </div>
 
       {/* 상단 프로필 */}
       <div className="flex justify-between items-center mt-20 mb-10">
@@ -74,7 +76,9 @@ const MyPage = () => {
         <button
           onClick={() => setTab("작성내역")}
           className={`text-[16px] rounded-[32px] px-6 py-3 ${
-            tab === "작성내역" ? "bg-[#333333] text-white" : "bg-[#F5F5F5] text-[#999999]"
+            tab === "작성내역"
+              ? "bg-[#333333] text-white"
+              : "bg-[#F5F5F5] text-[#999999]"
           }`}
           style={{ width: "155px", height: "54px", fontWeight: 500 }}
         >
@@ -83,7 +87,9 @@ const MyPage = () => {
         <button
           onClick={() => setTab("문의내역")}
           className={`text-[16px] rounded-[32px] px-6 py-3 ${
-            tab === "문의내역" ? "bg-[#333333] text-white" : "bg-[#F5F5F5] text-[#999999]"
+            tab === "문의내역"
+              ? "bg-[#333333] text-white"
+              : "bg-[#F5F5F5] text-[#999999]"
           }`}
           style={{ width: "155px", height: "54px", fontWeight: 500 }}
         >
@@ -124,17 +130,19 @@ const MyPage = () => {
                 </div>
                 <div>
                   <div className="text-[20px] font-bold mb-1">{item.title}</div>
-                  <div className="text-[16px] font-medium text-[#666]">{item.content}</div>
+                  <div className="text-[16px] font-medium text-[#666]">
+                    {item.content}
+                  </div>
                 </div>
                 <div className="flex gap-4 mt-3 text-[#999] text-[14px]">
                   <span>닉네임</span>
                   <span>3일 전</span>
                   <div className="flex items-center gap-1">
-                    <img src={eyeIcon} alt="view" className="w-4 h-4" />
+                    <img src={eye} alt="view" className="w-4 h-4" />
                     {item.views}
                   </div>
                   <div className="flex items-center gap-1">
-                    <img src={heartIcon} alt="like" className="w-4 h-4" />
+                    <img src={like} alt="like" className="w-4 h-4" />
                     {item.likes}
                   </div>
                   <div className="flex items-center gap-1">
@@ -146,7 +154,9 @@ const MyPage = () => {
             ) : (
               <div className="flex flex-col justify-between h-full mt-1">
                 <div className="text-[20px] font-bold mb-1">{item.title}</div>
-                <div className="text-[16px] font-medium text-[#666]">{item.content}</div>
+                <div className="text-[16px] font-medium text-[#666]">
+                  {item.content}
+                </div>
                 <div className="text-[#999] text-[14px] mt-3">{item.date}</div>
               </div>
             )}

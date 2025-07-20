@@ -6,7 +6,10 @@ interface SortDropdownProps {
   onChange: (value: string) => void;
 }
 
-const SortDropdown = ({ defaultValue = "인기순", onChange }: SortDropdownProps) => {
+const SortDropdown = ({
+  defaultValue = "인기순",
+  onChange,
+}: SortDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(defaultValue);
 
@@ -40,7 +43,8 @@ const SortDropdown = ({ defaultValue = "인기순", onChange }: SortDropdownProp
           <div
             onClick={() => handleSelect("인기순")}
             className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-              selected === "인기순" ? "text-[#0080FF]" : "text-[#333]"}
+              selected === "인기순" ? "text-[#0080FF]" : "text-[#333]"
+            }
             `}
           >
             인기순
@@ -48,7 +52,8 @@ const SortDropdown = ({ defaultValue = "인기순", onChange }: SortDropdownProp
           <div
             onClick={() => handleSelect("최신순")}
             className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
-              selected === "최신순" ? "text-[#0080FF]" : "text-[#333]"}
+              selected === "최신순" ? "text-[#0080FF]" : "text-[#333]"
+            }
             `}
           >
             최신순
