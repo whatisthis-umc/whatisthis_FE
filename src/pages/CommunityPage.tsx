@@ -1,12 +1,19 @@
 import { useState } from "react";
 import SortDropdown from "../components/common/SortDropdown";
-import eyeIcon from "../assets/eye.png";
-import heartIcon from "../assets/likes.png";
-import commentIcon from "../assets/comments.png";
-import bestBadge from "../assets/best.png";
-import writeIcon from "../assets/pencil.png";
+import { eye } from "../assets";
+import { like } from "../assets";
+import { commentIcon } from "../assets";
+import { bestBadge } from "../assets";
+import { writeIcon } from "../assets";
 
-const categories = ["전체", "인기글", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"];
+const categories = [
+  "전체",
+  "인기글",
+  "생활꿀팁",
+  "꿀템 추천",
+  "살까말까?",
+  "궁금해요!",
+];
 
 const dummyData = [
   {
@@ -115,9 +122,7 @@ const CommunityPage = () => {
                   {item.category}
                 </div>
                 {item.isBest && (
-                  <div
-                    className="flex items-center px-3 py-1 rounded-[32px] text-[14px] bg-[#66B2FF] text-white"
-                  >
+                  <div className="flex items-center px-3 py-1 rounded-[32px] text-[14px] bg-[#66B2FF] text-white">
                     Best
                   </div>
                 )}
@@ -150,11 +155,11 @@ const CommunityPage = () => {
                   {item.nickname} · {item.time}
                 </span>
                 <div className="flex items-center gap-1">
-                  <img src={eyeIcon} alt="views" className="w-4 h-4" />
+                  <img src={eye} alt="views" className="w-4 h-4" />
                   <span>{item.views}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <img src={heartIcon} alt="likes" className="w-4 h-4" />
+                  <img src={like} alt="likes" className="w-4 h-4" />
                   <span>{item.likes}</span>
                 </div>
                 <div className="flex items-center gap-1">

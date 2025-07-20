@@ -1,7 +1,7 @@
 import React from "react";
-import eye from "/src/assets/eye.png";
-import like from "/src/assets/likes.png";
-import comment from "/src/assets/comments.png";
+import { eye } from "../assets";
+import { like } from "../assets";
+import { commentIcon } from "../assets";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -70,7 +70,7 @@ const CommunityCard = ({
           {likes}
         </span>
         <span className="flex gap-2">
-          <img src={comment} className="w-6 h-6"></img>
+          <img src={commentIcon} className="w-6 h-6"></img>
           {comments}
         </span>
       </div>

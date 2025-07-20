@@ -304,7 +304,7 @@ const PostDetailPage: React.FC = () => {
             </div>
           ))}
         </div>
-        
+
         {/* 페이지네이션 */}
         <div className="flex justify-center mt-10 gap-4 items-center">
           <button

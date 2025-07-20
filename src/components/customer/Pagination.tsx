@@ -1,6 +1,6 @@
 import React from "react";
-import chevronBackward from "/src/assets/chevron_backward.svg";
-import chevronForward from "/src/assets/chevron_forward.svg";
+import { chevronBackward } from "../../assets";
+import { chevronForward } from "../../assets";
 
 type PaginationProps = {
   currentPage: number;
@@ -13,14 +13,13 @@ const Pagination: React.FC<PaginationProps> = ({
   totalPages,
   onPageChange,
 }) => {
-
   // 한 번에 보여줄 페이지 수 (6개)
   const maxVisiblePages = 6;
-  
+
   // 시작 페이지와 끝 페이지 계산
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-  
+
   // 끝 페이지가 총 페이지 수보다 작을 때 시작 페이지 조정
   if (endPage - startPage + 1 < maxVisiblePages) {
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -33,7 +32,7 @@ const Pagination: React.FC<PaginationProps> = ({
   );
 
   return (
-    <div className="flex justify-center items-center" style={{ gap: '24px' }}>
+    <div className="flex justify-center items-center" style={{ gap: "24px" }}>
       {/* 이전 페이지 버튼 - 항상 표시 */}
       <button
         onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
@@ -43,15 +42,11 @@ const Pagination: React.FC<PaginationProps> = ({
             ? "opacity-30 cursor-not-allowed"
             : "hover:bg-gray-100 cursor-pointer"
         }`}
-        style={{ gap: '10px' }}
+        style={{ gap: "10px" }}
       >
-        <img 
-          src={chevronBackward} 
-          alt="이전 페이지" 
-          className="w-4 h-4"
-        />
+        <img src={chevronBackward} alt="이전 페이지" className="w-4 h-4" />
       </button>
-      
+
       {/* 페이지 번호들 (최대 6개) */}
       {pageNumbers.map((page) => (
         <button
@@ -63,9 +58,9 @@ const Pagination: React.FC<PaginationProps> = ({
               : "bg-white text-gray-500 hover:bg-gray-100"
           }`}
           style={{
-            gap: '10px',
-            borderRadius: '32px',
-            ...(page === currentPage && { background: '#0080FF' })
+            gap: "10px",
+            borderRadius: "32px",
+            ...(page === currentPage && { background: "#0080FF" }),
           }}
         >
           {page}
@@ -74,20 +69,18 @@ const Pagination: React.FC<PaginationProps> = ({
 
       {/* 다음 페이지 버튼 - 항상 표시 */}
       <button
-        onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+        onClick={() =>
+          currentPage < totalPages && onPageChange(currentPage + 1)
+        }
         disabled={currentPage >= totalPages}
         className={`w-6 h-6 rounded-full transition-colors flex flex-col justify-center items-center ${
           currentPage >= totalPages
             ? "opacity-30 cursor-not-allowed"
             : "hover:bg-gray-100 cursor-pointer"
         }`}
-        style={{ gap: '10px' }}
+        style={{ gap: "10px" }}
       >
-        <img 
-          src={chevronForward} 
-          alt="다음 페이지" 
-          className="w-4 h-4"
-        />
+        <img src={chevronForward} alt="다음 페이지" className="w-4 h-4" />
       </button>
     </div>
   );

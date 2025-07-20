@@ -1,9 +1,8 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import menu from "/src/assets/menu.png";
-import profile from "/src/assets/profile.png";
-import favorite from "/src/assets/favorite.png";
-import bookmark from "/src/assets/bookmark.png";
+import { profile } from "../assets";
+import { favorite } from "../assets";
+import { bookmark } from "../assets";
 
 import logo from "/src/assets/logo.png";
 
@@ -38,14 +37,8 @@ const Navbar = () => {
         <img
           src={logo}
           alt="로고"
-          className="w-[72px] h-[36px] cursor-pointer"
+          className="w-[72px] h-[36px] ml-15 cursor-pointer"
           onClick={() => navigate("/")}
-        ></img>
-
-        <img
-          src={menu}
-          alt="메뉴"
-          className="w-[42px] h-[36px] ml-[-250px]"
         ></img>
 
         <div className="flex gap-3 justify-center items-center">

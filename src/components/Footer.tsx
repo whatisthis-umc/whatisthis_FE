@@ -1,12 +1,13 @@
-import { useLocation } from "react-router-dom";// 관리자 페이지에서는 푸터 안 보이게
-import insta from "/src/assets/insta.png";
-import X from "/src/assets/x.png";
+import { useLocation } from "react-router-dom"; // 관리자 페이지에서는 푸터 안 보이게
+import { insta } from "../assets";
+import { X } from "../assets";
 import React from "react";
 
 const Footer = () => {
-  const location = useLocation();//// 관리자 페이지에서는 푸터 안 보이게
+  const location = useLocation(); //// 관리자 페이지에서는 푸터 안 보이게
   const isAdminPage =
-    location.pathname.startsWith("/admin") || location.pathname === "/adminlogin";
+    location.pathname.startsWith("/admin") ||
+    location.pathname === "/adminlogin";
 
   if (isAdminPage) return null; // 관리자 페이지에서는 푸터 안 보이게
 
