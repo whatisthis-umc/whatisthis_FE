@@ -1,6 +1,6 @@
 import { useState } from "react";
-import addPhotoIcon from "../assets/add_photo.png";
-import cancelIcon from "../assets/cancel.png";
+import { addPhotoIcon } from "../assets";
+import { cancelIcon } from "../assets";
 
 const MyInfoEditPage = () => {
   const [image, setImage] = useState<string | null>(null);

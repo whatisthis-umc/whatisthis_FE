@@ -4,8 +4,8 @@ import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { tipCategories } from "../../data/categoryList";
-import whitescrap from "/src/assets/whitescrap.png";
-import report from "/src/assets/report.png";
+import { whitescrap } from "../../assets";
+import { reportIcon } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
@@ -145,7 +145,11 @@ const TipsPostDetailPage = () => {
                   className="w-[156px] h-[54px] text-white text-[20px] font-[500] gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center cursor-pointer"
                   onClick={() => setShowReportModal(true)}
                 >
-                  <img src={report} alt="신고하기" className="w-5 h-5 mr-2" />
+                  <img
+                    src={reportIcon}
+                    alt="신고하기"
+                    className="w-5 h-5 mr-2"
+                  />
                   신고하기
                 </button>
               </div>
