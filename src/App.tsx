@@ -40,7 +40,7 @@ function App() {
             <main className="flex-grow pb-[1300px]">
               <Routes>
                 <Route path="/" element={<MainPage />} />
-
+                <Route path="/search" element={<MainPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/likes" element={<LikesPage />} />
                 <Route path="/scrap" element={<ScrapPage />} />
@@ -67,7 +67,10 @@ function App() {
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/notice" element={<AdminNoticePage />} />
-                <Route path="/admin/notice/new" element={<AdminNewNoticePage />} />
+                <Route
+                  path="/admin/notice/new"
+                  element={<AdminNewNoticePage />}
+                />
                 <Route path="/admin/post" element={<AdminPostPage />} />
                 <Route
                   path="/admin/post/:id"

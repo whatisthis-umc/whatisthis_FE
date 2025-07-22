@@ -1,17 +1,18 @@
 import React from "react";
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
-import { left } from "../assets";
-import { right } from "../assets";
-import { more } from "../assets";
-import { useNavigate } from "react-router-dom";
+import { left, right, more } from "../assets";
+import { useNavigate, useLocation } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
 import { useState } from "react";
 import { dummyPosts } from "../data/dummyPosts";
 import { dummyPosts2 } from "../data/dummyPosts2";
 
 const MainPage = () => {
-  const [keyword, setKeyword] = useState("");
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const keyword = queryParams.get("keyword") || "";
+
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const postsPerPage = 4;
@@ -20,16 +21,16 @@ const MainPage = () => {
   };
   const handleNext = () => {
     setCurrentIndex((prev) =>
-      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage)
+      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage),
     );
   };
   const handleSearch = (input: string) => {
-    setKeyword(input);
+    navigate(`/search?keyword=${encodeURIComponent(input)}`);
   };
 
   const visiblePosts = dummyPosts.slice(
     currentIndex,
-    currentIndex + postsPerPage
+    currentIndex + postsPerPage,
   );
   const filteredPosts = keyword
     ? dummyPosts.filter((post) =>
@@ -40,13 +41,13 @@ const MainPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       )
     : dummyPosts;
 
   return (
     <div>
-      <div className="w-full max-w-[1440px]  mx-auto flex justify-between items-center px-4 mt-4">
+      <div className="hidden md:w-full md:max-w-[1440px]  md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
         <Searchbar onSearch={handleSearch} />
       </div>
       {keyword ? (
@@ -71,7 +72,7 @@ const MainPage = () => {
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center w-full mt-27 h-[435px]">
+          <div className="flex justify-between items-center w-full mt-27 sm:mt-17 md:mt-27 h-[149px] sm:h-[280px] md:h-[430px]">
             <div>
               <img
                 src={left}
@@ -80,12 +81,12 @@ const MainPage = () => {
                 onClick={handlePrev}
               />
             </div>
-            <div className="flex w-[1218px] h-[435px] rounded-4xl bg-[#E6E6E6] gap-17 overflow-hidden">
+            <div className="flex w-[320px] sm:w-[700px] md:w-[1218px] h-[435px] rounded-4xl bg-[#E6E6E6] gap-4 overflow-hidden">
               {visiblePosts.map((post) => (
                 <div
                   key={post.id}
                   onClick={() => navigate(`/items/${post.id}`)}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-shrink-0 w-[120px] sm:w-[150px] md:w-[230px]"
                 >
                   <ItemCard {...post} />
                 </div>
@@ -95,7 +96,7 @@ const MainPage = () => {
               <img
                 src={right}
                 alt="오른쪽 화살표"
-                className="w-8 h-8 mr-10 ml-5 cursor-pointer"
+                className="w-8 h-8 mr-5 ml-5 cursor-pointer"
                 onClick={handleNext}
               />
             </div>
