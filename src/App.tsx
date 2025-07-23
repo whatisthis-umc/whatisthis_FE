@@ -29,6 +29,14 @@ import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
 import TipsDetailPage from "./pages/tips/TipsDetailPage";
 import AdminNewPostPage from "./pages/AdminPages/AdminPost/AdminNewPostPage";
 import AdminNewNoticePage from "./pages/AdminPages/AdminNotice/AdminNewNoticePage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AdminNoticeDetailPage from "./pages/AdminPages/AdminNotice/AdminNoticeDetailPage";
+import AdminQnaPage from "./pages/AdminPages/AdminQna/AdminQnaPage";
+import AdminQnaDetailPage from "./pages/AdminPages/AdminQna/AdminQnaDetailPage";
+import AdminQnaEditPage from "./pages/AdminPages/AdminQna/AdminQnaEditPage";
+import AdminNewQnaPage from "./pages/AdminPages/AdminQna/AdminNewQnaPage";
+import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditPage";
 
 function App() {
   return (
@@ -42,6 +50,9 @@ function App() {
                 <Route path="/" element={<MainPage />} />
 
                 <Route path="/my" element={<MyPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup/*" element={<SignupPage />} />
+                
                 <Route path="/likes" element={<LikesPage />} />
                 <Route path="/scrap" element={<ScrapPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
@@ -66,18 +77,27 @@ function App() {
 
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+
                 <Route path="/admin/notice" element={<AdminNoticePage />} />
                 <Route path="/admin/notice/new" element={<AdminNewNoticePage />} />
+                <Route path="/admin/notice/edit/:id" element={<AdminNoticeEditPage />} />
+                <Route path="/admin/notice/:id" element={<AdminNoticeDetailPage />} />
+                
+
                 <Route path="/admin/post" element={<AdminPostPage />} />
                 <Route
                   path="/admin/post/:id"
                   element={<AdminPostDetailPage />}
                 />
                 <Route
-                  path="/admin/post/:id/edit"
+                  path="/admin/post/edit/:id"
                   element={<AdminPostEditPage />}
                 />
                 <Route path="/admin/post/new" element={<AdminNewPostPage />} />
+                <Route path="/admin/qna" element={<AdminQnaPage />} />
+                <Route path="/admin/qna/:id" element={<AdminQnaDetailPage />} />
+                <Route path="/admin/qna/edit/:id" element={<AdminQnaEditPage />} />
+                <Route path="/admin/qna/new" element={<AdminNewQnaPage />} />
               </Routes>
             </main>
             <Footer />

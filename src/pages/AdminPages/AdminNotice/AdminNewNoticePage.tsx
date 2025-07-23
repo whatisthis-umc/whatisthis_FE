@@ -1,11 +1,11 @@
-import React from "react";
+
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from 'react-router-dom';
 
 
 
 export default function AdminNewNoticePage() {
-  
+  const navigate = useNavigate();
   return (
     <AdminLayout>
     <div className="absolute top-[230px] left-[377px] w-[1023px] flex flex-col gap-[40px]">
@@ -33,7 +33,7 @@ export default function AdminNewNoticePage() {
 />
       </div>
 
-      {/* 버튼 영역 - 나중에 스타일링 */}
+      
       <div className="flex justify-end gap-[16px]">
         <button className="w-[148px] h-[56px] rounded-full bg-blue-500 text-white"
         onClick={() => navigate('/admin/notice')}>
@@ -41,7 +41,7 @@ export default function AdminNewNoticePage() {
         </button>
         <button className="w-[148px] h-[56px] rounded-full bg-blue-500 text-white">
           저장
-        </button>
+        </button>{/*저장 관련해서..는 구현못함*/}
       </div>
     </div>
     </AdminLayout>
