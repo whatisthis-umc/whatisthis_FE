@@ -28,6 +28,10 @@ import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
 import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
 import TipsDetailPage from "./pages/tips/TipsDetailPage";
 import AdminNewPostPage from "./pages/AdminPages/AdminPost/AdminNewPostPage";
+import AdminReportPage from "./pages/AdminPages/AdminReport/AdminReportPage";
+import AdminReportDetailPage from "./pages/AdminPages/AdminReport/AdminReportDetailPage";
+import AdminInquiryPage from "./pages/AdminPages/AdminInquiry/AdminInquiryPage";
+import AdminInquiryDetailPage from "./pages/AdminPages/AdminInquiry/AdminInquiryDetailPage";
 
 function App() {
   return (
@@ -76,6 +80,10 @@ function App() {
                   element={<AdminPostEditPage />}
                 />
                 <Route path="/admin/post/new" element={<AdminNewPostPage />} />
+                <Route path="/admin/reports" element={<AdminReportPage />} />
+                <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
+                <Route path="/admin/inquiries" element={<AdminInquiryPage />} />
+                <Route path="/admin/inquiries/:id" element={<AdminInquiryDetailPage />} />
               </Routes>
             </main>
             <Footer />
