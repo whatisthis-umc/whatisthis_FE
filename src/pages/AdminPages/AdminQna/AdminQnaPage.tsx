@@ -20,7 +20,8 @@ import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { dummyAdminNotice } from "../../../data/dummyAdminNotice";
+import { dummyQna } from "../../../data/dummyQna";
+
 
 
 export default function AdminNoticePage() {
@@ -30,7 +31,7 @@ export default function AdminNoticePage() {
   const postsPerPage = 5;
 
   // 필터링
-  const filteredPosts = dummyAdminNotice.filter((post) => {
+  const filteredPosts = dummyQna.filter((post) => {
     const categoryMatch =
       selectedCategory === "all" || post.category === selectedCategory;
     const searchMatch = post.title.toLowerCase().includes(search.toLowerCase());
@@ -229,7 +230,7 @@ export default function AdminNoticePage() {
             {paginatedPosts.map((post) => (
               <TableRow
                 key={post.id}
-                onClick={() => navigate(`/admin/notice/${post.id}`)} // ← 이동
+                onClick={() => navigate(`/admin/qna/${post.id}`)} // ← 이동
                 style={{ cursor: "pointer" }}
               >
                 <TableCell>
@@ -310,7 +311,7 @@ export default function AdminNoticePage() {
   }}>
           <Button
             variant="contained"
-            onClick={() => navigate("/admin/notice/new")}
+            onClick={() => navigate("/admin/qna/new")}
             sx={{
       width: '160px',
       height: '54px',
