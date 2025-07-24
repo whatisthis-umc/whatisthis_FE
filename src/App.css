@@ -43,3 +43,20 @@
   color: #888;
 }
 
+.custom-scroll::-webkit-scrollbar {
+  width: 12px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #e6e6e6;
+  border-radius: 100px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #007aff;
+  border-radius: 100px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #0061cc;
+}

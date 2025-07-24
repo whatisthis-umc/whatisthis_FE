@@ -21,7 +21,7 @@ const MainPage = () => {
   };
   const handleNext = () => {
     setCurrentIndex((prev) =>
-      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage),
+      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage)
     );
   };
   const handleSearch = (input: string) => {
@@ -30,7 +30,7 @@ const MainPage = () => {
 
   const visiblePosts = dummyPosts.slice(
     currentIndex,
-    currentIndex + postsPerPage,
+    currentIndex + postsPerPage
   );
   const filteredPosts = keyword
     ? dummyPosts.filter((post) =>
@@ -41,7 +41,7 @@ const MainPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase()),
+          .includes(keyword.toLowerCase())
       )
     : dummyPosts;
 
@@ -102,23 +102,24 @@ const MainPage = () => {
             </div>
           </div>
           {/* 오늘의 생활꿀팁 */}
-          <div className="w-[1392px] h-[475px] mt-36">
-            {/* 제목 + 더보기 버튼 */}
+          <div className="w-full md:w-[1392px] h-[250px] md:h-[475px] mt-15  md:mt-36">
             <div className="flex justify-between h-12 ">
-              <span className="font-[700] text-[32px]">오늘의 생활꿀팁</span>
+              <span className="font-[700] text-[20px] md:text-[32px]">
+                오늘의 생활꿀팁
+              </span>
               <button
                 onClick={() => navigate("/tips")}
-                className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+                className="w-[57px] md:w-[86px] h-[25px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
               >
-                <span className="ml-2">더보기</span>
+                <span className="text-[10px] md:text-[16px] ml-2">더보기</span>
                 <img
                   src={more}
                   alt="더보기"
-                  className="w-[7.4px] h-[12px] mr-2"
+                  className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
                 />
               </button>
             </div>
-            <div className="w-full h-110 flex flex-row gap-20 overflow-x-hidden">
+            <div className="w-full mt-[-15px] md:mt-0 h-110 flex flex-row gap-7 md:gap-20 overflow-x-hidden">
               {dummyPosts.map((post) => (
                 <div
                   key={post.id}
@@ -132,22 +133,24 @@ const MainPage = () => {
           </div>
 
           {/* 오늘의 생활꿀템 */}
-          <div className="w-[1392px] h-[475px] mt-25">
+          <div className="w-full md:w-[1392px] h-[260px] md:h-[475px] mt-15 md:mt-36">
             <div className="flex justify-between h-12 ">
-              <span className="font-[700] text-[32px]">오늘의 생활꿀템</span>
+              <span className="font-[700] text-[20px] md:text-[32px]">
+                오늘의 생활꿀템
+              </span>
               <button
                 onClick={() => navigate("/items")}
-                className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+                className="w-[57px] md:w-[86px] h-[25px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
               >
-                <span className="ml-2">더보기</span>
+                <span className="text-[10px] md:text-[16px] ml-2">더보기</span>
                 <img
                   src={more}
                   alt="더보기"
-                  className="w-[7.4px] h-[12px] mr-2"
+                  className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
                 />
               </button>
             </div>
-            <div className="w-full h-110 flex flex-row gap-20 overflow-x-hidden">
+            <div className="w-full mt-[-15px] md:mt-0 h-110 flex flex-row gap-7 md:gap-20 overflow-x-hidden">
               {dummyPosts.map((post) => (
                 <div
                   key={post.id}
@@ -161,22 +164,24 @@ const MainPage = () => {
           </div>
 
           {/* 인기 커뮤니티 글 */}
-          <div className="w-[1392px] h-[475px] mt-25">
-            <div className="flex justify-between h-12 ">
-              <span className="font-[700] text-[32px]">인기 커뮤니티 글</span>
+          <div className="w-full md:w-[1392px] h-[260px] md:h-[475px] mt-15 md:mt-36">
+            <div className="flex justify-between h-12">
+              <span className="font-[700] text-[20px] md:text-[32px]">
+                인기 커뮤니티 글
+              </span>
               <button
                 onClick={() => navigate("/community")}
-                className="w-[86px] h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+                className="w-[57px] md:w-[86px] h-[25px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
               >
-                <span className="ml-2">더보기</span>
+                <span className="text-[10px] md:text-[16px] ml-2">더보기</span>
                 <img
                   src={more}
                   alt="더보기"
-                  className="w-[7.4px] h-[12px] mr-2"
+                  className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
                 />
               </button>
             </div>
-            <div className="w-full h-110 flex flex-row gap-20 overflow-x-hidden">
+            <div className="w-full mt-[-40px] md:mt-0 h-110 flex flex-row gap-5 md:gap-20 overflow-x-hidden">
               {dummyPosts2.map((post, index) => (
                 <CommunityCard key={index} {...post} best={true} />
               ))}
