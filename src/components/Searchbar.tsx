@@ -1,11 +1,11 @@
 import React from "react";
-import { search } from "../assets";
-import { arrowDownIcon } from "../assets";
+import { search, arrowDownIcon } from "../assets";
 import { useState } from "react";
 
 const Searchbar = ({ onSearch }: { onSearch: (keyword: string) => void }) => {
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const handleSearch = () => {
     onSearch(input);
   };
@@ -20,30 +20,56 @@ const Searchbar = ({ onSearch }: { onSearch: (keyword: string) => void }) => {
   ];
 
   return (
-    <div className="relative w-[240px] ml-auto mt-4">
-      <div className="flex w-full h-[40px] border-b border-[#333333]">
-        <div className="w-[152px] text-start ">
+    <div className="relative w-[40px] md:w-[240px] ml-auto mt-4">
+      <div className="flex w-full h-[40px] md:border-b md:border-[#333333] relative">
+        {/*모바일용 검색창*/}
+        {isSearchOpen && (
           <input
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="1. 인기검색어"
+            placeholder="검색어 입력"
+            className="absolute right-4 top-0 w-[100px] h-[30px] px-2 text-sm text-black placeholder-gray-400  border-b border-b-gray-300 z-20 md:hidden"
+            autoFocus
           />
-        </div>
-        <img
-          src={arrowDownIcon}
-          alt="보기"
-          className="w-[24px] h-[24px] cursor-pointer ml-auto"
-          onClick={() => setIsOpen(!isOpen)}
-        />
+        )}
+        {!isSearchOpen && (
+          <div className="hidden md:block w-[152px] md:text-start ">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="1. 인기검색어"
+              className="placeholder:invisible md:placeholder:visible"
+            />
+          </div>
+        )}
+        {!isSearchOpen && (
+          <img
+            src={arrowDownIcon}
+            alt="보기"
+            className="hidden md:inline-block w-[24px] h-[24px] md:cursor-pointer md:ml-auto"
+            onClick={() => setIsOpen(!isOpen)}
+          />
+        )}
         <img
           src={search}
           alt="검색"
-          onClick={handleSearch}
-          className="w-[24px] h-[24px] ml-auto cursor-pointer"
+          onClick={() => {
+            if (window.innerWidth < 768) {
+              if (isSearchOpen) {
+                handleSearch(); // 검색창 열려 있을 때는 검색 실행
+              } else {
+                setIsSearchOpen(true); // 닫혀 있을 때는 검색창 열기
+              }
+            } else {
+              handleSearch(); // PC에서는 바로 검색
+            }
+          }}
+          className="w-6 md:w-[24px] h-6 md:h-[24px] ml-auto cursor-pointer z-30"
         />
       </div>
       {/*인기검색어 목록*/}
-      {isOpen && (
+      {isOpen && !isSearchOpen && (
         <ul className="absolute flex flex-col items-start text-left bg-white text-[#999999] border-[#E6E6E6] border-t-white w-full shadow z-10">
           {keywords.map((word, index) => (
             <li

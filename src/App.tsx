@@ -48,11 +48,11 @@ function App() {
             <main className="flex-grow pb-[1300px]">
               <Routes>
                 <Route path="/" element={<MainPage />} />
-
+                <Route path="/search" element={<MainPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup/*" element={<SignupPage />} />
-                
+
                 <Route path="/likes" element={<LikesPage />} />
                 <Route path="/scrap" element={<ScrapPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
@@ -79,10 +79,18 @@ function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
 
                 <Route path="/admin/notice" element={<AdminNoticePage />} />
-                <Route path="/admin/notice/new" element={<AdminNewNoticePage />} />
-                <Route path="/admin/notice/edit/:id" element={<AdminNoticeEditPage />} />
-                <Route path="/admin/notice/:id" element={<AdminNoticeDetailPage />} />
-                
+                <Route
+                  path="/admin/notice/new"
+                  element={<AdminNewNoticePage />}
+                />
+                <Route
+                  path="/admin/notice/edit/:id"
+                  element={<AdminNoticeEditPage />}
+                />
+                <Route
+                  path="/admin/notice/:id"
+                  element={<AdminNoticeDetailPage />}
+                />
 
                 <Route path="/admin/post" element={<AdminPostPage />} />
                 <Route
@@ -96,7 +104,10 @@ function App() {
                 <Route path="/admin/post/new" element={<AdminNewPostPage />} />
                 <Route path="/admin/qna" element={<AdminQnaPage />} />
                 <Route path="/admin/qna/:id" element={<AdminQnaDetailPage />} />
-                <Route path="/admin/qna/edit/:id" element={<AdminQnaEditPage />} />
+                <Route
+                  path="/admin/qna/edit/:id"
+                  element={<AdminQnaEditPage />}
+                />
                 <Route path="/admin/qna/new" element={<AdminNewQnaPage />} />
               </Routes>
             </main>
