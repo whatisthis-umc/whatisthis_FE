@@ -1,28 +1,29 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { profile } from "../assets";
-import { favorite } from "../assets";
-import { bookmark } from "../assets";
-
-import logo from "/src/assets/logo.png";
+import { profile, favorite, bookmark, logo } from "../assets";
+import Searchbar from "./Searchbar";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const isAdmin =
     location.pathname.startsWith("/admin") ||
     location.pathname === "/adminlogin"; //admin관리자 부분은 navbar 숨겨야해서
   const currentPath = location.pathname;
+  const handleSearch = (input: string) => {
+    navigate(`/search?keyword=${encodeURIComponent(input)}`);
+  };
 
   const getButton = (path: string) => {
     const isActive = currentPath.startsWith(path);
-    return `text-xl w-[116px] h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
+    return `text-sm sm:text-lg md:text-xl w-[80px] sm:w-[100px] md:w-[116px] h-[36px] sm:h-[45px] md:h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
     ${isActive ? "bg-black text-white" : "bg-white text-black"}`;
   };
-  if (isAdmin) return null; //admin 관리자 부분 은 navbar 적용 안해야함
+  if (isAdmin) return null; //admin 관리자 부분은 navbar 적용 안해야함
   return (
     <div className="sticky w-full">
-      <div className="flex justify-end w-full gap-3">
+      <div className="hidden sm:flex justify-end w-full gap-3">
         <button className="cursor-pointer" onClick={() => navigate("/login")}>
           로그인/회원가입
         </button>
@@ -33,64 +34,89 @@ const Navbar = () => {
           고객센터
         </button>
       </div>
-      <div className="flex justify-between items-center w-full py-2 mt-2">
+      {/*모바일*/}
+      <div className="flex items-center justify-between mt-1 px-4 py-2 md:hidden">
         <img
           src={logo}
           alt="로고"
-          className="w-[72px] h-[36px] ml-15 cursor-pointer"
+          className="w-[49px] h-[24px] cursor-pointer"
           onClick={() => navigate("/")}
-        ></img>
+        />
+        <div className="flex items-center gap-4">
+          <Searchbar onSearch={handleSearch} />
+          <img
+            src={profile}
+            className="w-9 h-9 cursor-pointer"
+            onClick={() => navigate("/my")}
+          />
+        </div>
+      </div>
+      <div className="flex justify-center  gap-0 md:hidden mt-1 px-2">
+        <button
+          className={getButton("/tips")}
+          onClick={() => navigate("/tips")}
+        >
+          생활꿀팁
+        </button>
+        <button
+          className={getButton("/items")}
+          onClick={() => navigate("/items")}
+        >
+          생활꿀템
+        </button>
+        <button
+          className={getButton("/community")}
+          onClick={() => navigate("/community")}
+        >
+          커뮤니티
+        </button>
+      </div>
 
-        <div className="flex gap-3 justify-center items-center">
+      {/*PC*/}
+      <div className="hidden md:flex items-center justify-between px-6 py-3 relative w-full">
+        <div className="flex items-center">
+          <img
+            src={logo}
+            alt="로고"
+            className="w-[72px] h-[36px] cursor-pointer"
+            onClick={() => navigate("/")}
+          />
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 flex gap-6">
           <button
             className={getButton("/tips")}
-            onClick={() => {
-              navigate("/tips");
-            }}
+            onClick={() => navigate("/tips")}
           >
             생활꿀팁
           </button>
           <button
             className={getButton("/items")}
-            onClick={() => {
-              navigate("/items");
-            }}
+            onClick={() => navigate("/items")}
           >
             생활꿀템
           </button>
           <button
             className={getButton("/community")}
-            onClick={() => {
-              navigate("/community");
-            }}
+            onClick={() => navigate("/community")}
           >
             커뮤니티
           </button>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex items-center gap-3">
           <img
             src={profile}
-            alt="프로필"
             className="w-14 h-14 cursor-pointer"
-            onClick={() => {
-              navigate("/my");
-            }}
+            onClick={() => navigate("/my")}
           />
           <img
             src={favorite}
-            alt="좋아요"
             className="w-14 h-14 cursor-pointer"
-            onClick={() => {
-              navigate("/likes");
-            }}
+            onClick={() => navigate("/likes")}
           />
           <img
             src={bookmark}
-            alt="스크랩"
             className="w-14 h-14 cursor-pointer"
-            onClick={() => {
-              navigate("/scrap");
-            }}
+            onClick={() => navigate("/scrap")}
           />
         </div>
       </div>
