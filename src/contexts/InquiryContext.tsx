@@ -10,11 +10,12 @@ export interface InquiryItem {
   date: string;
   isPublic: boolean;
   authorId: number; // 작성자 ID
+  type: "post" | "comment"; // 게시물 또는 댓글 문의
 }
 
 interface InquiryContextType {
   inquiries: InquiryItem[];
-  addInquiry: (inquiry: Omit<InquiryItem, 'id' | 'status' | 'date'>) => void;
+  addInquiry: (inquiry: Omit<InquiryItem, 'id' | 'status' | 'date' | 'type'> & { type?: "post" | "comment" }) => void;
   updateInquiry: (id: number, inquiry: Partial<InquiryItem>) => void;
 }
 
@@ -42,16 +43,18 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "미답변",
       date: "2024.01.15",
       isPublic: true,
-      authorId: 1001
+      authorId: 1001,
+      type: "post"
     },
     {
       id: 2,
       title: "배송 관련 문의 문의드립니다.",
       content: "배송이 언제 될까요?",
-      status: "미답변", 
+      status: "미답변",
       date: "2024.01.14",
       isPublic: true,
-      authorId: 999
+      authorId: 999,
+      type: "comment"
     },
     {
       id: 3,
@@ -61,7 +64,8 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "답변완료",
       date: "2024.01.13",
       isPublic: false,
-      authorId: 1002
+      authorId: 1002,
+      type: "post"
     },
     {
       id: 4,
@@ -71,7 +75,8 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "답변완료",
       date: "2024.01.12",
       isPublic: true,
-      authorId: 1003
+      authorId: 1003,
+      type: "comment"
     },
     {
       id: 5,
@@ -80,7 +85,8 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "미답변",
       date: "2024.01.11",
       isPublic: true,
-      authorId: 999
+      authorId: 999,
+      type: "post"
     },
     {
       id: 6,
@@ -89,7 +95,8 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "미답변",
       date: "2024.01.10",
       isPublic: false,
-      authorId: 1004
+      authorId: 1004,
+      type: "comment"
     },
     {
       id: 7,
@@ -98,26 +105,28 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       status: "미답변",
       date: "2024.01.09",
       isPublic: true,
-      authorId: 1005
+      authorId: 1005,
+      type: "post"
     }
   ]);
 
-  const addInquiry = (newInquiry: Omit<InquiryItem, 'id' | 'status' | 'date'>) => {
+  const addInquiry = (newInquiry: Omit<InquiryItem, 'id' | 'status' | 'date' | 'type'> & { type?: "post" | "comment" }) => {
     const today = new Date();
     const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
-    
+
     const inquiry: InquiryItem = {
       ...newInquiry,
       id: Math.max(...inquiries.map(i => i.id), 0) + 1,
       status: "미답변",
-      date: formattedDate
+      date: formattedDate,
+      type: newInquiry.type || "post" // 기본값은 게시물
     };
 
     setInquiries(prev => [inquiry, ...prev]); // 새로운 문의를 맨 앞에 추가
   };
 
   const updateInquiry = (id: number, updatedInquiry: Partial<InquiryItem>) => {
-    setInquiries(prev => prev.map(inquiry => 
+    setInquiries(prev => prev.map(inquiry =>
       inquiry.id === id ? { ...inquiry, ...updatedInquiry } : inquiry
     ));
   };

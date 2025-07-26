@@ -47,7 +47,7 @@ export default function AdminPostPage() {
     setCurrentPage(1); // 검색 시 첫 페이지로
   };
   //삭제
-  const handleDelete = (id: number) => {
+  const handleDelete = (/* id: number */) => {
     const confirmed = window.confirm("정말 삭제하시겠습니까?");
     if (confirmed) {
       alert("삭제 처리되었습니다.");

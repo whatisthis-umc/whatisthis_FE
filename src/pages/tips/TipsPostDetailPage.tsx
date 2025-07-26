@@ -38,15 +38,15 @@ const TipsPostDetailPage = () => {
   };
   const searchfilteredPosts = keyword
     ? dummyPosts.filter((post) =>
-        [
-          post.title,
-          post.description,
-          ...(Array.isArray(post.hashtag) ? post.hashtag : [post.hashtag]),
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword.toLowerCase())
-      )
+      [
+        post.title,
+        post.description,
+        ...(Array.isArray(post.hashtag) ? post.hashtag : [post.hashtag]),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword.toLowerCase())
+    )
     : dummyPosts;
 
   return (
@@ -95,11 +95,10 @@ const TipsPostDetailPage = () => {
                     <div
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-4 h-4 rounded-4xl cursor-pointer ${
-                        currentImageIndex === idx
+                      className={`w-4 h-4 rounded-4xl cursor-pointer ${currentImageIndex === idx
                           ? "bg-[#0080FF]"
                           : "bg-gray-400"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
