@@ -11,10 +11,10 @@ export default function AdminReportDetailPage() {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  
+
   const report = dummyReports.find(r => r.id === Number(id));
   const post = report ? dummyPosts.find(p => p.id === report.postId) : null;
-  
+
   if (!report) {
     return (
       <AdminLayout>
@@ -86,7 +86,7 @@ export default function AdminReportDetailPage() {
           </table>
         </Box>
 
-                {/* 메인 컨텐츠 영역 */}
+        {/* 메인 컨텐츠 영역 */}
         {report.category === 'comment' ? (
           /* 댓글 신고의 경우 */
           <Box className="mb-8">
@@ -101,7 +101,7 @@ export default function AdminReportDetailPage() {
                   <p className="text-gray-700 leading-relaxed mb-3">
                     {report.reportedContent || '나쁜 유품인 정말다애나 감사합니다.'}
                   </p>
-                  
+
                   {/* 댓글 메타 정보 */}
                   <Box className="flex items-center text-xs text-gray-500 gap-4">
                     <span>14시간</span>
@@ -115,7 +115,7 @@ export default function AdminReportDetailPage() {
                     </Box>
                   </Box>
                 </Box>
-                
+
                 {/* 신고 아이콘 */}
                 <Box className="ml-4">
                   <span className="text-red-500">🚨</span>
@@ -134,10 +134,10 @@ export default function AdminReportDetailPage() {
                     <div className="text-4xl mb-2">📄</div>
                     <div className="text-lg">신고된 게시글 내용</div>
                   </div>
-                  
+
                   <Box className="bg-white rounded-lg p-6 shadow-sm">
                     <h3 className="text-lg font-bold mb-4 text-black">{post.title}</h3>
-                    
+
                     <div className="text-sm text-gray-800 mb-4 whitespace-pre-line leading-relaxed">
                       {post.content}
                     </div>
@@ -177,28 +177,28 @@ export default function AdminReportDetailPage() {
             <Box className="w-80">
               <Box className="bg-white border rounded-lg p-6">
                 <h3 className="text-lg font-bold mb-4">{post.title}</h3>
-                
+
                 <Box className="space-y-4 text-sm">
                   <Box>
                     <div className="text-gray-600 mb-1">작성자</div>
                     <div className="font-medium">{post.authorNickname}({post.author})</div>
                   </Box>
-                  
+
                   <Box>
                     <div className="text-gray-600 mb-1">작성일시</div>
                     <div>{post.createdAt}</div>
                   </Box>
-                  
+
                   <Box>
                     <div className="text-gray-600 mb-1">조회수</div>
                     <div>{post.views.toLocaleString()}</div>
                   </Box>
-                  
+
                   <Box>
                     <div className="text-gray-600 mb-1">좋아요</div>
                     <div>{post.likes}</div>
                   </Box>
-                  
+
                   <Box>
                     <div className="text-gray-600 mb-1">댓글</div>
                     <div>{post.comments}</div>
@@ -268,7 +268,7 @@ export default function AdminReportDetailPage() {
             </Button>
           </Box>
         )}
-        
+
         {report.status === 'processed' && (
           <Box className="flex justify-center">
             <span className="bg-blue-500 text-white px-6 py-2 rounded-lg">

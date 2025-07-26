@@ -50,7 +50,7 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
       id: 2,
       title: "배송 관련 문의 문의드립니다.",
       content: "배송이 언제 될까요?",
-      status: "미답변", 
+      status: "미답변",
       date: "2024.01.14",
       isPublic: true,
       authorId: 999,
@@ -113,7 +113,7 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
   const addInquiry = (newInquiry: Omit<InquiryItem, 'id' | 'status' | 'date' | 'type'> & { type?: "post" | "comment" }) => {
     const today = new Date();
     const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
-    
+
     const inquiry: InquiryItem = {
       ...newInquiry,
       id: Math.max(...inquiries.map(i => i.id), 0) + 1,
@@ -126,7 +126,7 @@ export const InquiryProvider: React.FC<InquiryProviderProps> = ({ children }) =>
   };
 
   const updateInquiry = (id: number, updatedInquiry: Partial<InquiryItem>) => {
-    setInquiries(prev => prev.map(inquiry => 
+    setInquiries(prev => prev.map(inquiry =>
       inquiry.id === id ? { ...inquiry, ...updatedInquiry } : inquiry
     ));
   };

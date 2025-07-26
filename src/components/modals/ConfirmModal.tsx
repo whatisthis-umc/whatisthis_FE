@@ -36,7 +36,7 @@ export default function ConfirmModal({ open, onClose, message }: ConfirmModalPro
         <Box className="text-lg font-medium text-gray-800">
           {message}
         </Box>
-        
+
         <Button
           onClick={onClose}
           sx={{

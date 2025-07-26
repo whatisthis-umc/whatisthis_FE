@@ -33,11 +33,11 @@ export default function AdminInquiryDetailPage() {
       return;
     }
 
-    updateInquiry(inquiry.id, { 
+    updateInquiry(inquiry.id, {
       answer: answerText,
       status: "답변완료"
     });
-    
+
     setModalMessage("답변이 등록되었습니다.");
     setModalOpen(true);
   };
@@ -66,7 +66,7 @@ export default function AdminInquiryDetailPage() {
               <span className="text-lg font-bold text-gray-700 bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center mr-3">
                 Q
               </span>
-                             <h3 className="text-lg font-medium text-gray-800">{inquiry.title}</h3>
+              <h3 className="text-lg font-medium text-gray-800">{inquiry.title}</h3>
             </Box>
             <Box className="ml-11">
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -114,7 +114,7 @@ export default function AdminInquiryDetailPage() {
                 />
               )}
             </Box>
-            
+
             {/* 등록 버튼 - 우측 하단에 고정 */}
             {(!inquiry.answer || showAnswerForm) && (
               <Box className="absolute bottom-4 right-4">
