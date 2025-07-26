@@ -13,26 +13,49 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <div className="w-[200px] px-6 pt-8 pb-4 bg-white flex flex-col gap-4">
+    <div className="w-[200px] px-6 pt-8 pb-4 bg-white flex flex-col items-start gap-4 font-[Pretendard]">
       {/* 관리자 모드 pill */}
-      <div className="border border-gray-400 rounded-full text-sm px-3 py-1 w-fit mx-auto">
+      <div
+        className="rounded-[19px] border border-[#8E9BAA] w-[134px] h-[38px]
+                   flex justify-center items-center text-[#333333]"
+        style={{
+          fontSize: "20px",
+          fontWeight: 500,
+          lineHeight: "150%",
+          letterSpacing: "-0.02em",
+          
+        }}
+      >
         관리자 모드
       </div>
 
       {/* 메뉴 리스트 */}
-      <div className="flex flex-col gap-4 mt-4 text-[18px] font-medium">
+      <div className="flex flex-col gap-2 mt-4">
         {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path); //시작경로 일치하면 사이드바 메뉴 활성화되게 수정했어요
+          const isActive = location.pathname.startsWith(item.path);
 
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`transition-all duration-200 px-4 py-2 ${
-                isActive
-                  ? "bg-zinc-800 text-white rounded-full mx-auto"
-                  : "text-black text-left"
-              }`}
+              className={`rounded-[32px] transition-all duration-200 text-[20px] font-medium leading-[150%]
+                          px-6 py-3 text-[#333333] tracking-[-0.02em] text-left
+                          ${
+                            isActive
+                              ? "bg-[#333333] text-white"
+                              : "bg-white hover:bg-[#F5F5F5]"
+                          }`}
+              style={{
+                
+                fontFamily: "Pretendard",
+                fontSize: "20px",
+                fontWeight: 500,
+                lineHeight: "150%",
+                letterSpacing: "-0.02em",
+                whiteSpace: "nowrap",
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+              }}
             >
               {item.label}
             </button>

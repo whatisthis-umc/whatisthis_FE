@@ -8,7 +8,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Button,
   InputBase,
   Paper,
   IconButton,

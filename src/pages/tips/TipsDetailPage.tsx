@@ -6,8 +6,8 @@ import { tipCategories } from "../../data/categoryList";
 import ItemCard from "../../components/ItemCard";
 import { useNavigate } from "react-router-dom";
 import { dummyPosts } from "../../data/dummyPosts";
-import backward from "/src/assets/backward.png";
-import forward from "/src/assets/forward.png";
+import { backward } from "../../assets";
+import { forward } from "../../assets";
 import SortDropdown from "../../components/common/SortDropdown";
 
 const TipsDetailPage = () => {
@@ -85,7 +85,7 @@ const TipsDetailPage = () => {
       ) : (
         <>
           <div className="flex justify-end px-4 mt-6 pt-10">
-            <SortDropdown sortType={sortType} setSortType={setSortType} />
+            <SortDropdown onChange={setSortType} defaultValue={sortType} />
           </div>
           <div className="w-full grid grid-cols-5 gap-8 pt-5">
             {paginatedPosts.map((post) => (

@@ -1,8 +1,8 @@
 import React from "react";
 import { useState } from "react";
-import reportIcon from "../../assets/report.png";
-import checkCircle from "../../assets/check_circle.png";
-import checkedCircle from "../../assets/checked_circle.png";
+import { reportIcon } from "../../assets";
+import { checkCircle } from "../../assets";
+import { checkedCircle } from "../../assets";
 
 interface ReportModalProps {
   onClose: () => void;

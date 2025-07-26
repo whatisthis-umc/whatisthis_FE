@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
-import photo from "/src/assets/add_photo.png";
-import cancel from "/src/assets/cancel.png";
+import { addPhotoIcon } from "../../../assets";
+import { cancelIcon } from "../../../assets";
 import add from "/src/assets/add.png";
 
 const AdminNewPostPage = () => {
@@ -13,7 +13,7 @@ const AdminNewPostPage = () => {
   const [content1, setContent1] = useState("");
   const [content2, setContent2] = useState("");
   const [tagInputs, setTagInputs] = useState([""]);
-  const [tags, setTags] = useState<string[]>([]);
+  const [, setTags] = useState<string[]>([]);
   const subCategoryMap: { [key: string]: string[] } = {
     생활꿀팁: [
       "조리/주방",
@@ -101,7 +101,7 @@ const AdminNewPostPage = () => {
               htmlFor="imageUpload"
               className="mt-4 gap-3 w-[500px] h-[54px] rounded-4xl flex justify-center items-center bg-[#0080FF] text-white text-[20px] cursor-pointer "
             >
-              <img src={photo}></img>
+              <img src={addPhotoIcon}></img>
               파일에서 업로드
             </label>
             <input
@@ -187,7 +187,7 @@ const AdminNewPostPage = () => {
                   onClick={() => handleRemoveTagInput(idx)}
                   className="text-gray-600 hover:text-black"
                 >
-                  <img src={cancel} className="w-[16px] h-[16px]"></img>
+                  <img src={cancelIcon} className="w-[16px] h-[16px]"></img>
                 </button>
               </div>
             ))}

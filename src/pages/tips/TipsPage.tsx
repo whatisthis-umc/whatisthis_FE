@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Searchbar from "../../components/Searchbar";
-import more from "/src/assets/more.png";
+import { more } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import { dummyPosts } from "../../data/dummyPosts";
 import type { ItemCardProps } from "../../types/post";
