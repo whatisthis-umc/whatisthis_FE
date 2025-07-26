@@ -4,12 +4,16 @@ import { eye } from "../assets";
 import { scrap } from "../assets";
 
 const ItemCard = ({
+  // id,
+  // category,
   hashtag,
   imageUrl,
   title,
   description,
   views,
   scraps,
+  // date,
+  // type,
 }: ItemCardProps) => {
   const firstImage =
     typeof imageUrl === "string" ? imageUrl : imageUrl[0] || "";

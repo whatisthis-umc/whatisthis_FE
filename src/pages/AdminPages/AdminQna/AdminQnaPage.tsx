@@ -25,7 +25,7 @@ import { dummyQna } from "../../../data/dummyQna";
 
 
 export default function AdminNoticePage() {
-  const [selectedCategory] = useState("all");
+  const [selectedCategory /*, setSelectedCategory */] = useState("all");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 5;
@@ -50,7 +50,7 @@ export default function AdminNoticePage() {
     setCurrentPage(1); // 검색 시 첫 페이지로
   };
   //삭제
-  const handleDelete = () => {
+  const handleDelete = (/* id: number */) => {
     const confirmed = window.confirm("정말 삭제하시겠습니까?");
     if (confirmed) {
       alert("삭제 처리되었습니다.");
