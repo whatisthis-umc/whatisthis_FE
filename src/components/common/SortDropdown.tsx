@@ -27,7 +27,7 @@ const SortDropdown = ({
   return (
     <div className="relative inline-block text-left">
       <div
-        className="flex items-center border border-[#999999] rounded-[32px] px-3 py-2 gap-1 text-sm text-[#333] cursor-pointer"
+        className="flex items-center border border-[#999999] rounded-[32px] px-2 md:px-3 py-1 md:py-2 gap-1 text-[12px] md:text-sm text-[#333] cursor-pointer"
         onClick={() => setOpen(!open)}
       >
         {selected}
@@ -39,10 +39,10 @@ const SortDropdown = ({
       </div>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[80px] bg-white border border-[#E6E6E6] rounded-[8px] shadow-md z-10">
+        <div className="absolute right-0 mt-2 w-full md:w-[80px] bg-white border border-[#E6E6E6] rounded-[8px] shadow-md z-10 ">
           <div
             onClick={() => handleSelect("인기순")}
-            className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
+            className={`px-3 py-2 md:text-sm cursor-pointer hover:bg-[#F5F5F5] text-[12px] ${
               selected === "인기순" ? "text-[#0080FF]" : "text-[#333]"
             }
             `}
@@ -51,7 +51,7 @@ const SortDropdown = ({
           </div>
           <div
             onClick={() => handleSelect("최신순")}
-            className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#F5F5F5] ${
+            className={`px-3 py-2 md:text-sm cursor-pointer hover:bg-[#F5F5F5] text-[12px] ${
               selected === "최신순" ? "text-[#0080FF]" : "text-[#333]"
             }
             `}
