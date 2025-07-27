@@ -21,7 +21,7 @@ const MainPage = () => {
   };
   const handleNext = () => {
     setCurrentIndex((prev) =>
-      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage)
+      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage),
     );
   };
   const handleSearch = (input: string) => {
@@ -30,7 +30,7 @@ const MainPage = () => {
 
   const visiblePosts = dummyPosts.slice(
     currentIndex,
-    currentIndex + postsPerPage
+    currentIndex + postsPerPage,
   );
   const filteredPosts = keyword
     ? dummyPosts.filter((post) =>
@@ -41,7 +41,7 @@ const MainPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       )
     : dummyPosts;
 
@@ -53,9 +53,14 @@ const MainPage = () => {
       {keyword ? (
         // 검색 결과 화면
         <div className="mt-10 px-8">
-          <h2 className="text-[24px] font-bold mb-4">검색 결과</h2>
+          <h2 className="text-[20px] md:text-[24px] font-bold mb-2 md:mb-4">
+            <span className="inline-block bg-[#F5FFCC] rounded-2xl px-2">
+              {keyword}
+            </span>
+            에 대한 검색 결과
+          </h2>
           {filteredPosts.length > 0 ? (
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-1 md:gap-6">
               {filteredPosts.map((post) => (
                 <div
                   key={post.id}
@@ -72,21 +77,21 @@ const MainPage = () => {
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center w-full mt-27 sm:mt-17 md:mt-27 h-[149px] sm:h-[280px] md:h-[430px]">
+          <div className="flex justify-between items-center w-full mt-18 sm:mt-17 md:mt-27 h-[149px] sm:h-[280px] md:h-[430px]">
             <div>
               <img
                 src={left}
                 alt="왼쪽 화살표"
-                className="w-8 h-8 ml-10 mr-5 cursor-pointer"
+                className="w-6 h-6 md:w-8 md:h-8 ml-5 mr-5 cursor-pointer"
                 onClick={handlePrev}
               />
             </div>
-            <div className="flex w-[320px] sm:w-[700px] md:w-[1218px] h-[435px] rounded-4xl bg-[#E6E6E6] gap-4 overflow-hidden">
+            <div className="flex w-85 sm:w-[700px] md:w-[1218px] h-[250px] md:h-[435px] rounded-4xl bg-[#E6E6E6] gap-4 sm:gap-12 md:gap-21 overflow-hidden">
               {visiblePosts.map((post) => (
                 <div
                   key={post.id}
                   onClick={() => navigate(`/items/${post.id}`)}
-                  className="cursor-pointer flex-shrink-0 w-[120px] sm:w-[150px] md:w-[230px]"
+                  className="cursor-pointer flex-shrink-0 w-28 sm:w-[150px] md:w-[230px]"
                 >
                   <ItemCard {...post} />
                 </div>
@@ -96,13 +101,13 @@ const MainPage = () => {
               <img
                 src={right}
                 alt="오른쪽 화살표"
-                className="w-8 h-8 mr-5 ml-5 cursor-pointer"
+                className="w-6 h-6 md:w-8 md:h-8 mr-5 ml-5 cursor-pointer"
                 onClick={handleNext}
               />
             </div>
           </div>
           {/* 오늘의 생활꿀팁 */}
-          <div className="w-full md:w-[1392px] h-[250px] md:h-[475px] mt-15  md:mt-36">
+          <div className="w-full md:w-[1392px] h-[250px] md:h-[475px] mt-20  md:mt-36">
             <div className="flex justify-between h-12 ">
               <span className="font-[700] text-[20px] md:text-[32px]">
                 오늘의 생활꿀팁

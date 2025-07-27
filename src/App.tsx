@@ -48,7 +48,7 @@ function App() {
         <div className="min-h-screen flex flex-col">
           <div className="w-full max-w-[1440px] px-4 mx-auto flex flex-col flex-grow">
             <Navbar />
-            <main className="flex-grow pb-[1300px]">
+            <main className="flex-grow pb-60">
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/search" element={<MainPage />} />

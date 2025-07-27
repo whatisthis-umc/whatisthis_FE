@@ -22,7 +22,7 @@ const TipsDetailPage = () => {
     selectedCategory === "전체"
       ? dummyPosts.filter((post) => post.type === "tips")
       : dummyPosts.filter(
-          (post) => post.type === "tips" && post.category === selectedCategory
+          (post) => post.type === "tips" && post.category === selectedCategory,
         );
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortType === "인기순") return b.views - a.views;
@@ -33,7 +33,7 @@ const TipsDetailPage = () => {
   const startIndex = (currentPage - 1) * postsPerPage;
   const paginatedPosts = sortedPosts.slice(
     startIndex,
-    startIndex + postsPerPage
+    startIndex + postsPerPage,
   );
   const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
 
@@ -49,7 +49,7 @@ const TipsDetailPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       )
     : dummyPosts;
   return (
@@ -60,14 +60,21 @@ const TipsDetailPage = () => {
           selected={selectedCategory}
           onSelect={setSelectedCategory}
         />
-        <Searchbar onSearch={handleSearch} />
+        <div className="hidden md:w-full md:max-w-[1440px]  md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+          <Searchbar onSearch={handleSearch} />
+        </div>
       </div>
       {keyword ? (
         // 검색 결과 화면
         <div className="mt-10 px-8">
-          <h2 className="text-[24px] font-bold mb-4">검색 결과</h2>
+          <h2 className="text-[20px] md:text-[24px] font-bold mb-2 md:mb-4">
+            <span className="inline-block bg-[#F5FFCC] rounded-2xl px-2">
+              {keyword}
+            </span>
+            에 대한 검색 결과
+          </h2>
           {filteredPosts.length > 0 ? (
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-1 md:gap-6">
               {searchfilteredPosts.map((post) => (
                 <div
                   key={post.id}
@@ -84,10 +91,10 @@ const TipsDetailPage = () => {
         </div>
       ) : (
         <>
-          <div className="flex justify-end px-4 mt-6 pt-10">
+          <div className="flex justify-end px-4 mt-4 md:mt-6 pt-5 md:pt-10">
             <SortDropdown onChange={setSortType} defaultValue={sortType} />
           </div>
-          <div className="w-full grid grid-cols-5 gap-8 pt-5">
+          <div className="w-full grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-5 md:gap-8 pt-3 md:pt-5">
             {paginatedPosts.map((post) => (
               <div
                 key={post.id}
@@ -99,7 +106,7 @@ const TipsDetailPage = () => {
             ))}
           </div>
           {/*페이지네이션*/}
-          <div className=" flex justify-center items-center mt-30 mb-20 gap-2">
+          <div className="flex justify-center items-center mt-15 md:mt-30 mb-20 gap-2">
             <img
               src={backward}
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -109,7 +116,7 @@ const TipsDetailPage = () => {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-full text-sm font-medium flex items-center justify-center transition cursor-pointer ${
+                className={`w-7 md:w-8 h-7 md:h-8 rounded-full text-[12px] md:text-sm font-medium flex items-center justify-center transition cursor-pointer ${
                   page === currentPage
                     ? "bg-blue-500 text-white"
                     : "text-gray-500 hover:text-black"
