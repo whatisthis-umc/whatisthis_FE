@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
-import { useInquiry } from "../../contexts/InquiryContext";
+import { useInquiry, type InquiryItem } from "../../contexts/InquiryContext";
+import lockIcon from "../../assets/lock.svg";
+import writingIcon from "../../assets/writing.svg";
 
 const InquiryPage = () => {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ const InquiryPage = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [showPrivateModal, setShowPrivateModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
   const itemsPerPage = 5;
   const { inquiries } = useInquiry();
 
@@ -31,7 +34,7 @@ const InquiryPage = () => {
     navigate("/customer/inquiry/write");
   };
 
-  const handleItemClick = (item: any) => {
+  const handleItemClick = (item: InquiryItem) => {
     // 비공개 글인 경우
     if (!item.isPublic) {
       // 로그인하지 않은 상태
@@ -45,7 +48,7 @@ const InquiryPage = () => {
         return;
       }
     }
-    
+
     // 공개 글이거나 작성자 본인인 경우 아코디언 토글
     toggleExpand(item.id);
   };
@@ -74,152 +77,279 @@ const InquiryPage = () => {
       <div className="w-full pb-8">
         {/* 검색바 */}
         <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
-          <Searchbar />
+          <Searchbar
+            onSearch={(keyword: string) => {
+              // 검색 기능 구현 필요시 여기에 추가
+              console.log("검색어:", keyword);
+            }}
+          />
         </div>
-        
+
         {/* 고객센터 네비게이션 */}
         <CustomerNav />
 
         {/* 1:1 문의 목록 */}
-        <div className="space-y-3">
+        <div className="flex flex-col gap-6 max-w-[1440px] mx-auto px-4">
           {currentItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* 문의글 헤더 */}
+            <div key={item.id} className="flex flex-col gap-6">
+              {/* 문의글 헤더 - 클릭 가능한 제목 블록 */}
               <div
+                className="flex w-full max-w-[1392px] p-6 flex-col items-start gap-6 rounded-[32px] cursor-pointer transition-all"
+                style={{
+                  border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+                  background:
+                    expandedId === item.id
+                      ? "var(--WIT-Gray10, #E6E6E6)"
+                      : "white",
+                }}
                 onClick={() => handleItemClick(item)}
-                className="p-5 cursor-pointer"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between w-full">
                   <div className="flex-1">
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-6">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium mr-3 ${
+                        className="inline-flex justify-center items-center rounded-[32px] text-xs font-medium mr-3"
+                        style={
                           item.status === "미답변"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
+                            ? {
+                                padding: "4px 12px",
+                                border: "1px solid var(--WIT-Gray200, #999)",
+                                color: "#333",
+                              }
+                            : {
+                                padding: "4px 12px",
+                                background: "var(--WIT-Blue, #0080FF)",
+                                color: "white",
+                              }
+                        }
                       >
                         {item.status}
                       </span>
-                      {/* 비공개 표시 */}
-                      {!item.isPublic && (
-                        <span className="inline-block px-2 py-1 bg-gray-600 text-white text-xs rounded-full">
-                          🔒 비공개
-                        </span>
-                      )}
                     </div>
-                    <h3 
-                      className="mb-3"
-                      style={{
-                        color: '#333',
-                        fontFamily: 'Pretendard',
-                        fontSize: '20px',
-                        fontStyle: 'normal',
-                        fontWeight: 700,
-                        lineHeight: '150%',
-                        letterSpacing: '-0.4px'
-                      }}
-                    >
-                      {item.title}
-                    </h3>
+                    <div className="flex items-center mb-6 gap-2">
+                      {/* 비공개 자물쇠 아이콘 */}
+                      {!item.isPublic && (
+                        <img src={lockIcon} alt="비공개" className="w-6 h-6" />
+                      )}
+                      <h3
+                        className="flex-1"
+                        style={{
+                          color: "#333",
+                          fontFamily: "Pretendard",
+                          fontSize: "20px",
+                          fontStyle: "normal",
+                          fontWeight: 700,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.4px",
+                        }}
+                      >
+                        {item.title}
+                      </h3>
+                    </div>
                     <p className="text-gray-500 text-xs">{item.date}</p>
-                  </div>
-                  
-                  {/* 화살표 아이콘 */}
-                  <div className="ml-4">
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${
-                        expandedId === item.id ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
                   </div>
                 </div>
               </div>
 
-              {/* 아코디언 내용 (문의 질문과 답변) - 공개글이거나 로그인한 작성자 본인인 경우만 표시 */}
-              {expandedId === item.id && (item.isPublic || (isLoggedIn && item.authorId === currentUserId)) && (
-                <div className="border-t border-gray-200 bg-gray-50">
-                  <div className="p-5">
-                    {/* 문의 질문 */}
-                    <div className="mb-6">
-                      <div className="flex items-center mb-3">
-                        <span className="text-sm font-semibold text-gray-700">Q</span>
-                        <h4 className="text-sm font-medium text-gray-700 ml-2">문의 내용</h4>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                          {item.content}
-                        </p>
-                      </div>
+              {/* 아코디언 내용 (Q&A 형태) - 별도의 독립적인 블록들 */}
+              {expandedId === item.id &&
+                (item.isPublic ||
+                  (isLoggedIn && item.authorId === currentUserId)) && (
+                  <div className="flex flex-col gap-4">
+                    {/* 질문 블록 */}
+                    <div
+                      className="w-full max-w-[1392px] self-stretch rounded-[32px] bg-white"
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        padding: "24px",
+                        border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "var(--WIT-Gray600, #333)",
+                          fontFamily: "Pretendard",
+                          fontSize: "20px",
+                          fontStyle: "normal",
+                          fontWeight: 700,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.4px",
+                          marginRight: "24px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        Q
+                      </span>
+                      <p
+                        style={{
+                          flex: "1 0 0",
+                          color: "var(--WIT-Gray600, #333)",
+                          fontFamily: "Pretendard",
+                          fontSize: "20px",
+                          fontStyle: "normal",
+                          fontWeight: 700,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.4px",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {item.content}
+                      </p>
                     </div>
 
-                    {/* 답변 */}
-                    <div>
-                      <div className="flex items-center mb-3">
-                        <span className="text-sm font-semibold text-blue-600">A</span>
-                        <h4 className="text-sm font-medium text-gray-700 ml-2">답변</h4>
-                      </div>
-                      
-                      {item.answer ? (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                            {item.answer}
-                          </p>
-                          <div className="mt-4 pt-3 border-t border-blue-200">
-                            <p className="text-xs text-gray-500">
-                              답변일: {item.date}
+                    {/* 답변 블록 */}
+                    <div
+                      className="w-full max-w-[1392px] self-stretch rounded-[32px] bg-white"
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        padding: "24px",
+                        border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "var(--WIT-Gray600, #333)",
+                          fontFamily: "Pretendard",
+                          fontSize: "20px",
+                          fontStyle: "normal",
+                          fontWeight: 700,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.4px",
+                          marginRight: "24px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        A
+                      </span>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          flex: "1 0 0",
+                        }}
+                      >
+                        {item.answer ? (
+                          <div>
+                            <p
+                              style={{
+                                flex: "1 0 0",
+                                color: "var(--WIT-Gray600, #333)",
+                                fontFamily: "Pretendard",
+                                fontSize: "20px",
+                                fontStyle: "normal",
+                                fontWeight: 500,
+                                lineHeight: "150%",
+                                letterSpacing: "-0.4px",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {item.answer}
                             </p>
+                            <div
+                              className="flex justify-end"
+                              style={{ marginTop: "24px" }}
+                            >
+                              <p
+                                style={{
+                                  color: "var(--WIT-Gray200, #999)",
+                                  fontFamily: "Pretendard",
+                                  fontSize: "14px",
+                                  fontStyle: "normal",
+                                  fontWeight: 500,
+                                  lineHeight: "150%",
+                                  letterSpacing: "-0.14px",
+                                }}
+                              >
+                                <span>2025.06.21</span>
+                                <span style={{ marginLeft: "8px" }}>
+                                  17:18:07
+                                </span>
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-500 text-center">
-                            아직 답변이 등록되지 않았습니다.<br/>
+                        ) : (
+                          <p
+                            className="text-left"
+                            style={{
+                              flex: "1 0 0",
+                              color: "var(--WIT-Gray600, #333)",
+                              fontFamily: "Pretendard",
+                              fontSize: "20px",
+                              fontStyle: "normal",
+                              fontWeight: 500,
+                              lineHeight: "150%",
+                              letterSpacing: "-0.4px",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            아직 답변이 등록되지 않았습니다.
+                            <br />
                             빠른 시일 내에 답변드리겠습니다.
                           </p>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           ))}
         </div>
 
         {/* 빈 상태일 때 */}
         {inquiries.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-gray-400 text-lg mb-2">💬</div>
-            <p className="text-gray-500">등록된 문의가 없습니다.</p>
+          <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
+            <div className="text-gray-400 text-base md:text-lg mb-2">💬</div>
+            <p className="text-gray-500 text-sm md:text-base">
+              등록된 문의가 없습니다.
+            </p>
           </div>
         )}
 
         {/* 문의하기 버튼 - 문의 목록 아래 오른쪽 정렬 */}
-        <div className="flex justify-end mt-8 mb-8">
+        <div className="flex justify-end mt-6 mb-8 max-w-[1440px] mx-auto px-4">
           <button
             onClick={handleInquiryClick}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-md transition-all duration-200 flex items-center space-x-2"
+            className="text-white shadow-md transition-all duration-200 flex justify-center items-center"
+            style={{
+              width: "156px",
+              padding: "12px 32px",
+              borderRadius: "32px",
+              background: "var(--WIT-Blue, #0080FF)",
+              gap: "0",
+            }}
           >
-            <span className="text-sm font-medium">✏️ 문의하기</span>
+            <img
+              src={writingIcon}
+              alt="문의하기"
+              style={{
+                width: "24px",
+                height: "24px",
+                flexShrink: 0,
+                aspectRatio: "1/1",
+                opacity: 0.8,
+              }}
+            />
+            <span
+              style={{
+                color: "var(--WIT-White, var(--White, #FFF))",
+                fontFamily: "Pretendard",
+                fontSize: "20px",
+                fontStyle: "normal",
+                fontWeight: 500,
+                lineHeight: "150%",
+                letterSpacing: "-0.4px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              문의하기
+            </span>
           </button>
         </div>
 
         {/* 페이지네이션 */}
-        <div className="mt-20">
+        <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -275,4 +405,4 @@ const InquiryPage = () => {
   );
 };
 
-export default InquiryPage; 
+export default InquiryPage;
