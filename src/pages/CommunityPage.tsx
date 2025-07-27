@@ -59,7 +59,7 @@ const dummyData = [
 
 const CommunityPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("전체");
-  const [sortType, setSortType] = useState("인기순");
+  const [sortType, setSortType] = useState("인기순"); // TODO: sortType will be used for API connection
 
   const filteredData = dummyData.filter((item) => {
     if (selectedCategory === "전체") return true;

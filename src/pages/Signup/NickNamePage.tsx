@@ -5,15 +5,7 @@ export default function SignupNicknamePage() {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState('');
 
-  const handleNext = () => {
-    if (!nickname.trim()) {
-      alert('닉네임을 입력해주세요.');
-      return;
-    }
 
-    // TODO: 중복 확인 로직 추가 예정
-    navigate('/signup/complete');
-  };
 
   return (
     
