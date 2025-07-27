@@ -18,7 +18,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
   // 시작 페이지와 끝 페이지 계산
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
   // 끝 페이지가 총 페이지 수보다 작을 때 시작 페이지 조정
   if (endPage - startPage + 1 < maxVisiblePages) {

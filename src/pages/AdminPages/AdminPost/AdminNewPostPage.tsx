@@ -13,7 +13,7 @@ const AdminNewPostPage = () => {
   const [content1, setContent1] = useState("");
   const [content2, setContent2] = useState("");
   const [tagInputs, setTagInputs] = useState([""]);
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]); // TODO: tags will be used for API connection
   const subCategoryMap: { [key: string]: string[] } = {
     생활꿀팁: [
       "조리/주방",

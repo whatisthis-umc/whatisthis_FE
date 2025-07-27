@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import React from "react";
 import "./App.css";
 import MainPage from "./pages/MainPage";
 import Navbar from "./components/Navbar";
@@ -28,6 +27,10 @@ import ItemsPostDetailPage from "./pages/items/ItemsPostDetailPage";
 import TipsPostDetailPage from "./pages/tips/TipsPostDetailPage";
 import TipsDetailPage from "./pages/tips/TipsDetailPage";
 import AdminNewPostPage from "./pages/AdminPages/AdminPost/AdminNewPostPage";
+import AdminReportPage from "./pages/AdminPages/AdminReport/AdminReportPage";
+import AdminReportDetailPage from "./pages/AdminPages/AdminReport/AdminReportDetailPage";
+import AdminInquiryPage from "./pages/AdminPages/AdminInquiry/AdminInquiryPage";
+import AdminInquiryDetailPage from "./pages/AdminPages/AdminInquiry/AdminInquiryDetailPage";
 import AdminNewNoticePage from "./pages/AdminPages/AdminNotice/AdminNewNoticePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -102,6 +105,10 @@ function App() {
                   element={<AdminPostEditPage />}
                 />
                 <Route path="/admin/post/new" element={<AdminNewPostPage />} />
+                <Route path="/admin/reports" element={<AdminReportPage />} />
+                <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
+                <Route path="/admin/inquiries" element={<AdminInquiryPage />} />
+                <Route path="/admin/inquiries/:id" element={<AdminInquiryDetailPage />} />
                 <Route path="/admin/qna" element={<AdminQnaPage />} />
                 <Route path="/admin/qna/:id" element={<AdminQnaDetailPage />} />
                 <Route

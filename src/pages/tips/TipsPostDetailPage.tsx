@@ -15,7 +15,7 @@ const TipsPostDetailPage = () => {
   const navigate = useNavigate();
   const post = dummyPosts.find((p) => p.id === Number(id));
   const [selectedCategory, setSelectedCategory] = useState(
-    post?.category || "전체",
+    post?.category || "전체"
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -46,7 +46,7 @@ const TipsPostDetailPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase()),
+          .includes(keyword.toLowerCase())
       )
     : dummyPosts;
 
