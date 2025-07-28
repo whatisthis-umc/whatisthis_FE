@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import { useInquiry } from "../../contexts/InquiryContext";
+import addPhotoIcon from "../../assets/add_photo.png";
 
 const InquiryWritePage = () => {
   const navigate = useNavigate();
@@ -219,23 +220,39 @@ const InquiryWritePage = () => {
             </div>
           </div>
 
-          {/* URL 입력 */}
+          {/* 첨부파일/URL 입력 */}
           <div className="mt-8 md:mt-10 lg:mt-[40px]">
             <div
-              className="flex items-start p-4 md:p-5 lg:p-6 gap-6 md:gap-8 lg:gap-10 rounded-2xl md:rounded-3xl lg:rounded-[32px]"
+              className="flex items-center p-4 md:p-5 lg:p-6 rounded-2xl md:rounded-3xl lg:rounded-[32px]"
               style={{
                 border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+                gap: "40px",
               }}
             >
-              <input
-                type="url"
-                placeholder="URL을 입력해주세요."
-                value={formData.url || ""}
-                onChange={(e) => handleInputChange("url", e.target.value)}
-                className="w-full focus:outline-none text-sm md:text-base lg:text-base"
+              <span
                 style={{
                   color: "var(--WIT-Gray600, #333)",
                   fontFamily: "Pretendard",
+                  fontSize: "16px",
+                  fontStyle: "normal",
+                  fontWeight: 700,
+                  lineHeight: "150%",
+                  letterSpacing: "-0.16px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                첨부파일
+              </span>
+              <input
+                type="url"
+                placeholder="URL"
+                value={formData.url || ""}
+                onChange={(e) => handleInputChange("url", e.target.value)}
+                className="w-full focus:outline-none"
+                style={{
+                  color: "var(--WIT-Gray600, #333)",
+                  fontFamily: "Pretendard",
+                  fontSize: "16px",
                   fontStyle: "normal",
                   fontWeight: 500,
                   lineHeight: "150%",
@@ -258,7 +275,7 @@ const InquiryWritePage = () => {
                 cursor: "pointer",
               }}
             >
-              <span className="text-base md:text-lg lg:text-xl">📁</span>
+              <img src={addPhotoIcon} alt="사진 추가" className="w-6 h-6" />
               <span
                 className="text-base md:text-lg lg:text-xl ml-2"
                 style={{
