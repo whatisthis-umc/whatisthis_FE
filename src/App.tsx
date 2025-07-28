@@ -8,11 +8,11 @@ import InquiryPage from "./pages/customer/InquiryPage"; // 1:1 문의
 import InquiryWritePage from "./pages/customer/InquiryWritePage"; // 1:1 문의 작성
 import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
-import CommunityPage from "./pages/CommunityPage";
-import MyInfoPage from "./pages/MyInfoPage";
+import CommunityPage from "./pages/community/CommunityPage";
+import MyInfoEditPage from "./pages/my/MyInfoEditPage";
 import ItemsPage from "./pages/items/ItemsPage";
 import ItemsDetailPage from "./pages/items/ItemsDetailPage";
-import MyPage from "./pages/MyPage";
+import MyPage from "./pages/my/MyPage";
 import LikesPage from "./pages/LikesPage";
 import ScrapPage from "./pages/ScrapPage";
 import { InquiryProvider } from "./contexts/InquiryContext";
@@ -60,7 +60,8 @@ function App() {
                 <Route path="/scrap" element={<ScrapPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
                 <Route path="/community" element={<CommunityPage />} />
-                <Route path="/myinfo" element={<MyInfoPage />} />
+                <Route path="/myinfo" element={<MyInfoEditPage />} />
+                <Route path="/post" element={<PostDetailPage />} />
 
                 <Route path="/tips" element={<TipsPage />} />
                 <Route path="/tips/list" element={<TipsDetailPage />} />

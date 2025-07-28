@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import arrowDownIcon from "../../assets/arrow_down.png";
 
 interface SortDropdownProps {
@@ -12,11 +12,6 @@ const SortDropdown = ({
 }: SortDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(defaultValue);
-
-  useEffect(() => {
-    // 초기값 전달
-    onChange(defaultValue);
-  }, [defaultValue, onChange]);
 
   const handleSelect = (type: string) => {
     setSelected(type);
@@ -44,8 +39,7 @@ const SortDropdown = ({
             onClick={() => handleSelect("인기순")}
             className={`px-3 py-2 md:text-sm cursor-pointer hover:bg-[#F5F5F5] text-[12px] ${
               selected === "인기순" ? "text-[#0080FF]" : "text-[#333]"
-            }
-            `}
+            }`}
           >
             인기순
           </div>
@@ -53,8 +47,7 @@ const SortDropdown = ({
             onClick={() => handleSelect("최신순")}
             className={`px-3 py-2 md:text-sm cursor-pointer hover:bg-[#F5F5F5] text-[12px] ${
               selected === "최신순" ? "text-[#0080FF]" : "text-[#333]"
-            }
-            `}
+            }`}
           >
             최신순
           </div>
