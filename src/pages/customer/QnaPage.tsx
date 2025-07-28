@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
@@ -11,6 +12,11 @@ interface QnaItem {
 }
 
 const QnaPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const keyword = queryParams.get("keyword") || "";
+
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const itemsPerPage = 5;
@@ -89,143 +95,185 @@ const QnaPage = () => {
     },
   ];
 
+  // 검색 필터링
+  const filteredQnaItems = keyword
+    ? qnaItems.filter((item) =>
+        [item.question, item.answer]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
+      )
+    : qnaItems;
+
   // 페이지네이션 계산
-  const totalPages = Math.ceil(qnaItems.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredQnaItems.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = qnaItems.slice(startIndex, startIndex + itemsPerPage);
+  const currentItems = filteredQnaItems.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleSearch = (input: string) => {
+    navigate(`/customer/qna?keyword=${encodeURIComponent(input)}`);
   };
 
   const toggleExpanded = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  return (
-    <div className="flex-1 bg-white">
-      <div className="w-full pb-8">
-        {/* 검색바 */}
-        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
-          <Searchbar
-            onSearch={(keyword: string) => {
-              // 검색 기능 구현 필요시 여기에 추가
-              console.log("검색어:", keyword);
+  const renderQnaList = () => (
+    <div className="flex flex-col gap-6 md:gap-10 max-w-[1440px] mx-auto px-4">
+      {currentItems.map((item) => (
+        <div key={item.id} className="flex flex-col gap-3 md:gap-4">
+          {/* 질문 블록 */}
+          <div
+            className="flex w-full max-w-[1392px] p-6 flex-col items-start gap-6 cursor-pointer transition-colors rounded-[32px]"
+            style={{
+              border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+              background:
+                expandedId === item.id ? "var(--WIT-Gray10, #E6E6E6)" : "white",
             }}
-          />
-        </div>
-
-        {/* 고객센터 네비게이션 */}
-        <CustomerNav />
-
-        {/* Q&A 목록 */}
-        <div className="flex flex-col gap-6 md:gap-10 max-w-[1440px] mx-auto px-4">
-          {currentItems.map((item) => (
-            <div key={item.id} className="flex flex-col gap-3 md:gap-4">
-              {/* 질문 블록 */}
-              <div
-                className="flex w-full max-w-[1392px] p-6 flex-col items-start gap-6 cursor-pointer transition-colors rounded-[32px]"
+            onClick={() => toggleExpanded(item.id)}
+          >
+            <div className="flex items-center gap-6 self-stretch">
+              <span
                 style={{
-                  border: "1px solid var(--WIT-Gray10, #E6E6E6)",
-                  background:
-                    expandedId === item.id
-                      ? "var(--WIT-Gray10, #E6E6E6)"
-                      : "white",
+                  color: "var(--WIT-Gray600, #333)",
+                  fontFamily: "Pretendard",
+                  fontSize: "20px",
+                  fontStyle: "normal",
+                  fontWeight: 700,
+                  lineHeight: "150%",
+                  letterSpacing: "-0.4px",
                 }}
-                onClick={() => toggleExpanded(item.id)}
               >
-                <div className="flex items-center gap-6 self-stretch">
-                  <span
-                    style={{
-                      color: "var(--WIT-Gray600, #333)",
-                      fontFamily: "Pretendard",
-                      fontSize: "20px",
-                      fontStyle: "normal",
-                      fontWeight: 700,
-                      lineHeight: "150%",
-                      letterSpacing: "-0.4px",
-                    }}
-                  >
-                    Q
-                  </span>
-                  <p
-                    className="flex-1 text-base md:text-lg lg:text-xl"
-                    style={{
-                      color: "#333",
-                      fontFamily: "Pretendard",
-                      fontStyle: "normal",
-                      fontWeight: 700,
-                      lineHeight: "150%",
-                      letterSpacing: "-0.4px",
-                    }}
-                  >
-                    {item.question}
-                  </p>
-                </div>
-              </div>
+                Q
+              </span>
+              <p
+                className="flex-1 text-base md:text-lg lg:text-xl"
+                style={{
+                  color: "#333",
+                  fontFamily: "Pretendard",
+                  fontStyle: "normal",
+                  fontWeight: 700,
+                  lineHeight: "150%",
+                  letterSpacing: "-0.4px",
+                }}
+              >
+                {item.question}
+              </p>
+            </div>
+          </div>
 
-              {/* 답변 블록 - 별도의 독립적인 블록 */}
-              {expandedId === item.id && (
-                <div
-                  className="flex w-full max-w-[1392px] p-6 flex-col items-start gap-6 bg-white rounded-[32px]"
+          {/* 답변 블록 - 별도의 독립적인 블록 */}
+          {expandedId === item.id && (
+            <div
+              className="flex w-full max-w-[1392px] p-6 flex-col items-start gap-6 bg-white rounded-[32px]"
+              style={{
+                border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+              }}
+            >
+              <div className="flex items-center gap-6 self-stretch">
+                <span
                   style={{
-                    border: "1px solid var(--WIT-Gray10, #E6E6E6)",
+                    color: "var(--WIT-Gray600, #333)",
+                    fontFamily: "Pretendard",
+                    fontSize: "20px",
+                    fontStyle: "normal",
+                    fontWeight: 700,
+                    lineHeight: "150%",
+                    letterSpacing: "-0.4px",
                   }}
                 >
-                  <div className="flex items-center gap-6 self-stretch">
-                    <span
-                      style={{
-                        color: "var(--WIT-Gray600, #333)",
-                        fontFamily: "Pretendard",
-                        fontSize: "20px",
-                        fontStyle: "normal",
-                        fontWeight: 700,
-                        lineHeight: "150%",
-                        letterSpacing: "-0.4px",
-                      }}
-                    >
-                      A
-                    </span>
-                    <p
-                      className="flex-1"
-                      style={{
-                        color: "var(--WIT-Gray600, #333)",
-                        fontFamily: "Pretendard",
-                        fontSize: "20px",
-                        fontStyle: "normal",
-                        fontWeight: 500,
-                        lineHeight: "150%",
-                        letterSpacing: "-0.4px",
-                      }}
-                    >
-                      {item.answer}
-                    </p>
-                  </div>
-                </div>
-              )}
+                  A
+                </span>
+                <p
+                  className="flex-1"
+                  style={{
+                    color: "var(--WIT-Gray600, #333)",
+                    fontFamily: "Pretendard",
+                    fontSize: "20px",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    lineHeight: "150%",
+                    letterSpacing: "-0.4px",
+                  }}
+                >
+                  {item.answer}
+                </p>
+              </div>
             </div>
-          ))}
+          )}
         </div>
+      ))}
+    </div>
+  );
 
-        {/* 페이지네이션 */}
-        <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-
-        {/* 빈 상태일 때 */}
-        {qnaItems.length === 0 && (
-          <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
-            <div className="text-gray-400 text-base md:text-lg mb-2">❓</div>
-            <p className="text-gray-500 text-sm md:text-base">
-              등록된 Q&A가 없습니다.
-            </p>
-          </div>
-        )}
+  return (
+    <div className="flex-1 bg-white">
+      {/* 검색바 */}
+      <div className="hidden md:w-full md:max-w-[1440px] md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+        <Searchbar onSearch={handleSearch} />
       </div>
+
+      {keyword ? (
+        // 검색 결과 화면
+        <div className="w-full pb-8">
+          {/* 고객센터 네비게이션 */}
+          <CustomerNav />
+
+          <div className="mt-10 px-8 max-w-[1440px] mx-auto">
+            <h2 className="text-[24px] font-bold mb-4">검색 결과</h2>
+            {currentItems.length > 0 ? (
+              <>
+                {renderQnaList()}
+
+                {/* 페이지네이션 */}
+                <div className="mt-8 md:mt-20">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-gray-500 mt-8">검색 결과가 없습니다.</div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="w-full pb-8">
+          {/* 고객센터 네비게이션 */}
+          <CustomerNav />
+
+          {/* Q&A 목록 */}
+          {renderQnaList()}
+
+          {/* 페이지네이션 */}
+          <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+
+          {/* 빈 상태일 때 */}
+          {filteredQnaItems.length === 0 && (
+            <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
+              <div className="text-gray-400 text-base md:text-lg mb-2">❓</div>
+              <p className="text-gray-500 text-sm md:text-base">
+                등록된 Q&A가 없습니다.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
@@ -13,6 +14,11 @@ interface Notice {
 }
 
 const NoticeListPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const keyword = queryParams.get("keyword") || "";
+
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -269,134 +275,178 @@ const NoticeListPage = () => {
     },
   ];
 
+  // 검색 필터링
+  const filteredNotices = keyword
+    ? notices.filter((notice) =>
+        [notice.title, notice.content]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
+      )
+    : notices;
+
   // 페이지네이션 계산
-  const totalPages = Math.ceil(notices.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = notices.slice(startIndex, startIndex + itemsPerPage);
+  const currentItems = filteredNotices.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleSearch = (input: string) => {
+    navigate(`/customer/notice?keyword=${encodeURIComponent(input)}`);
   };
 
   const toggleExpanded = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  return (
-    <div className="flex-1 bg-white">
-      <div className="w-full pb-8">
-        {/* 검색바 */}
-        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center px-4 mt-4">
-          <Searchbar
-            onSearch={(keyword: string) => {
-              // 검색 기능 구현 필요시 여기에 추가
-              console.log("검색어:", keyword);
+  const renderNoticeList = () => (
+    <div className="flex flex-col gap-4 md:gap-6 max-w-[1440px] mx-auto px-4">
+      {currentItems.map((notice) => (
+        <div key={notice.id} className="flex flex-col gap-3 md:gap-4">
+          {/* 공지사항 헤더 - 클릭 가능한 제목 블록 */}
+          <div
+            className="border border-[#E6E6E6] rounded-[16px] md:rounded-[32px] flex flex-col items-start gap-4 md:gap-6 p-4 md:p-6 cursor-pointer transition-all"
+            style={{
+              background:
+                expandedId === notice.id
+                  ? "var(--WIT-Gray10, #E6E6E6)"
+                  : "white",
             }}
-          />
-        </div>
-
-        {/* 고객센터 네비게이션 */}
-        <CustomerNav />
-
-        {/* 공지사항 목록 */}
-        <div className="flex flex-col gap-4 md:gap-6 max-w-[1440px] mx-auto px-4">
-          {currentItems.map((notice) => (
-            <div key={notice.id} className="flex flex-col gap-3 md:gap-4">
-              {/* 공지사항 헤더 - 클릭 가능한 제목 블록 */}
-              <div
-                className="border border-[#E6E6E6] rounded-[16px] md:rounded-[32px] flex flex-col items-start gap-4 md:gap-6 p-4 md:p-6 cursor-pointer transition-all"
-                style={{
-                  background:
-                    expandedId === notice.id
-                      ? "var(--WIT-Gray10, #E6E6E6)"
-                      : "white",
-                }}
-                onClick={() => toggleExpanded(notice.id)}
-              >
-                <div className="flex items-start justify-between w-full">
-                  <div className="flex-1">
-                    <div className="flex flex-col gap-3 md:gap-6">
-                      {notice.isRequired && (
-                        <span
-                          className="px-2 py-1 md:px-3 md:py-1 rounded-[32px] self-start text-sm md:text-base lg:text-lg"
-                          style={{
-                            color: "#333",
-                            fontFamily: "Pretendard",
-                            fontStyle: "normal",
-                            fontWeight: 500,
-                            lineHeight: "150%",
-                            letterSpacing: "-0.4px",
-                            border: "1px solid var(--WIT-Gray200, #999)",
-                            background: "transparent",
-                          }}
-                        >
-                          필독
-                        </span>
-                      )}
-                      <h3
-                        className="transition-colors text-left"
-                        style={{
-                          color: "var(--WIT-Gray600, #333)",
-                          fontFamily: "Pretendard",
-                          fontSize: "20px",
-                          fontStyle: "normal",
-                          fontWeight: 700,
-                          lineHeight: "150%",
-                          letterSpacing: "-0.4px",
-                        }}
-                      >
-                        {notice.title}
-                      </h3>
-                      <div className="flex items-center text-xs md:text-sm text-gray-500 space-x-2">
-                        <span>{notice.author}</span>
-                        <span>{notice.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 공지사항 상세 내용 - 별도의 독립적인 블록 */}
-              {expandedId === notice.id && (
-                <div className="flex flex-col justify-end items-end gap-4 md:gap-6 w-full p-4 md:p-6 bg-white border border-[#E6E6E6] rounded-[16px] md:rounded-[32px]">
-                  <div
-                    className="w-full text-left whitespace-pre-line text-sm md:text-base lg:text-lg"
+            onClick={() => toggleExpanded(notice.id)}
+          >
+            <div className="flex items-start justify-between w-full">
+              <div className="flex-1">
+                <div className="flex flex-col gap-3 md:gap-6">
+                  {notice.isRequired && (
+                    <span
+                      className="px-2 py-1 md:px-3 md:py-1 rounded-[32px] self-start text-sm md:text-base lg:text-lg"
+                      style={{
+                        color: "#333",
+                        fontFamily: "Pretendard",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        lineHeight: "150%",
+                        letterSpacing: "-0.4px",
+                        border: "1px solid var(--WIT-Gray200, #999)",
+                        background: "transparent",
+                      }}
+                    >
+                      필독
+                    </span>
+                  )}
+                  <h3
+                    className="transition-colors text-left"
                     style={{
-                      color: "#333",
+                      color: "var(--WIT-Gray600, #333)",
                       fontFamily: "Pretendard",
+                      fontSize: "20px",
                       fontStyle: "normal",
-                      fontWeight: 500,
+                      fontWeight: 700,
                       lineHeight: "150%",
                       letterSpacing: "-0.4px",
                     }}
                   >
-                    {notice.content}
+                    {notice.title}
+                  </h3>
+                  <div className="flex items-center text-xs md:text-sm text-gray-500 space-x-2">
+                    <span>{notice.author}</span>
+                    <span>{notice.date}</span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* 페이지네이션 */}
-        <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-
-        {/* 빈 상태일 때 */}
-        {notices.length === 0 && (
-          <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
-            <div className="text-gray-400 text-base md:text-lg mb-2">📢</div>
-            <p className="text-gray-500 text-sm md:text-base">
-              등록된 공지사항이 없습니다.
-            </p>
           </div>
-        )}
+
+          {/* 공지사항 상세 내용 - 별도의 독립적인 블록 */}
+          {expandedId === notice.id && (
+            <div className="flex flex-col justify-end items-end gap-4 md:gap-6 w-full p-4 md:p-6 bg-white border border-[#E6E6E6] rounded-[16px] md:rounded-[32px]">
+              <div
+                className="w-full text-left whitespace-pre-line text-sm md:text-base lg:text-lg"
+                style={{
+                  color: "#333",
+                  fontFamily: "Pretendard",
+                  fontStyle: "normal",
+                  fontWeight: 500,
+                  lineHeight: "150%",
+                  letterSpacing: "-0.4px",
+                }}
+              >
+                {notice.content}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="flex-1 bg-white">
+      {/* 검색바 */}
+      <div className="hidden md:w-full md:max-w-[1440px] md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+        <Searchbar onSearch={handleSearch} />
       </div>
+
+      {keyword ? (
+        // 검색 결과 화면
+        <div className="w-full pb-8">
+          {/* 고객센터 네비게이션 */}
+          <CustomerNav />
+
+          <div className="mt-10 px-8 max-w-[1440px] mx-auto">
+            <h2 className="text-[24px] font-bold mb-4">검색 결과</h2>
+            {currentItems.length > 0 ? (
+              <>
+                {renderNoticeList()}
+
+                {/* 페이지네이션 */}
+                <div className="mt-8 md:mt-20">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-gray-500 mt-8">검색 결과가 없습니다.</div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="w-full pb-8">
+          {/* 고객센터 네비게이션 */}
+          <CustomerNav />
+
+          {/* 공지사항 목록 */}
+          {renderNoticeList()}
+
+          {/* 페이지네이션 */}
+          <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+
+          {/* 빈 상태일 때 */}
+          {filteredNotices.length === 0 && (
+            <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
+              <div className="text-gray-400 text-base md:text-lg mb-2">📢</div>
+              <p className="text-gray-500 text-sm md:text-base">
+                등록된 공지사항이 없습니다.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

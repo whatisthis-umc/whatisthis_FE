@@ -32,33 +32,52 @@ const CustomerNav = () => {
   };
 
   return (
-    <div className="flex justify-start space-x-2 md:space-x-3 mb-6 md:mb-10 max-w-[1440px] mx-auto px-4">
-      {/* 공지사항 버튼 */}
-      <Link
-        to="/customer/notice"
-        className={`${getButtonClass("/customer/notice")} ${getTextSizeClass()}`}
-        style={getTextStyle("/customer/notice")}
+    <div className="max-w-[1440px] mx-auto px-4">
+      {/* 고객센터 제목 */}
+      <h1
+        className="mt-[123.5px] mb-[120px]"
+        style={{
+          color: "var(--WIT-Gray600, #333)",
+          fontFamily: "Pretendard",
+          fontSize: "32px",
+          fontStyle: "normal",
+          fontWeight: 700,
+          lineHeight: "150%",
+          letterSpacing: "-0.64px",
+        }}
       >
-        공지사항
-      </Link>
+        고객센터
+      </h1>
 
-      {/* Q&A 버튼 */}
-      <Link
-        to="/customer/qna"
-        className={`${getButtonClass("/customer/qna")} ${getTextSizeClass()}`}
-        style={getTextStyle("/customer/qna")}
-      >
-        Q&A
-      </Link>
+      {/* 네비게이션 버튼들 */}
+      <div className="flex justify-start space-x-2 md:space-x-3 mb-6 md:mb-10">
+        {/* 공지사항 버튼 */}
+        <Link
+          to="/customer/notice"
+          className={`${getButtonClass("/customer/notice")} ${getTextSizeClass()}`}
+          style={getTextStyle("/customer/notice")}
+        >
+          공지사항
+        </Link>
 
-      {/* 1:1 문의 버튼 */}
-      <Link
-        to="/customer/inquiry"
-        className={`${getButtonClass("/customer/inquiry")} ${getTextSizeClass()}`}
-        style={getTextStyle("/customer/inquiry")}
-      >
-        1:1 문의
-      </Link>
+        {/* Q&A 버튼 */}
+        <Link
+          to="/customer/qna"
+          className={`${getButtonClass("/customer/qna")} ${getTextSizeClass()}`}
+          style={getTextStyle("/customer/qna")}
+        >
+          Q&A
+        </Link>
+
+        {/* 1:1 문의 버튼 */}
+        <Link
+          to="/customer/inquiry"
+          className={`${getButtonClass("/customer/inquiry")} ${getTextSizeClass()}`}
+          style={getTextStyle("/customer/inquiry")}
+        >
+          1:1 문의
+        </Link>
+      </div>
     </div>
   );
 };
