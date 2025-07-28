@@ -71,7 +71,7 @@ export default function AdminReportPage() {
     <AdminLayout>
       <Box className="px-10 py-6">
         {/* 상단 제목 */}
-        <Box className="text-left mb-6">
+        <Box className="text-left mb-20">
           <h2 className="text-2xl font-bold">신고내역</h2>
         </Box>
 
@@ -356,7 +356,7 @@ export default function AdminReportPage() {
         </Table>
 
         {/* 페이지네이션 */}
-        <Box className="flex justify-center mt-6 gap-2 items-center">
+        <Box className="flex justify-center mt-20 gap-2 items-center">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           >
