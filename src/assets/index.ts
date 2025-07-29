@@ -26,3 +26,4 @@ export { default as right } from "./right.png";
 export { default as addPhotoIcon } from "./add_photo.png";
 export { default as cancelIcon } from "./cancel.png";
 export { default as logo } from "./logo.png";
+export { default as bArrowDown } from "./b_arrow_down.png";

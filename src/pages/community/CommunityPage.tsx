@@ -57,7 +57,8 @@ const dummyData = [
     id: 4,
     category: "살까말까?",
     title: "스탠드형 무선 청소기 써보신 분?",
-    content: "삼성, LG, 샤오미 중 고민 중인데 어떤 게 제일 실용적인지 궁금합니다.",
+    content:
+      "삼성, LG, 샤오미 중 고민 중인데 어떤 게 제일 실용적인지 궁금합니다.",
     nickname: "청소고민남",
     time: "1시간 전",
     views: 12,
@@ -140,7 +141,9 @@ const CommunityPage = () => {
               key={item.id}
               onClick={() => index === 0 && navigate("/post")}
               className={`flex flex-col cursor-pointer ${
-                item.isBest ? "bg-[#CCE5FF] border-none" : "bg-white border border-[#CCCCCC]"
+                item.isBest
+                  ? "bg-[#CCE5FF] border-none"
+                  : "bg-white border border-[#CCCCCC]"
               } rounded-[32px] p-4 md:p-6 gap-3 md:gap-4 w-full md:w-[1132px]`}
             >
               <div className="flex items-center gap-2 flex-wrap">
@@ -162,25 +165,45 @@ const CommunityPage = () => {
                 ))}
               </div>
 
-              <div className="text-[16px] md:text-[18px] font-medium">{item.title}</div>
-              <div className="text-[12px] md:text-[14px] text-[#666666]">{item.content}</div>
+              <div className="text-[16px] md:text-[18px] font-medium">
+                {item.title}
+              </div>
+              <div className="text-[12px] md:text-[14px] text-[#666666]">
+                {item.content}
+              </div>
               <div className="flex items-center gap-3 text-[12px] md:text-[14px] text-[#999]">
                 <span className="flex items-center gap-1 text-[#333333]">
                   {item.isBest && (
-                    <img src={bestBadge} alt="best" className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />
+                    <img
+                      src={bestBadge}
+                      alt="best"
+                      className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]"
+                    />
                   )}
                   {item.nickname} · {item.time}
                 </span>
                 <div className="flex items-center gap-1">
-                  <img src={eye} alt="views" className="w-3 h-3 md:w-4 md:h-4" />
+                  <img
+                    src={eye}
+                    alt="views"
+                    className="w-3 h-3 md:w-4 md:h-4"
+                  />
                   <span>{item.views}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <img src={like} alt="likes" className="w-3 h-3 md:w-4 md:h-4" />
+                  <img
+                    src={like}
+                    alt="likes"
+                    className="w-3 h-3 md:w-4 md:h-4"
+                  />
                   <span>{item.likes}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <img src={commentIcon} alt="comments" className="w-3 h-3 md:w-4 md:h-4" />
+                  <img
+                    src={commentIcon}
+                    alt="comments"
+                    className="w-3 h-3 md:w-4 md:h-4"
+                  />
                   <span>{item.comments}</span>
                 </div>
               </div>
@@ -199,7 +222,7 @@ const CommunityPage = () => {
 
       <div className="fixed bottom-5 right-5 md:static md:mt-10 flex justify-end z-[50]">
         <button
-          onClick={() => alert("글쓰기 버튼 클릭됨")}
+          onClick={() => navigate("/communitypost")}
           className="bg-[#0080FF] text-white flex items-center gap-2 rounded-[32px] px-6 py-3 text-sm md:text-base"
         >
           <img src={writeIcon} alt="write" className="w-5 h-5" />

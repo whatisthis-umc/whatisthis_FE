@@ -41,6 +41,7 @@ import AdminQnaEditPage from "./pages/AdminPages/AdminQna/AdminQnaEditPage";
 import AdminNewQnaPage from "./pages/AdminPages/AdminQna/AdminNewQnaPage";
 import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import CommunityPostPage from "./pages/community/CommunityPostPage";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/community" element={<CommunityPage />} />
                 <Route path="/myinfo" element={<MyInfoEditPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
+                <Route path="/communitypost" element={<CommunityPostPage />} />
 
                 <Route path="/tips" element={<TipsPage />} />
                 <Route path="/tips/list" element={<TipsDetailPage />} />
