@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { addPhotoIcon } from "../assets";
-import { cancelIcon } from "../assets";
+import { addPhotoIcon, cancelIcon } from "../../assets";
 
 const MyInfoEditPage = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -21,21 +20,22 @@ const MyInfoEditPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-white font-[Pretendard] overflow-x-hidden">
+    <div className="min-h-screen w-full flex justify-center items-center bg-white font-[Pretendard] overflow-x-hidden px-4">
       <div
-        className="flex gap-[80px] rounded-[32px] bg-white"
+        className="flex flex-col lg:flex-row gap-10 lg:gap-[80px] rounded-[32px] bg-white"
         style={{
-          width: "772.8px",
-          height: "550px",
+          width: "100%",
+          maxWidth: "772.8px",
+          minHeight: "550px", // 고정 높이 제거, 최소 높이로 변경
           padding: "24px",
           border: "1px solid #E6E6E6",
         }}
       >
         {/* 이미지 영역 */}
-        <div className="flex flex-col mt-2 items-center relative">
+        <div className="flex flex-col mt-2 items-center relative w-full lg:w-[290px]">
           <div
-            className="bg-[#E6E6E6] rounded-[32px] relative"
-            style={{ width: "290px", height: "291px" }}
+            className="bg-[#E6E6E6] rounded-[32px] relative w-full lg:w-[290px]"
+            style={{ height: "291px" }}
           >
             {image && (
               <img
@@ -54,8 +54,8 @@ const MyInfoEditPage = () => {
 
           <label
             htmlFor="fileInput"
-            className="flex items-center justify-center bg-[#0080FF] text-white text-[20px] mt-4 rounded-[32px] cursor-pointer"
-            style={{ width: "290px", height: "54px", fontWeight: 500 }}
+            className="flex items-center justify-center bg-[#0080FF] text-white text-[20px] mt-4 rounded-[32px] cursor-pointer w-full lg:w-[290px]"
+            style={{ height: "54px", fontWeight: 500 }}
           >
             <img src={addPhotoIcon} alt="add" className="w-5 h-5 mr-2" />
             파일에서 업로드
@@ -70,10 +70,7 @@ const MyInfoEditPage = () => {
         </div>
 
         {/* 입력폼 영역 */}
-        <div
-          className="flex flex-col mt-2 justify-between"
-          style={{ width: "300px" }}
-        >
+        <div className="flex flex-col mt-2 justify-between w-full lg:w-[300px]">
           <div>
             {/* 이름 */}
             <div className="text-[16px] mb-4">이름</div>
@@ -82,7 +79,8 @@ const MyInfoEditPage = () => {
                 type="text"
                 placeholder="입력"
                 style={{
-                  width: "328px",
+                  width: "100%",
+                  maxWidth: "328px",
                   borderBottom: "1px solid #999999",
                   outline: "none",
                   fontSize: "16px",
@@ -98,7 +96,7 @@ const MyInfoEditPage = () => {
 
             {/* 이메일 */}
             <div className="text-[16px] mb-4">이메일</div>
-            <div className="flex items-center gap-2 mb-10">
+            <div className="flex items-center gap-2 mb-10 flex-wrap">
               <input
                 type="text"
                 placeholder="이메일 주소"
@@ -114,7 +112,7 @@ const MyInfoEditPage = () => {
                 type="text"
                 placeholder="선택"
                 style={{
-                  width: "150px",
+                  width: "110px",
                   borderBottom: "1px solid #999999",
                   outline: "none",
                   fontSize: "16px",
@@ -129,7 +127,8 @@ const MyInfoEditPage = () => {
                 type="text"
                 placeholder="입력"
                 style={{
-                  width: "328px",
+                  width: "100%",
+                  maxWidth: "328px",
                   borderBottom: "1px solid #999999",
                   outline: "none",
                   fontSize: "16px",
@@ -144,7 +143,8 @@ const MyInfoEditPage = () => {
                 type="text"
                 placeholder="입력"
                 style={{
-                  width: "328px",
+                  width: "100%",
+                  maxWidth: "328px",
                   borderBottom: "1px solid #999999",
                   outline: "none",
                   fontSize: "16px",
@@ -156,8 +156,8 @@ const MyInfoEditPage = () => {
           {/* 저장버튼 */}
           <div className="flex justify-end mt-4">
             <button
-              className="bg-[#0080FF] text-white text-[20px] rounded-[32px]"
-              style={{ width: "160px", height: "54px", fontWeight: 500 }}
+              className="bg-[#0080FF] text-white text-[16px] lg:text-[20px] rounded-[32px] w-[120px] lg:w-[160px]"
+              style={{ height: "54px", fontWeight: 500 }}
             >
               저장
             </button>
