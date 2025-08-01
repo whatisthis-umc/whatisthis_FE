@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Select,
@@ -10,6 +10,7 @@ import {
   TableRow,
   InputBase,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { dummyReports, reportStatuses } from "../../../data/dummyReports";
@@ -20,6 +21,7 @@ import ConfirmModal from "../../../components/modals/ConfirmModal";
 import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { reportApi, type ReportListItem } from "../../../api/reportApi";
 
 export default function AdminReportPage() {
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus>("all");
@@ -27,37 +29,97 @@ export default function AdminReportPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [reports, setReports] = useState<ReportListItem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const reportsPerPage = 5;
   const navigate = useNavigate();
 
-  // 필터링
-  const filteredReports = dummyReports.filter((report) => {
-    const statusMatch =
-      selectedStatus === "all" || report.status === selectedStatus;
-    const searchMatch =
-      report.title.toLowerCase().includes(search.toLowerCase()) ||
-      report.reporter.toLowerCase().includes(search.toLowerCase());
-    return statusMatch && searchMatch;
-  });
+  // 신고 목록 조회
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // API 파라미터를 스웨거 문서에 맞게 변환
+      let apiStatus = 'ALL';
+      if (selectedStatus === 'processed') apiStatus = 'PROCESSED';
+      if (selectedStatus === 'unprocessed') apiStatus = 'UNPROCESSED';
+      
+      const response = await reportApi.getReportList(
+        currentPage,
+        apiStatus,
+        search
+      );
+      
+      // API 응답에서 실제 데이터 추출
+      if (response.isSuccess) {
+        setReports(response.result.reportList);
+        setTotalPages(response.result.totalPage);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      console.error('신고 목록 조회 실패:', err);
+      setError('신고 목록을 불러오는데 실패했습니다.');
+      
+      // 개발 중에는 더미 데이터로 폴백 (API 형태로 변환)
+      const filteredReports = dummyReports.filter((report) => {
+        const statusMatch =
+          selectedStatus === "all" || report.status === selectedStatus;
+        const searchMatch =
+          report.title.toLowerCase().includes(search.toLowerCase()) ||
+          report.reporter.toLowerCase().includes(search.toLowerCase());
+        return statusMatch && searchMatch;
+      });
+      
+      const startIndex = (currentPage - 1) * 5;
+      const paginatedReports = filteredReports.slice(
+        startIndex,
+        startIndex + 5,
+      );
+      
+      // 더미 데이터를 API 응답 형태로 변환
+      const convertedReports: ReportListItem[] = paginatedReports.map((report: any) => ({
+        reportId: report.id,
+        type: report.category === "comment" ? "COMMENT" : "POST",
+        content: report.title,
+        reportContent: "ETC_CONTENT",
+        reportedAt: report.createdAt || new Date().toISOString(),
+        status: report.status === "processed" ? "PROCESSED" : "UNPROCESSED"
+      }));
+      
+      setReports(convertedReports);
+      setTotalPages(Math.ceil(filteredReports.length / 5));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 페이지네이션
-  const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
-  const paginatedReports = filteredReports.slice(
-    (currentPage - 1) * reportsPerPage,
-    currentPage * reportsPerPage,
-  );
+  // 초기 로드 및 필터/검색 변경시 재조회
+  useEffect(() => {
+    fetchReports();
+  }, [currentPage, selectedStatus, search]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
+    // useEffect에서 search 변경을 감지하여 자동으로 API 호출됨
   };
 
   // 상태 변경 처리
-  const handleStatusChange = (reportId: number) => {
-    const report = dummyReports.find((r) => r.id === reportId);
-    if (report) {
-      // 실제로는 API 호출
+  const handleStatusChange = async (reportId: number) => {
+    try {
+      await reportApi.processReport(reportId, 'delete');
       setModalMessage("삭제 처리되었습니다.");
+      setModalOpen(true);
+      
+      // 목록 새로고침
+      fetchReports();
+    } catch (error) {
+      console.error('신고 처리 실패:', error);
+      setModalMessage("처리 중 오류가 발생했습니다.");
       setModalOpen(true);
     }
   };
@@ -182,8 +244,29 @@ export default function AdminReportPage() {
           </Box>
         </Box>
 
+        {/* 로딩 상태 */}
+        {loading && (
+          <Box className="flex justify-center py-8">
+            <CircularProgress />
+          </Box>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <Box className="text-center py-8">
+            <p className="text-red-500 mb-4">{error}</p>
+            <button
+              onClick={fetchReports}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              다시 시도
+            </button>
+          </Box>
+        )}
+
         {/* 신고 테이블 */}
-        <Table
+        {!loading && !error && (
+          <Table
           sx={{
             borderCollapse: "separate",
             "& th": {
@@ -258,10 +341,10 @@ export default function AdminReportPage() {
               textAlign: "left",
             }}
           >
-            {paginatedReports.map((report) => (
+            {reports.map((report) => (
               <TableRow
-                key={report.id}
-                onClick={() => navigate(`/admin/reports/${report.id}`)}
+                key={report.reportId}
+                onClick={() => navigate(`/admin/reports/${report.reportId}`)}
                 style={{ cursor: "pointer" }}
               >
                 <TableCell>
@@ -279,7 +362,7 @@ export default function AdminReportPage() {
                       color: "#333333",
                     }}
                   >
-                    {report.category === "comment" ? "댓글" : "게시글"}
+                    {report.type === "COMMENT" ? "댓글" : report.type === "POST" ? "게시글" : "기타"}
                   </Box>
                 </TableCell>
                 <TableCell
@@ -293,7 +376,7 @@ export default function AdminReportPage() {
                     textAlign: "left",
                   }}
                 >
-                  {report.title}
+                  {report.content}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -306,14 +389,14 @@ export default function AdminReportPage() {
                     textAlign: "center",
                   }}
                 >
-                  {report.createdAt}
+                  {new Date(report.reportedAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  {report.status === "unprocessed" ? (
+                  {report.status === "UNPROCESSED" ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleStatusChange(report.id);
+                        handleStatusChange(report.reportId);
                       }}
                       style={{
                         backgroundColor: "#0080FF",
@@ -353,7 +436,8 @@ export default function AdminReportPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        )}
 
         {/* 페이지네이션 */}
         <Box className="flex justify-center mt-20 gap-2 items-center">

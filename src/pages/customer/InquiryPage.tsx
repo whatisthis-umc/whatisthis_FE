@@ -52,6 +52,11 @@ const InquiryPage = () => {
   };
 
   const handleInquiryClick = () => {
+    // 로그인하지 않은 상태라면 모달 표시
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     navigate("/customer/inquiry/write");
   };
 
@@ -86,11 +91,6 @@ const InquiryPage = () => {
   const handleLoginModalCancel = () => {
     setShowLoginModal(false);
     // 최근에 봤던 게시물로 이동 (현재는 그대로 있음)
-  };
-
-  const handleLoginModalLogin = () => {
-    setShowLoginModal(false);
-    navigate("/login");
   };
 
   const renderInquiryList = () => (
@@ -404,14 +404,53 @@ const InquiryPage = () => {
 
       {/* 로그인된 사용자의 비밀글 접근 불가 모달 */}
       {showPrivateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4 text-center">
-            <p className="text-gray-700 mb-6 text-sm leading-relaxed">
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              width: "686px",
+              padding: "40px",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+              gap: "40px",
+              borderRadius: "32px",
+              background: "var(--White, #FFF)",
+            }}
+          >
+            <p
+              style={{
+                alignSelf: "stretch",
+                color: "var(--WIT-Gray600, #333)",
+                fontFamily: "Pretendard",
+                fontSize: "24px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                lineHeight: "150%",
+                letterSpacing: "-0.48px",
+              }}
+            >
               비밀글은 작성자만 확인할 수 있습니다.
             </p>
             <button
               onClick={handlePrivateModalConfirm}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="text-white font-medium transition-colors"
+              style={{
+                display: "flex",
+                width: "160px",
+                padding: "12px 16px",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "32px",
+                background: "var(--WIT-Blue, #0080FF)",
+                border: "none",
+                cursor: "pointer",
+              }}
             >
               확인
             </button>
@@ -421,27 +460,56 @@ const InquiryPage = () => {
 
       {/* 로그인 요구 모달 */}
       {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <div className="text-center mb-6">
-              <p className="text-gray-700 text-sm leading-relaxed">
-                비밀글을 로그인 후 확인할 수 있습니다.
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleLoginModalCancel}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium transition-colors text-sm"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleLoginModalLogin}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-medium transition-colors text-sm"
-              >
-                로그인
-              </button>
-            </div>
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              width: "686px",
+              padding: "40px",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+              gap: "40px",
+              borderRadius: "32px",
+              background: "var(--White, #FFF)",
+            }}
+          >
+            <p
+              style={{
+                alignSelf: "stretch",
+                color: "var(--WIT-Gray600, #333)",
+                fontFamily: "Pretendard",
+                fontSize: "24px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                lineHeight: "150%",
+                letterSpacing: "-0.48px",
+              }}
+            >
+              이 기능은 로그인 후 이용 가능합니다.
+            </p>
+            <button
+              onClick={handleLoginModalCancel}
+              className="text-white font-medium transition-colors"
+              style={{
+                display: "flex",
+                width: "160px",
+                padding: "12px 16px",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "32px",
+                background: "var(--WIT-Blue, #0080FF)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              확인
+            </button>
           </div>
         </div>
       )}

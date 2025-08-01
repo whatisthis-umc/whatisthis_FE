@@ -14,6 +14,10 @@ const InquiryWritePage = () => {
     isPublic: null as boolean | null, // null: 미선택, true: 공개, false: 비공개
   });
   const [isPublicDropdownOpen, setIsPublicDropdownOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // 로그인 상태 (테스트용으로 false로 설정)
+  const isLoggedIn = false;
 
   const handleInputChange = (field: string, value: string | boolean | null) => {
     setFormData((prev) => ({
@@ -23,6 +27,12 @@ const InquiryWritePage = () => {
   };
 
   const handleSubmit = () => {
+    // 로그인 체크
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+
     if (!formData.title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -64,6 +74,10 @@ const InquiryWritePage = () => {
   const selectPublicOption = (isPublic: boolean) => {
     handleInputChange("isPublic", isPublic);
     setIsPublicDropdownOpen(false);
+  };
+
+  const handleLoginModalClose = () => {
+    setShowLoginModal(false);
   };
 
   return (
@@ -277,7 +291,7 @@ const InquiryWritePage = () => {
             >
               <img src={addPhotoIcon} alt="사진 추가" className="w-6 h-6" />
               <span
-                className="text-base md:text-lg lg:text-xl ml-2"
+                className="text-base md:text-lg lg:text-xl ml-4"
                 style={{
                   color: "var(--WIT-White, var(--White, #FFF))",
                   fontFamily: "Pretendard",
@@ -343,6 +357,62 @@ const InquiryWritePage = () => {
           </div>
         </div>
       </div>
+
+      {/* 로그인 요구 모달 */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              width: "686px",
+              padding: "40px",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+              gap: "40px",
+              borderRadius: "32px",
+              background: "var(--White, #FFF)",
+            }}
+          >
+            <p
+              style={{
+                alignSelf: "stretch",
+                color: "var(--WIT-Gray600, #333)",
+                fontFamily: "Pretendard",
+                fontSize: "24px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                lineHeight: "150%",
+                letterSpacing: "-0.48px",
+              }}
+            >
+              이 기능은 로그인 후 이용 가능합니다.
+            </p>
+            <button
+              onClick={handleLoginModalClose}
+              className="text-white font-medium transition-colors"
+              style={{
+                display: "flex",
+                width: "160px",
+                padding: "12px 16px",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "32px",
+                background: "var(--WIT-Blue, #0080FF)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

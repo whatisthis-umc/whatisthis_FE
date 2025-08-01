@@ -1,26 +1,96 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Box, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box, Button, CircularProgress } from "@mui/material";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { dummyReports } from "../../../data/dummyReports";
 import { dummyPosts } from "../../../types/post";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
+import { reportApi, type ReportDetail } from "../../../api/reportApi";
 
 export default function AdminReportDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [report, setReport] = useState<any>(null); // 임시: 상세조회 API 스웨거 문서 확인 후 타입 수정
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const report = dummyReports.find(r => r.id === Number(id));
-  const post = report ? dummyPosts.find(p => p.id === report.postId) : null;
+  // 신고 상세 정보 조회 (임시: 더미 데이터 사용, 나중에 상세조회 API 스웨거 문서 확인 후 수정)
+  useEffect(() => {
+    const fetchReportDetail = async () => {
+      if (!id) return;
 
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // 임시: 더미 데이터 사용 (상세조회 API 스웨거 문서 필요)
+        const dummyReport = dummyReports.find(r => r.id === Number(id));
+        if (dummyReport) {
+          // 기존 구조 유지 (상세 페이지에서 필요한 모든 정보 포함)
+          setReport(dummyReport as any);
+        } else {
+          throw new Error('신고를 찾을 수 없습니다.');
+        }
+      } catch (err) {
+        console.error('신고 상세 조회 실패:', err);
+        setError('신고 정보를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportDetail();
+  }, [id]);
+  const post = report ? dummyPosts.find(p => p.id === (report as any).postId) : null;
+
+  // 로딩 상태
+  if (loading) {
+    return (
+      <AdminLayout>
+        <Box className="px-10 py-6 flex justify-center items-center min-h-[400px]">
+          <CircularProgress />
+        </Box>
+      </AdminLayout>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <AdminLayout>
+        <Box className="px-10 py-6">
+          <h2 className="text-2xl font-bold mb-6">신고내용</h2>
+          <Box className="text-center py-8">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button 
+              variant="contained" 
+              onClick={() => navigate('/admin/reports')}
+            >
+              목록으로 돌아가기
+            </Button>
+          </Box>
+        </Box>
+      </AdminLayout>
+    );
+  }
+
+  // 신고를 찾을 수 없는 경우
   if (!report) {
     return (
       <AdminLayout>
         <Box className="px-10 py-6">
           <h2 className="text-2xl font-bold mb-6">신고내용</h2>
-          <p>신고를 찾을 수 없습니다.</p>
+          <Box className="text-center py-8">
+            <p className="mb-4">신고를 찾을 수 없습니다.</p>
+            <Button 
+              variant="contained" 
+              onClick={() => navigate('/admin/reports')}
+            >
+              목록으로 돌아가기
+            </Button>
+          </Box>
         </Box>
       </AdminLayout>
     );
@@ -37,11 +107,22 @@ export default function AdminReportDetailPage() {
     );
   }
 
-  const handleStatusChange = (action: 'delete' | 'keep') => {
-    const actionText = action === 'delete' ? '삭제' : '유지';
-    // 실제로는 API 호출
-    setModalMessage(`${actionText} 처리되었습니다.`);
-    setModalOpen(true);
+  const handleStatusChange = async (action: 'delete' | 'keep') => {
+    if (!report) return;
+
+    try {
+      await reportApi.processReport((report as any).id || report.reportId, action);
+      const actionText = action === 'delete' ? '삭제' : '유지';
+      setModalMessage(`${actionText} 처리되었습니다.`);
+      setModalOpen(true);
+      
+      // 상태 업데이트
+      setReport((prev: any) => prev ? { ...prev, status: 'processed' } : null);
+    } catch (error) {
+      console.error('신고 처리 실패:', error);
+      setModalMessage('처리 중 오류가 발생했습니다.');
+      setModalOpen(true);
+    }
   };
 
   const handleModalClose = () => {

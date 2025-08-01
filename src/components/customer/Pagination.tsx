@@ -28,7 +28,7 @@ const Pagination: React.FC<PaginationProps> = ({
   // 표시할 페이지 번호 배열 생성
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
-    (_, i) => startPage + i
+    (_, i) => startPage + i,
   );
 
   return (
@@ -39,7 +39,7 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage <= 1}
         className={`w-6 h-6 rounded-full transition-colors flex flex-col justify-center items-center ${
           currentPage <= 1
-            ? "opacity-30 cursor-not-allowed"
+            ? "cursor-not-allowed"
             : "hover:bg-gray-100 cursor-pointer"
         }`}
         style={{ gap: "10px" }}
@@ -75,7 +75,7 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage >= totalPages}
         className={`w-6 h-6 rounded-full transition-colors flex flex-col justify-center items-center ${
           currentPage >= totalPages
-            ? "opacity-30 cursor-not-allowed"
+            ? "cursor-not-allowed"
             : "hover:bg-gray-100 cursor-pointer"
         }`}
         style={{ gap: "10px" }}
