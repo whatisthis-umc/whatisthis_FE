@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { profile, favorite, bookmark, logo } from "../assets";
+import { profile, favorite, bookmark, logo, menu } from "../assets";
 import Searchbar from "./Searchbar";
+import Sidebar from "./Sidebar";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const isAdmin =
     location.pathname.startsWith("/admin") ||
@@ -36,19 +38,24 @@ const Navbar = () => {
       </div>
       {/*모바일*/}
       <div className="flex items-center justify-between mt-1 px-4 py-2 md:hidden">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+        <img
+          src={menu}
+          alt="메뉴"
+          className="w-7 h-7"
+          onClick={() => setIsSidebarOpen(true)}
+        />
         <img
           src={logo}
           alt="로고"
-          className="w-[49px] h-[24px] cursor-pointer"
+          className="w-[50px] h-[27px] cursor-pointer"
           onClick={() => navigate("/")}
         />
         <div className="flex items-center gap-4">
           <Searchbar onSearch={handleSearch} />
-          <img
-            src={profile}
-            className="w-9 h-9 cursor-pointer"
-            onClick={() => navigate("/my")}
-          />
         </div>
       </div>
       <div className="flex justify-center  gap-0 md:hidden mt-1 px-2">

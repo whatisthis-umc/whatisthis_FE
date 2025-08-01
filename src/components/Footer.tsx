@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom"; // 관리자 페이지에서는 푸터 안 보이게
+import { useLocation, useNavigate } from "react-router-dom"; // 관리자 페이지에서는 푸터 안 보이게
 import { insta } from "../assets";
 import { X } from "../assets";
 import React from "react";
@@ -8,7 +8,7 @@ const Footer = () => {
   const isAdminPage =
     location.pathname.startsWith("/admin") ||
     location.pathname === "/adminlogin";
-
+  const navigate = useNavigate();
   if (isAdminPage) return null; // 관리자 페이지에서는 푸터 안 보이게
 
   return (
@@ -27,7 +27,7 @@ const Footer = () => {
           </div>
         </div>
         {/* 가운데 */}
-        <div className="flex flex-col gap-2 mt-4 md:mt-10 items-start text-left ml-8 md:ml-[-500px]">
+        <div className="flex flex-col gap-2 mt-4 md:mt-10 items-start text-left ml-6 md:ml-15 md:mr-100">
           <span className="text-[11px] md:text-[14px] font-[600]">
             이게뭐예요?
           </span>
@@ -39,14 +39,14 @@ const Footer = () => {
           </span>
         </div>
         {/* 오른쪽 */}
-        <div className="flex flex-col gap-2 mt-4 md:mt-10 mr-3 md:mr-10 items-start text-left">
+        <div className="flex flex-col gap-2 mt-4 md:mt-10 mr-3 md:mr-20 items-start text-left">
           <span className="text-[11px]  md:text-[14px] font-[600] ml-5 md:ml-6">
             고객센터
           </span>
-          <div className="flex flex-col w-full text-[10px] md:text-[14px] font-[500] border-l border-[#666666] pl-5 md:pl-6 mr-3 md:mr-10">
-            <span>Q&A</span>
-            <span>공지사항</span>
-            <span>1:1 문의</span>
+          <div className="flex flex-col w-full text-[10px] md:text-[14px] font-[500] border-l border-[#666666] pl-5 md:pl-6 mr-3 md:mr-10 cursor-pointer">
+            <span onClick={() => navigate("/customer/notice")}>Q&A</span>
+            <span onClick={() => navigate("/customer/qna")}>공지사항</span>
+            <span onClick={() => navigate("/customer/inquiry")}>1:1 문의</span>
           </div>
         </div>
       </div>

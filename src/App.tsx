@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
 import MainPage from "./pages/MainPage";
 import Navbar from "./components/Navbar";
@@ -8,11 +8,11 @@ import InquiryPage from "./pages/customer/InquiryPage"; // 1:1 문의
 import InquiryWritePage from "./pages/customer/InquiryWritePage"; // 1:1 문의 작성
 import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
-import CommunityPage from "./pages/CommunityPage";
-import MyInfoPage from "./pages/MyInfoPage";
+import CommunityPage from "./pages/community/CommunityPage";
+import MyInfoEditPage from "./pages/my/MyInfoEditPage";
 import ItemsPage from "./pages/items/ItemsPage";
 import ItemsDetailPage from "./pages/items/ItemsDetailPage";
-import MyPage from "./pages/MyPage";
+import MyPage from "./pages/my/MyPage";
 import LikesPage from "./pages/LikesPage";
 import ScrapPage from "./pages/ScrapPage";
 import { InquiryProvider } from "./contexts/InquiryContext";
@@ -40,6 +40,8 @@ import AdminQnaDetailPage from "./pages/AdminPages/AdminQna/AdminQnaDetailPage";
 import AdminQnaEditPage from "./pages/AdminPages/AdminQna/AdminQnaEditPage";
 import AdminNewQnaPage from "./pages/AdminPages/AdminQna/AdminNewQnaPage";
 import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import CommunityPostPage from "./pages/community/CommunityPostPage";
 
 function App() {
   return (
@@ -48,7 +50,7 @@ function App() {
         <div className="min-h-screen flex flex-col">
           <div className="w-full max-w-[1440px] px-4 mx-auto flex flex-col flex-grow">
             <Navbar />
-            <main className="flex-grow pb-[1300px]">
+            <main className="flex-grow pb-60">
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/search" element={<MainPage />} />
@@ -60,7 +62,9 @@ function App() {
                 <Route path="/scrap" element={<ScrapPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
                 <Route path="/community" element={<CommunityPage />} />
-                <Route path="/myinfo" element={<MyInfoPage />} />
+                <Route path="/myinfo" element={<MyInfoEditPage />} />
+                <Route path="/post" element={<PostDetailPage />} />
+                <Route path="/communitypost" element={<CommunityPostPage />} />
 
                 <Route path="/tips" element={<TipsPage />} />
                 <Route path="/tips/list" element={<TipsDetailPage />} />
@@ -79,43 +83,44 @@ function App() {
                 />
 
                 <Route path="/admin/login" element={<AdminLoginPage />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-
-                <Route path="/admin/notice" element={<AdminNoticePage />} />
                 <Route
-                  path="/admin/notice/new"
-                  element={<AdminNewNoticePage />}
-                />
-                <Route
-                  path="/admin/notice/edit/:id"
-                  element={<AdminNoticeEditPage />}
-                />
-                <Route
-                  path="/admin/notice/:id"
-                  element={<AdminNoticeDetailPage />}
-                />
-
-                <Route path="/admin/post" element={<AdminPostPage />} />
-                <Route
-                  path="/admin/post/:id"
-                  element={<AdminPostDetailPage />}
-                />
-                <Route
-                  path="/admin/post/edit/:id"
-                  element={<AdminPostEditPage />}
-                />
-                <Route path="/admin/post/new" element={<AdminNewPostPage />} />
-                <Route path="/admin/reports" element={<AdminReportPage />} />
-                <Route path="/admin/reports/:id" element={<AdminReportDetailPage />} />
-                <Route path="/admin/inquiries" element={<AdminInquiryPage />} />
-                <Route path="/admin/inquiries/:id" element={<AdminInquiryDetailPage />} />
-                <Route path="/admin/qna" element={<AdminQnaPage />} />
-                <Route path="/admin/qna/:id" element={<AdminQnaDetailPage />} />
-                <Route
-                  path="/admin/qna/edit/:id"
-                  element={<AdminQnaEditPage />}
-                />
-                <Route path="/admin/qna/new" element={<AdminNewQnaPage />} />
+                  path="/admin/*"
+                  element={
+                    <ProtectedRoute>
+                      <Outlet />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="notice" element={<AdminNoticePage />} />
+                  <Route path="notice/new" element={<AdminNewNoticePage />} />
+                  <Route
+                    path="notice/edit/:id"
+                    element={<AdminNoticeEditPage />}
+                  />
+                  <Route
+                    path="notice/:id"
+                    element={<AdminNoticeDetailPage />}
+                  />
+                  <Route path="post" element={<AdminPostPage />} />
+                  <Route path="post/:id" element={<AdminPostDetailPage />} />
+                  <Route path="post/edit/:id" element={<AdminPostEditPage />} />
+                  <Route path="post/new" element={<AdminNewPostPage />} />
+                  <Route path="reports" element={<AdminReportPage />} />
+                  <Route
+                    path="reports/:id"
+                    element={<AdminReportDetailPage />}
+                  />
+                  <Route path="inquiries" element={<AdminInquiryPage />} />
+                  <Route
+                    path="inquiries/:id"
+                    element={<AdminInquiryDetailPage />}
+                  />
+                  <Route path="qna" element={<AdminQnaPage />} />
+                  <Route path="qna/:id" element={<AdminQnaDetailPage />} />
+                  <Route path="qna/edit/:id" element={<AdminQnaEditPage />} />
+                  <Route path="qna/new" element={<AdminNewQnaPage />} />
+                </Route>
               </Routes>
             </main>
             <Footer />

@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { search, arrowDownIcon } from "../assets";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const Searchbar = ({ onSearch }: { onSearch: (keyword: string) => void }) => {
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setInput("");
+    setIsSearchOpen(false);
+  }, [location.pathname]);
   const handleSearch = () => {
     onSearch(input);
   };
