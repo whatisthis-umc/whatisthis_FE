@@ -235,14 +235,16 @@ export default function AdminPostPage() {
     letterSpacing: "-2%",
     color: "#333333",
     textAlign: "left", 
+
           }}>
             {paginatedPosts.map((post) => (
               <TableRow
                 key={post.id}
                 onClick={() => navigate(`/admin/post/${post.id}`)} // ← 이동
                 style={{ cursor: "pointer" }}
+                
               >
-                <TableCell>
+                <TableCell sx={{borderBottom: "1px solid #333333"}}>
                   <Box
     sx={{
       display: "inline-block",
@@ -272,6 +274,7 @@ export default function AdminPostPage() {
     letterSpacing: "-2%",
     color: "#333333",
     textAlign: "left", // ← 필요시 center로 조정 가능
+    borderBottom: "1px solid #333333"
   }}>{post.title}</TableCell>
                 <TableCell
                 sx={{
@@ -281,9 +284,14 @@ export default function AdminPostPage() {
     lineHeight: "150%",
     letterSpacing: "-2%",
     color: "#333333",
-    textAlign: "center",
+    textAlign: "left",
+    borderBottom: "1px solid #333333"
   }}>{post.date}</TableCell>
-                <TableCell>
+                <TableCell
+                sx={{
+    borderBottom: "1px solid #333333", // ✅ 반드시 추가!
+    textAlign: "left",
+  }}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -299,8 +307,8 @@ export default function AdminPostPage() {
       letterSpacing: "-1%",
       padding: "4px 12px",
       borderRadius: "32px",
-      border: "none",
       cursor: "pointer",
+      border: "none",
     }}
                   >
                     삭제
