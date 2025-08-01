@@ -48,7 +48,7 @@ export default function AdminNoticePage() {
     setCurrentPage(1); // 검색 시 첫 페이지로
   };
   //삭제
-  const handleDelete = (/* id: number */) => {
+  const handleDelete = (id: number/* id: number */) => {
     const confirmed = window.confirm("정말 삭제하시겠습니까?");
     if (confirmed) {
       alert("삭제 처리되었습니다.");
@@ -263,7 +263,7 @@ export default function AdminNoticePage() {
                   </Box>
                 </TableCell>
                 <TableCell
-<<<<<<< HEAD
+
                 sx={{
     fontFamily: "Pretendard",
     fontWeight: 500,
@@ -287,34 +287,7 @@ export default function AdminNoticePage() {
   }}>{post.date}</TableCell>
                 <TableCell
                 sx={{ borderBottom: "1px solid #333333"}}>
-=======
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "left", // ← 필요시 center로 조정 가능
-                  }}
-                >
-                  {post.title}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "center",
-                  }}
-                >
-                  {post.date}
-                </TableCell>
-                <TableCell>
->>>>>>> dev
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

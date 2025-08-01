@@ -40,14 +40,9 @@ import AdminQnaDetailPage from "./pages/AdminPages/AdminQna/AdminQnaDetailPage";
 import AdminQnaEditPage from "./pages/AdminPages/AdminQna/AdminQnaEditPage";
 import AdminNewQnaPage from "./pages/AdminPages/AdminQna/AdminNewQnaPage";
 import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditPage";
-<<<<<<< HEAD
 import FindAccountPages from "./pages/FindAccountPage";
-
-
-=======
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
->>>>>>> dev
 
 function App() {
   return (

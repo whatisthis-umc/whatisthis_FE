@@ -48,7 +48,7 @@ export default function AdminNoticePage() {
     setCurrentPage(1); // 검색 시 첫 페이지로
   };
   //삭제
-  const handleDelete = (/* id: number */) => {
+  const handleDelete = (id: number/* id: number */) => {
     const confirmed = window.confirm("정말 삭제하시겠습니까?");
     if (confirmed) {
       alert("삭제 처리되었습니다.");
@@ -198,18 +198,6 @@ export default function AdminNoticePage() {
                 게시글 제목
               </TableCell>
               <TableCell
-<<<<<<< HEAD
-              sx={{
-                fontFamily: "Pretendard",
-    fontWeight: 700,
-    fontSize: "20px",
-    lineHeight: "150%",
-    letterSpacing: "-2%",
-    color: "#333333",
-    textAlign: "left",
-    verticalAlign: "middle",
-              }}>신고일</TableCell>
-=======
                 sx={{
                   fontFamily: "Pretendard",
                   fontWeight: 700,
@@ -222,7 +210,6 @@ export default function AdminNoticePage() {
               >
                 신고일
               </TableCell>
->>>>>>> dev
               <TableCell
                 sx={{
                   fontFamily: "Pretendard",
@@ -239,18 +226,7 @@ export default function AdminNoticePage() {
             </TableRow>
           </TableHead>
           <TableBody
-<<<<<<< HEAD
-          sx={{
-            fontFamily: "Pretendard",
-    fontWeight: 500,
-    fontSize: "20px",
-    lineHeight: "150%",
-    letterSpacing: "-2%",
-    color: "#333333",
-    textAlign: "left", 
-    
-          }}>
-=======
+
             sx={{
               fontFamily: "Pretendard",
               fontWeight: 500,
@@ -261,7 +237,7 @@ export default function AdminNoticePage() {
               textAlign: "left",
             }}
           >
->>>>>>> dev
+
             {paginatedPosts.map((post) => (
               <TableRow
                 key={post.id}
@@ -271,23 +247,7 @@ export default function AdminNoticePage() {
                 <TableCell
                 sx={{ borderBottom: "1px solid #333333"}}>
                   <Box
-<<<<<<< HEAD
-    sx={{
-      display: "inline-block",
-      padding: "4px 12px",
-      border: "1px solid #999999",
-      borderRadius: "32px",
-      fontFamily: "Pretendard",
-      fontWeight: 500,
-      fontSize: "20px",
-      lineHeight: "150%",
-      letterSpacing: "-2%",
-      color: "#333333",
-       
-    }}
-  >
 
-=======
                     sx={{
                       display: "inline-block",
                       padding: "4px 12px",
@@ -301,13 +261,13 @@ export default function AdminNoticePage() {
                       color: "#333333",
                     }}
                   >
->>>>>>> dev
+
                     {adminPostCategories.find((cat) => cat.id === post.category)
                       ?.name ?? post.category}
                   </Box>
                 </TableCell>
                 <TableCell
-<<<<<<< HEAD
+
                 sx={{
     fontFamily: "Pretendard",
     fontWeight: 500,
@@ -331,34 +291,6 @@ export default function AdminNoticePage() {
   }}>{post.date}</TableCell>
                 <TableCell
                 sx={{ borderBottom: "1px solid #333333"}}>
-=======
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "left", // ← 필요시 center로 조정 가능
-                  }}
-                >
-                  {post.title}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "center",
-                  }}
-                >
-                  {post.date}
-                </TableCell>
-                <TableCell>
->>>>>>> dev
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

@@ -47,7 +47,7 @@ export default function AdminPostPage() {
     setCurrentPage(1); // 검색 시 첫 페이지로
   };
   //삭제
-  const handleDelete = (/* id: number */) => {
+  const handleDelete = (id: number/* id: number */) => {
     const confirmed = window.confirm("정말 삭제하시겠습니까?");
     if (confirmed) {
       alert("삭제 처리되었습니다.");
@@ -239,18 +239,7 @@ export default function AdminPostPage() {
             </TableRow>
           </TableHead>
           <TableBody
-<<<<<<< HEAD
-          sx={{
-            fontFamily: "Pretendard",
-    fontWeight: 500,
-    fontSize: "20px",
-    lineHeight: "150%",
-    letterSpacing: "-2%",
-    color: "#333333",
-    textAlign: "left", 
 
-          }}>
-=======
             sx={{
               fontFamily: "Pretendard",
               fontWeight: 500,
@@ -261,7 +250,7 @@ export default function AdminPostPage() {
               textAlign: "left",
             }}
           >
->>>>>>> dev
+
             {paginatedPosts.map((post) => (
               <TableRow
                 key={post.id}
@@ -289,7 +278,7 @@ export default function AdminPostPage() {
                   </Box>
                 </TableCell>
                 <TableCell
-<<<<<<< HEAD
+
                 sx={{
     fontFamily: "Pretendard",
     fontWeight: 500,
@@ -311,59 +300,17 @@ export default function AdminPostPage() {
     textAlign: "left",
     borderBottom: "1px solid #333333"
   }}>{post.date}</TableCell>
+               
                 <TableCell
-                sx={{
-    borderBottom: "1px solid #333333", // ✅ 반드시 추가!
-    textAlign: "left",
-  }}>
-=======
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "left", // ← 필요시 center로 조정 가능
-                  }}
-                >
-                  {post.title}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "center",
-                  }}
-                >
-                  {post.date}
-                </TableCell>
-                <TableCell>
->>>>>>> dev
+                sx={{borderBottom: "1px solid #333333"}}>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(post.id);
                     }}
                     style={{
-<<<<<<< HEAD
-      backgroundColor: "#0080FF",
-      color: "#FFFFFF",
-      fontFamily: "Pretendard",
-      fontSize: "14px",
-      fontWeight: 500,
-      lineHeight: "150%",
-      letterSpacing: "-1%",
-      padding: "4px 12px",
-      borderRadius: "32px",
-      cursor: "pointer",
-      border: "none",
-    }}
-=======
+
                       backgroundColor: "#0080FF",
                       color: "#FFFFFF",
                       fontFamily: "Pretendard",
@@ -375,8 +322,9 @@ export default function AdminPostPage() {
                       borderRadius: "32px",
                       border: "none",
                       cursor: "pointer",
+                      
                     }}
->>>>>>> dev
+
                   >
                     삭제
                   </button>
