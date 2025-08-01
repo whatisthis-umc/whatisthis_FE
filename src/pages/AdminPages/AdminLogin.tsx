@@ -1,27 +1,31 @@
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   TextField,
   Button,
   Box,
   InputAdornment,
   FormHelperText,
-} from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import AdminLayout from '../../layouts/AdminLayout/AdminLayout';
+} from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import AdminLayout from "../../layouts/AdminLayout/AdminLayout";
+import { adminLogin } from "../../api/auth/admin";
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
 
-  const isFilled = username.trim() !== '' && password.trim() !== '';
+  const isFilled = username.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = () => {
-    if (username === 'admin' && password === '1234') {
-      navigate('/admin');
-    } else {
+  const handleLogin = async () => {
+    try {
+      const accessToken = await adminLogin(username, password);
+      localStorage.setItem("adminAccessToken", accessToken);
+      navigate("/admin");
+    } catch (err) {
+      console.error("로그인 실패:", err);
       setError(true);
     }
   };
@@ -32,14 +36,14 @@ export default function AdminLoginPage() {
         <Box
           className="w-[400px] border border-[#E6E6E6] rounded-[32px] shadow-md bg-white flex flex-col items-center"
           sx={{
-            padding: '40px 24px 32px 24px',
+            padding: "40px 24px 32px 24px",
           }}
         >
           {/* 입력 영역 */}
           <Box
             className="flex flex-col gap-6"
             sx={{
-              width: '352px',
+              width: "352px",
             }}
           >
             {/* 아이디 */}
@@ -51,34 +55,33 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               InputLabelProps={{
-                
                 style: {
-                  color: '#333333',
-                  fontSize: '16px',
+                  color: "#333333",
+                  fontSize: "16px",
                   fontWeight: 500,
-                  fontFamily: 'Pretendard',
-                  letterSpacing: '-1%',
-                  lineHeight: '150%',
+                  fontFamily: "Pretendard",
+                  letterSpacing: "-1%",
+                  lineHeight: "150%",
                 },
               }}
               inputProps={{
                 style: {
-                  fontSize: '16px',
+                  fontSize: "16px",
                   fontWeight: 500,
-                  fontFamily: 'Pretendard',
-                  letterSpacing: '-1%',
-                  lineHeight: '150%',
-                  paddingTop: '24px',
-                  paddingBottom: '8px',
+                  fontFamily: "Pretendard",
+                  letterSpacing: "-1%",
+                  lineHeight: "150%",
+                  paddingTop: "24px",
+                  paddingBottom: "8px",
                 },
               }}
               sx={{
-                height: '68px',
-                '& label.Mui-focused': {
-                  color: '#4B4B4B',
+                height: "68px",
+                "& label.Mui-focused": {
+                  color: "#4B4B4B",
                 },
-                '& .MuiInput-underline:after': {
-                  borderBottomColor: '#D9D9D9',
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#D9D9D9",
                 },
               }}
             />
@@ -95,23 +98,23 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               InputLabelProps={{
                 style: {
-                  color: '#333333',
-                  fontSize: '16px',
+                  color: "#333333",
+                  fontSize: "16px",
                   fontWeight: 500,
-                  fontFamily: 'Pretendard',
-                  letterSpacing: '-1%',
-                  lineHeight: '150%',
+                  fontFamily: "Pretendard",
+                  letterSpacing: "-1%",
+                  lineHeight: "150%",
                 },
               }}
               inputProps={{
                 style: {
-                  fontSize: '16px',
+                  fontSize: "16px",
                   fontWeight: 500,
-                  fontFamily: 'Pretendard',
-                  letterSpacing: '-1%',
-                  lineHeight: '150%',
-                  paddingTop: '24px',
-                  paddingBottom: '8px',
+                  fontFamily: "Pretendard",
+                  letterSpacing: "-1%",
+                  lineHeight: "150%",
+                  paddingTop: "24px",
+                  paddingBottom: "8px",
                 },
               }}
               InputProps={{
@@ -122,12 +125,12 @@ export default function AdminLoginPage() {
                 ) : null,
               }}
               sx={{
-                height: '68px',
-                '& label.Mui-focused': {
-                  color: '#4B4B4B',
+                height: "68px",
+                "& label.Mui-focused": {
+                  color: "#4B4B4B",
                 },
-                '& .MuiInput-underline:after': {
-                  borderBottomColor: error ? '#FF3B30' : '#D9D9D9',
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: error ? "#FF3B30" : "#D9D9D9",
                 },
               }}
             />
@@ -137,11 +140,11 @@ export default function AdminLoginPage() {
               <FormHelperText
                 error
                 style={{
-                  fontSize: '14px',
+                  fontSize: "14px",
                   fontWeight: 500,
-                  fontFamily: 'Pretendard',
-                  letterSpacing: '-1%',
-                  marginTop: '4px',
+                  fontFamily: "Pretendard",
+                  letterSpacing: "-1%",
+                  marginTop: "4px",
                 }}
               >
                 아이디와 비밀번호가 틀렸습니다.
@@ -158,15 +161,15 @@ export default function AdminLoginPage() {
             disabled={!isFilled}
             sx={{
               mt: 10,
-              width: '352px',
-              height: '48px',
-              borderRadius: '9999px',
-              backgroundColor: isFilled ? '#D9D9D9' : '#E6E6E6',
-              color: isFilled ? '#333' : '#9E9E9E',
+              width: "352px",
+              height: "48px",
+              borderRadius: "9999px",
+              backgroundColor: isFilled ? "#D9D9D9" : "#E6E6E6",
+              color: isFilled ? "#333" : "#9E9E9E",
               fontWeight: 500,
-              fontSize: '15px',
-              '&:hover': {
-                backgroundColor: isFilled ? '#D0D0D0' : '#E6E6E6',
+              fontSize: "15px",
+              "&:hover": {
+                backgroundColor: isFilled ? "#D0D0D0" : "#E6E6E6",
               },
             }}
           >

@@ -1,11 +1,15 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 export default function AdminNavbar() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    navigate('/admin/login');
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem("adminAccessToken");
+      navigate("/admin/login");
+    } catch (err) {
+      console.error("로그인 실패:", err);
+    }
   };
 
   return (
