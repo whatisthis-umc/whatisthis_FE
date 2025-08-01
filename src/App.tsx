@@ -40,6 +40,7 @@ import AdminQnaDetailPage from "./pages/AdminPages/AdminQna/AdminQnaDetailPage";
 import AdminQnaEditPage from "./pages/AdminPages/AdminQna/AdminQnaEditPage";
 import AdminNewQnaPage from "./pages/AdminPages/AdminQna/AdminNewQnaPage";
 import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditPage";
+import FindAccountPages from "./pages/FindAccountPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
 
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup/*" element={<SignupPage />} />
+                <Route path="/find/*" element={<FindAccountPages />} />
 
                 <Route path="/likes" element={<LikesPage />} />
                 <Route path="/scrap" element={<ScrapPage />} />
