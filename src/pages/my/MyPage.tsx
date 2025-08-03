@@ -2,9 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { eye, like, commentIcon } from "../../assets";
 
+
+
 const MyPage = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"작성내역" | "문의내역">("작성내역");
+  
+  
 
   const posts = Array.from({ length: 6 }, (_, i) => ({
     id: i + 1,
