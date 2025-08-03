@@ -21,15 +21,18 @@ export const useAuth = () => {
 export default function SomeComponent() {
   
 
-const { isLoggedIn } = useAuth(); 
-   useEffect(() => {
-    if (!isLoggedIn) {
-      alert("로그인 후 이용 가능한 페이지입니다.");
-      navigate("/login");
-    }
-  }, [isLoggedIn, navigate]);
-  }
+  const { isLoggedIn } = useAuth();
+  const [showModal, setShowModal] = useState(false);
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setShowModal(true);
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn && showModal) {
+    return <LoginModal onClose={() => setShowModal(false)} />;
+  }
 
 
 } 안에 집어넣고 import 까지하기

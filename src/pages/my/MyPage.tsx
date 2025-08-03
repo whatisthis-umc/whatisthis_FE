@@ -4,6 +4,7 @@ import { eye, like, commentIcon } from "../../assets";
 
 
 
+
 const MyPage = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"작성내역" | "문의내역">("작성내역");
