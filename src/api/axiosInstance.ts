@@ -1,8 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 
+const baseURL = import.meta.env.API_BASE_URL;
 export const axiosInstance = axios.create({
-    baseURL : 'http://52.78.98.150:8080',
-    headers: {
-        'Content-Type': 'application/json',
-    }
-})
+  baseURL: baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  responseType: "json",
+});
