@@ -8,8 +8,9 @@ import { whitescrap, reportIcon } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
-import { tipDetailService, type TipPostDetail } from "../../api/tipDetailApi";
-import { tipService, type TipPost } from "../../api/lifeTipsApi";
+import { tipDetailService } from "../../api/tipDetailApi";
+import { tipService } from "../../api/lifeTipsApi";
+import type { TipPostDetail, TipPost } from "../../api/types";
 
 const TipsPostDetailPage = () => {
   const { id } = useParams();

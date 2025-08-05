@@ -5,7 +5,8 @@ import Searchbar from "../../components/Searchbar";
 import SortDropdown from "../../components/common/SortDropdown";
 import ItemCard from "../../components/ItemCard";
 import { tipCategories } from "../../data/categoryList";
-import { tipService, type TipPost } from "../../api/lifeTipsApi";
+import { tipService } from "../../api/lifeTipsApi";
+import type { TipPost } from "../../api/types";
 import Pagination from "../../components/customer/Pagination";
 import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
 

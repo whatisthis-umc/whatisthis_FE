@@ -1,18 +1,5 @@
 import { axiosInstance } from "./axiosInstance";
-
-export interface TipPost {
-  postId: number;
-  title: string;
-  summary: string;
-  thumbnailUrl: string;
-  imageUrls: string[];
-  date: string;
-  views: number;
-  scraps: number;
-  hashtags: string[];
-  category: string;
-  subCategories?: string[];
-}
+import type { TipPost } from "./types";
 
 export const tipService = {
   getAllTips: (page: number): Promise<{ posts: TipPost[]; totalPages: number }> =>
@@ -161,6 +148,7 @@ export const tipService = {
               hashtags: finalHashtags,
               category: postData?.category || "LIFE_TIP",
               subCategories: raw.subCategory ? [raw.subCategory] : [],
+              type: "tips",
             };
             
             return result;
