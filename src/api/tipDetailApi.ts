@@ -1,20 +1,5 @@
 import { axiosInstance } from "./axiosInstance";
-import type { CustomResponse } from "./tipApi";
-
-export interface TipPostDetail {
-  postId: number;
-  category: string;
-  subCategories: string;
-  title: string;
-  content: string;
-  hashtags: string[];
-  images: string[];
-  likeCount: number;
-  scrapCount: number;
-  viewCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { CustomResponse, TipPostDetail } from "./types";
 // 꿀팁 상세조회
 export const tipDetailService = {
   getTipDetail: (postId: number): Promise<TipPostDetail> =>
