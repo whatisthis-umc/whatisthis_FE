@@ -1306,8 +1306,13 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
+<<<<<<< HEAD
+  follow-redirects@1.15.11:
+    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
+=======
   follow-redirects@1.15.9:
     resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
+>>>>>>> b082e0743acd3c9426da27dee5de1e0f57ecfd1a
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -2916,7 +2921,11 @@ snapshots:
 
   axios@1.11.0:
     dependencies:
+<<<<<<< HEAD
+      follow-redirects: 1.15.11
+=======
       follow-redirects: 1.15.9
+>>>>>>> b082e0743acd3c9426da27dee5de1e0f57ecfd1a
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -3226,7 +3235,11 @@ snapshots:
 
   flatted@3.3.3: {}
 
+<<<<<<< HEAD
+  follow-redirects@1.15.11: {}
+=======
   follow-redirects@1.15.9: {}
+>>>>>>> b082e0743acd3c9426da27dee5de1e0f57ecfd1a
 
   form-data@4.0.4:
     dependencies:
