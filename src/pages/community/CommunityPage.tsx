@@ -4,6 +4,7 @@ import SortDropdown from "../../components/common/SortDropdown";
 import Pagination from "../../components/customer/Pagination";
 import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
 import useGetCommunity from "../../hooks/queries/useGetCommunity";
+import LoginModal from "../../components/modals/LoginModal";
 import type { CommunityPost, CommunitySortType } from "../../types/community";
 
 const categories = [
@@ -28,9 +29,6 @@ const mapFrontendCategoryToAPI = (category: string): string | null => {
   }
 };
 
-const convertToUIType = (apiType: CommunitySortType): "인기순" | "최신순" =>
-  apiType === "BEST" ? "인기순" : "최신순";
-
 const convertToAPIType = (uiType: "인기순" | "최신순"): CommunitySortType =>
   uiType === "인기순" ? "BEST" : "LATEST";
 
@@ -39,6 +37,7 @@ const CommunityPage = () => {
   const [sortType, setSortType] = useState<"인기순" | "최신순">("인기순");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [showLoginModal, setShowLoginModal] = useState(false); // ✅ 추가
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,10 +83,7 @@ const CommunityPage = () => {
       </div>
 
       <div className="flex justify-end mb-4">
-        <SortDropdown
-          defaultValue={sortType}
-          onChange={setSortType}
-        />
+        <SortDropdown defaultValue={sortType} onChange={setSortType} />
       </div>
 
       <div className="flex flex-col gap-4">
@@ -182,13 +178,24 @@ const CommunityPage = () => {
 
       <div className="fixed bottom-5 right-5 md:static md:mt-10 flex justify-end z-[50]">
         <button
-          onClick={() => navigate("/communitypost")}
+          onClick={() => {
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) {
+              setShowLoginModal(true); // ✅ 모달 열기
+              return;
+            }
+            navigate("/communitypost");
+          }}
           className="bg-[#0080FF] text-white flex items-center gap-2 rounded-[32px] px-6 py-3 text-sm md:text-base"
         >
           <img src={writeIcon} alt="write" className="w-5 h-5" />
           글쓰기
         </button>
       </div>
+
+      {showLoginModal && (
+        <LoginModal onClose={() => setShowLoginModal(false)} />
+      )}
     </div>
   );
 };
