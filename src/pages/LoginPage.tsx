@@ -1,8 +1,10 @@
 import kakaoIcon from '/src/assets/kakao.png';
 import naverIcon from '/src/assets/naver.png';
 import googleIcon from '/src/assets/google.png';
+import errorIcon from '/src/assets/error.png';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { login } from '../api/auth/login';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,36 +17,29 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setIsLoading(true);
     setError('');
+      
+  try {
+    const data = await login({ memberId, password }); // 
 
-    try {
-      const response = await fetch('http://52.78.98.150:8080/members/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          memberId,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.isSuccess) {
-        // 로그인 성공 처리
-        console.log('accessToken:', data.result.accessToken);
-        // navigate('/main'); 
-      } else {
-        setError(data.message); 
-      }
-    } catch (e) {
-      setError('서버에 연결할 수 없습니다.');
-    } finally {
-      setIsLoading(false);
+    if (data.isSuccess) {
+      const { accessToken, refreshToken } = data.result;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      navigate('/community');
+    } else {
+      setError(data.message);
     }
-  };
-
-
-
+  } catch (e: any) {
+    // axios 에러 처리
+    if (e.response && e.response.data && e.response.data.message) {
+      setError(e.response.data.message);
+    } else {
+      setError('서버에 연결할 수 없습니다.');
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow flex items-center justify-center bg-white">
@@ -89,7 +84,7 @@ export default function LoginPage() {
     />
     {error && (
       <img
-        src="../src/assets/error.png"
+        src={errorIcon}
         alt="error icon"
         className="w-[16px] h-[16px] absolute right-0 top-[18px] md:top-[16px]"
       />
@@ -178,6 +173,6 @@ export default function LoginPage() {
 
     </div>
     
-    
   );
 }
+

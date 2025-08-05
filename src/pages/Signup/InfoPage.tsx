@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { requestEmailAuthCode } from "../../api/auth/email";
+import { signup } from "../../api/auth/signup";
 
 export default function SignUpInfoPage() {
   const navigate = useNavigate();
@@ -12,18 +14,82 @@ export default function SignUpInfoPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const isEmailValid = emailPrefix !== "" && emailDomain !== "";
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  // 이메일 조합
+  const fullEmail = `${emailPrefix}@${emailDomain}`;
+
+  // 전송 버튼 핸들러
+const handleEmailSend = async () => {
+  try {
+    await requestEmailAuthCode(fullEmail);
+    alert("인증 코드가 이메일로 전송되었습니다!");
+  } catch (error: any) {
+    alert(`인증 실패: ${error.message}`);
+  }
+};
 
 
-  const handleSubmit = () => {
-    // 유효성 검사 후 가입 처리 로직 (또는 다음 단계로 이동)
+const handleSubmit = async () => {
+  try {
+    const email = `${emailPrefix}@${emailDomain}`;
+
+    await signup({
+      email,
+      emailAuthCode: code,        // 인증 코드
+      memberId: userId,           // 아이디
+      password,
+      passwordCheck: confirmPassword,
+      nickname,
+      serviceAgreed: true,        // true 고정 (동의 했다고 가정)
+      privacyAgreed: true         // true 고정
+    });
+
+    // 성공 시 완료 페이지 이동
     navigate("/signup/complete", {
       state: {
-        email: `${emailPrefix}@${emailDomain}`,
+        email,
         userId,
         nickname,
       },
     });
-  };
+
+  } catch (error: any) {
+    const resData = error.response?.data;
+
+    const fieldErr: { [key: string]: string } = {};
+    setFieldErrors({});
+    setGeneralError(null);
+
+    if (resData?.result && typeof resData.result === "object") {
+      // 🔹 result에 필드별 오류 있는 경우
+      Object.entries(resData.result).forEach(([key, msg]) => {
+        fieldErr[key] = msg as string;
+      });
+      setFieldErrors(fieldErr);
+
+    } else if (resData?.message) {
+      // message만 있는 경우
+      const msg = resData.message;
+
+      // 키워드 기반으로 필드 지정
+      if (msg.includes("아이디")) {
+        setFieldErrors({ memberId: msg });
+      } else if (msg.includes("닉네임")) {
+        setFieldErrors({ nickname: msg });
+      } else if (msg.includes("비밀번호")) {
+        setFieldErrors({ password: msg });
+      } else if (msg.includes("인증 코드")) {
+        setFieldErrors({ emailAuthCode: msg });
+      } else {
+        setGeneralError(msg);
+      }
+    } else {
+      setGeneralError("알 수 없는 오류가 발생했습니다.");
+    }
+  }
+};
+
 
   return (
     
@@ -90,11 +156,12 @@ export default function SignUpInfoPage() {
         </select>
         <button
   className={`
-    w-[43px] h-[25px] text-[11px] rounded-full 
+    cursur-pointer w-[43px] h-[25px] text-[11px] rounded-full 
     ${isEmailValid ? "bg-[#007AFF] text-white" : "bg-[#E6E6E6] text-[#999999]"}
     ml-[12px] 
   `}
   disabled={!isEmailValid}
+  onClick={handleEmailSend}
 >
   전송
 </button>
@@ -102,18 +169,18 @@ export default function SignUpInfoPage() {
 
         {/* 코드, 아이디, 비밀번호, 닉네임 */}
         {[
-  { label: "코드", value: code, setter: setCode, placeholder: "코드를 입력해주세요." },
-  { label: "아이디", value: userId, setter: setUserId, placeholder: "설정하실 아이디를 입력해주세요." },
-  { label: "비밀번호", value: password, setter: setPassword, placeholder: "설정하실 비밀번호를 입력해주세요." },
-  { label: "비밀번호 확인", value: confirmPassword, setter: setConfirmPassword, placeholder: "비밀번호를 다시 입력해주세요." },
-  { label: "닉네임", value: nickname, setter: setNickname, placeholder: "닉네임을 입력해주세요." },
-].map(({ label, value, setter, placeholder }, i) => (
+  { name: "emailAuthCode",label: "코드", value: code, setter: setCode, placeholder: "코드를 입력해주세요." },
+  { name: "memberId", label: "아이디", value: userId, setter: setUserId, placeholder: "설정하실 아이디를 입력해주세요." },
+  { name: "password",label: "비밀번호", value: password, setter: setPassword, placeholder: "설정하실 비밀번호를 입력해주세요." },
+  { name: "passwordCheck", label: "비밀번호 확인", value: confirmPassword, setter: setConfirmPassword, placeholder: "비밀번호를 다시 입력해주세요." },
+  { name: "nickname", label: "닉네임", value: nickname, setter: setNickname, placeholder: "닉네임을 입력해주세요." },
+].map(({ name, label, value, setter, placeholder }, i) => (
   <div
     key={i}
     className="
       mb-[30px]                // 모바일 기준 간격
-      pl-[12px]           // 👈 모바일 여백
-      md:pl-0             // 👈 데스크탑에서는 원래대로
+      pl-[12px]           // 모바일 여백
+      md:pl-0             // 데스크탑에서는 원래대로
       md:mb-6                 // md 이상에서는 기존대로 유지
     "
   >
@@ -135,9 +202,21 @@ export default function SignUpInfoPage() {
         md:w-full                                      // 데스크탑에서는 꽉 차게
       "
     />
+    {/* 에러 메시지 추가 */}
+    {fieldErrors[name] && (
+      <p className="text-[12px] text-red-500 mt-[4px]">
+        {fieldErrors[name]}
+      </p>
+    )}
+    
   </div>
 ))}
-
+{/* 일반 오류 메시지 추가 */}
+{generalError && (
+  <div className="text-center text-red-600 text-sm mb-4">
+    {generalError}
+  </div>
+)}
 
         {/* 회원가입 버튼 */}
         <button
