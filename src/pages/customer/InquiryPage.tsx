@@ -4,6 +4,7 @@ import CustomerNav from "../../components/customer/CustomerNav";
 import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
 import { useInquiry, type InquiryItem } from "../../contexts/InquiryContext";
+import InformationModal from "../../components/modals/InformationModal";
 import lockIcon from "../../assets/lock.svg";
 import writingIcon from "../../assets/writing.svg";
 
@@ -402,117 +403,18 @@ const InquiryPage = () => {
         </div>
       )}
 
-      {/* 로그인된 사용자의 비밀글 접근 불가 모달 */}
-      {showPrivateModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50"
-          style={{
-            background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              width: "686px",
-              padding: "40px",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              alignItems: "flex-end",
-              gap: "40px",
-              borderRadius: "32px",
-              background: "var(--White, #FFF)",
-            }}
-          >
-            <p
-              style={{
-                alignSelf: "stretch",
-                color: "var(--WIT-Gray600, #333)",
-                fontFamily: "Pretendard",
-                fontSize: "24px",
-                fontStyle: "normal",
-                fontWeight: 700,
-                lineHeight: "150%",
-                letterSpacing: "-0.48px",
-              }}
-            >
-              비밀글은 작성자만 확인할 수 있습니다.
-            </p>
-            <button
-              onClick={handlePrivateModalConfirm}
-              className="text-white font-medium transition-colors"
-              style={{
-                display: "flex",
-                width: "160px",
-                padding: "12px 16px",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "32px",
-                background: "var(--WIT-Blue, #0080FF)",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 로그인 요구 모달 */}
-      {showLoginModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50"
-          style={{
-            background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              width: "686px",
-              padding: "40px",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              alignItems: "flex-end",
-              gap: "40px",
-              borderRadius: "32px",
-              background: "var(--White, #FFF)",
-            }}
-          >
-            <p
-              style={{
-                alignSelf: "stretch",
-                color: "var(--WIT-Gray600, #333)",
-                fontFamily: "Pretendard",
-                fontSize: "24px",
-                fontStyle: "normal",
-                fontWeight: 700,
-                lineHeight: "150%",
-                letterSpacing: "-0.48px",
-              }}
-            >
-              이 기능은 로그인 후 이용 가능합니다.
-            </p>
-            <button
-              onClick={handleLoginModalCancel}
-              className="text-white font-medium transition-colors"
-              style={{
-                display: "flex",
-                width: "160px",
-                padding: "12px 16px",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "32px",
-                background: "var(--WIT-Blue, #0080FF)",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
+      {/* 정보 모달들 */}
+      <InformationModal
+        isOpen={showPrivateModal}
+        message="비밀글은 작성자만 확인할 수 있습니다."
+        onClose={handlePrivateModalConfirm}
+      />
+      
+      <InformationModal
+        isOpen={showLoginModal}
+        message="이 기능은 로그인 후 이용 가능합니다."
+        onClose={handleLoginModalCancel}
+      />
     </div>
   );
 };

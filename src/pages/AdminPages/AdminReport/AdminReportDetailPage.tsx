@@ -5,7 +5,8 @@ import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { dummyReports } from "../../../data/dummyReports";
 import { dummyPosts } from "../../../types/post";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
-import { reportApi, type ReportDetail } from "../../../api/reportApi";
+import { processReport } from "../../../api/reportApi";
+import type { ReportDetail } from "../../../types/report";
 
 export default function AdminReportDetailPage() {
   const { id } = useParams();
@@ -111,7 +112,7 @@ export default function AdminReportDetailPage() {
     if (!report) return;
 
     try {
-      await reportApi.processReport((report as any).id || report.reportId, action);
+      await processReport((report as any).id || report.reportId, action);
       const actionText = action === 'delete' ? '삭제' : '유지';
       setModalMessage(`${actionText} 처리되었습니다.`);
       setModalOpen(true);
