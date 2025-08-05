@@ -16,10 +16,8 @@ export const itemCategories = [
   ];
 
   export const adminPostCategories = [
-    { id: 'all', name: '전체' },
-    { id: 'tip1', name: '생활꿀템' },
-    { id: 'tip2', name: '생활꿀팁' }
-  ];
-  
+  { id: 'all', name: '전체' },
+  { id: 'tip1', name: '생활꿀템' },
+  { id: 'tip2', name: '생활꿀팁' }
+];
 
-  

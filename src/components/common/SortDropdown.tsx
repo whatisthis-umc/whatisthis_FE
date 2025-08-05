@@ -6,10 +6,6 @@ export type SortUIType = "인기순" | "최신순";
 // ✅ API에서 사용하는 값
 export type SortAPIType = "BEST" | "LATEST";
 
-// ✅ 프론트 -> 백엔드 enum 변환 함수
-const convertToAPIType = (uiType: SortUIType): SortAPIType =>
-  uiType === "인기순" ? "BEST" : "LATEST";
-
 // ✅ 백엔드 -> 프론트 표시값 변환 함수
 const convertToUIType = (apiType: SortAPIType): SortUIType =>
   apiType === "BEST" ? "인기순" : "최신순";

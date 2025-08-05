@@ -1,22 +1,38 @@
-import React from "react";
 import type { ItemCardProps } from "../types/post";
 import { eye } from "../assets";
 import { scrap } from "../assets";
 
 const ItemCard = ({
-  // id,
-  //category,
   hashtag,
   imageUrl,
   title,
   description,
   views,
   scraps,
-  //date,
-  //type,
 }: ItemCardProps) => {
-  const firstImage =
-    typeof imageUrl === "string" ? imageUrl : imageUrl[0] || "";
+  const getImageUrl = () => {
+    if (!imageUrl) {
+      console.log("No imageUrl provided");
+      return "";
+    }
+    if (typeof imageUrl === "string") {
+      console.log("String imageUrl:", imageUrl);
+      return imageUrl;
+    }
+
+    if (Array.isArray(imageUrl)) {
+      console.log("Array imageUrl:", imageUrl);
+      const validUrl = imageUrl.find((url) => url && url.trim() !== "");
+      console.log("Valid URL found:", validUrl);
+      return validUrl || "";
+    }
+
+    console.log("Unknown imageUrl format");
+    return "";
+  };
+
+  const firstImage = getImageUrl();
+  console.log("Final firstImage:", firstImage);
   return (
     <div className="flex flex-col justify-center w-[90px]  md:w-57 h-[225px] md:h-96 bg-transparent gap-2  ml-1 md:ml-2 mr-0 md:mr-2 mt-4 md:mt-7 ">
       {/* 해시태그 */}
@@ -38,11 +54,19 @@ const ItemCard = ({
       </div>
 
       {/*썸네일*/}
-      <div className="w-[90px] h-[90px] md:w-57 md:h-57 bg-black rounded-2xl md:rounded-4xl mt-2 mb-1 ml-2">
+      <div className="w-[90px] h-[90px] md:w-57 md:h-57 rounded-2xl md:rounded-4xl mt-2 mb-1 ml-2 overflow-hidden">
         <img
-          src={firstImage}
+          src={
+            firstImage ||
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
+          }
           alt={title}
-          className="w-full h-full object-cover rounded-4xl"
+          className="w-full h-full object-cover rounded-2xl md:rounded-4xl"
+          onError={(e) => {
+            // 이미지 로드 실패 시 기본 이미지
+            e.currentTarget.src =
+              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=";
+          }}
         />
       </div>
       {/*제목*/}

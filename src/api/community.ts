@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 // 커뮤니티 글 생성
 export const createPost = async (data: CreatePostDto) => {
-  const response = await axiosInstance.post(`${API_URL}/posts`, data);
+  const response = await axiosInstance.post(`/posts`, data);
   return response.data;
 };
 
@@ -21,7 +21,7 @@ export const getCommunityPosts = async (
   console.log("✅ API 호출 params 확인:", { page, size, sort });
   console.log("✅ accessToken:", accessToken);
 
-  const response = await axiosInstance.get(`${API_URL}/posts/communities`, {
+  const response = await axiosInstance.get(`/posts/communities`, {
   params: {
     page: `${page}`,
     size: `${size}`,
@@ -31,6 +31,7 @@ export const getCommunityPosts = async (
     Authorization: `Bearer ${accessToken}`,
   },
 });
+
 
 
   console.log("🔥 API 응답 데이터", response.data);

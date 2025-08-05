@@ -8,6 +8,7 @@ import add from "/src/assets/add.png";
 import { adminNewPost } from "../../../api/adminNewPost";
 import { useNavigate } from "react-router-dom";
 import { subCategoryEnumMap } from "../../../constants/subCategoryEnumMap";
+import { uploadService } from "../../../api/uploadApi";
 
 const subCategoryMap = {
   생활꿀팁: [
@@ -32,7 +33,10 @@ const postSchema = z.object({
 type PostFormData = z.infer<typeof postSchema>;
 
 const AdminNewPostPage = () => {
-  const [image, setImage] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigate = useNavigate();
   const {
     register,
@@ -59,6 +63,20 @@ const AdminNewPostPage = () => {
 
   const mainCategory = watch("mainCategory");
 
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const imageUrl = await uploadService.uploadImage(file);
+      setUploadedImageUrls((prev) => [...prev, imageUrl]);
+      console.log("업로드된 이미지 URL:", imageUrl);
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      alert("이미지 업로드에 실패했습니다.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onSubmit = async (data: PostFormData) => {
     const content = [data.content1, data.content2].filter(Boolean).join("\n\n");
     const payload = {
@@ -67,7 +85,7 @@ const AdminNewPostPage = () => {
       category: data.mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
       subCategory:
         subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
-      imageUrls: [],
+      imageUrls: uploadedImageUrls,
       hashtags: data.tags.map((t) => t.value.trim()).filter(Boolean),
     };
     try {
@@ -92,29 +110,110 @@ const AdminNewPostPage = () => {
           <div className="w-full mb-6 ml-4">
             <p className="font-bold text-2xl">게시글 내용</p>
           </div>
-          <div className="w-[500px] h-[500px] bg-gray-100 rounded-4xl flex justify-center items-center overflow-hidden">
-            {image && (
-              <img
-                src={URL.createObjectURL(image)}
-                alt="미리보기"
-                className="w-full h-full object-cover rounded-xl"
-              />
-            )}
+          <div className="w-[500px] h-[500px] bg-gray-100 rounded-4xl flex justify-center items-center overflow-hidden relative">
+            {uploadedImageUrls.length > 0 ? (
+              <>
+                <img
+                  src={uploadedImageUrls[currentImageIndex]}
+                  alt="업로드된 이미지"
+                  className="w-full h-full object-cover rounded-xl"
+                />
+                <img
+                  src={cancelIcon}
+                  alt="cancel"
+                  onClick={() => {
+                    const newUrls = uploadedImageUrls.filter(
+                      (_, idx) => idx !== currentImageIndex
+                    );
+                    setUploadedImageUrls(newUrls);
+                    setCurrentImageIndex(0);
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 cursor-pointer opacity-80 hover:opacity-100"
+                />
+                {currentImageIndex === 0 && (
+                  <div className="absolute top-2 left-2 bg-[#0080FF] text-white text-xs px-2 py-1 rounded-lg">
+                    대표
+                  </div>
+                )}
+                {uploadedImageUrls.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 md:gap-3 bg-[#FFFFFF80] bg-opacity-50 px-3 py-1 rounded-4xl">
+                    {uploadedImageUrls.map((_, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-3 h-3 md:w-4 md:h-4 rounded-4xl cursor-pointer ${
+                          currentImageIndex === idx
+                            ? "bg-[#0080FF]"
+                            : "bg-gray-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : images.length > 0 ? (
+              <>
+                <img
+                  src={URL.createObjectURL(images[currentImageIndex])}
+                  alt="미리보기"
+                  className="w-full h-full object-cover rounded-xl"
+                />
+                <img
+                  src={cancelIcon}
+                  alt="cancel"
+                  onClick={() => {
+                    const newImages = images.filter(
+                      (_, idx) => idx !== currentImageIndex
+                    );
+                    setImages(newImages);
+                    setCurrentImageIndex(0);
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 cursor-pointer opacity-80 hover:opacity-100"
+                />
+                {currentImageIndex === 0 && (
+                  <div className="absolute top-2 left-2 bg-[#0080FF] text-white text-xs px-3 py-2 rounded-4xl !rounded-4xl">
+                    대표
+                  </div>
+                )}
+                {images.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 md:gap-3 bg-[#FFFFFF80] bg-opacity-50 px-3 py-1 rounded-4xl">
+                    {images.map((_, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-3 h-3 md:w-4 md:h-4 rounded-4xl cursor-pointer ${
+                          currentImageIndex === idx
+                            ? "bg-[#0080FF]"
+                            : "bg-gray-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
           <label
             htmlFor="imageUpload"
-            className="mt-4 w-[500px] h-[54px] bg-[#0080FF] text-white rounded-4xl flex justify-center items-center gap-3 cursor-pointer"
+            className={`mt-4 w-[500px] h-[54px] ${
+              uploading ? "bg-gray-400" : "bg-[#0080FF]"
+            } text-white rounded-4xl flex justify-center items-center gap-3 cursor-pointer`}
           >
-            <img src={addPhotoIcon} /> 파일에서 업로드
+            <img src={addPhotoIcon} />
+            {uploading ? "업로드 중..." : "파일에서 업로드"}
           </label>
           <input
             id="imageUpload"
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
-              if (file) setImage(file);
+              if (file) {
+                setImages([file]);
+                await handleImageUpload(file);
+              }
             }}
           />
         </div>
