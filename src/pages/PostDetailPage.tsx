@@ -13,6 +13,7 @@ import arrowRight from "../assets/chevron_forward.svg";
 
 const PostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">("게시물");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortType, setSortType] = useState("인기순");
 
@@ -65,17 +66,12 @@ const PostDetailPage = () => {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
+      {/* 유저 정보 + 게시글 */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80" />
         <div className="flex items-center gap-1">
-          <img
-            src={bestBadge}
-            alt="best badge"
-            className="w-4 h-4 sm:w-5 sm:h-5"
-          />
-          <span className="text-gray-800 font-medium text-sm sm:text-base">
-            닉네임
-          </span>
+          <img src={bestBadge} alt="best badge" className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-gray-800 font-medium text-sm sm:text-base">닉네임</span>
         </div>
         <span className="text-gray-500 text-sm">3일 전</span>
       </div>
@@ -87,41 +83,30 @@ const PostDetailPage = () => {
           <h1 className="text-[20px] sm:text-[24px] font-bold leading-snug">
             락앤락 냉장고 전용 밀폐용기 (BPA Free)
           </h1>
-
           <p className="text-gray-700 text-[15px] sm:text-[16px] font-medium leading-relaxed">
-            냉장고 내부 공간을 효율적으로 활용할 수 있는 락앤락의 전용
-            밀폐용기입니다. <br /> BPA Free 재질로 인체에 유해한 환경호르몬이
-            검출되지 않아 안심하고 사용할 수 있으며, 전자레인지 및 식기세척기
-            사용도 가능합니다.
+            냉장고 내부 공간을 효율적으로 활용할 수 있는 락앤락의 전용 밀폐용기입니다. <br />
+            BPA Free 재질로 인체에 유해한 환경호르몬이 검출되지 않아 안심하고 사용할 수 있으며,
+            전자레인지 및 식기세척기 사용도 가능합니다.
           </p>
 
+          {/* 주요 특징 */}
           <div className="border border-[#E6E6E6] rounded-[24px] p-4 sm:p-6 text-[14px] sm:text-[16px]">
             <table className="w-full">
               <tbody>
                 <tr>
-                  <td className="font-bold w-[80px] sm:w-[95px] align-top">
-                    주요 특징
-                  </td>
+                  <td className="font-bold w-[80px] sm:w-[95px] align-top">주요 특징</td>
                   <td>
                     <div className="mb-2 sm:mb-[8px]">
                       <span className="font-bold">공간 효율성</span>
-                      <span className="ml-2 text-gray-700">
-                        용기 높이가 낮고 규격화되어 있어 수직 적재가 용이합니다.
-                      </span>
+                      <span className="ml-2 text-gray-700">용기 높이가 낮고 규격화되어 있어 수직 적재가 용이합니다.</span>
                     </div>
                     <div className="mb-2 sm:mb-[8px]">
                       <span className="font-bold">밀폐력 우수</span>
-                      <span className="ml-2 text-gray-700">
-                        실리콘 패킹을 통해 내용물의 냄새와 수분이 외부로 새지
-                        않도록 차단합니다.
-                      </span>
+                      <span className="ml-2 text-gray-700">실리콘 패킹으로 냄새와 수분을 차단합니다.</span>
                     </div>
                     <div className="mb-2 sm:mb-[8px]">
                       <span className="font-bold">안전 인증</span>
-                      <span className="ml-2 text-gray-700">
-                        식품의약품안전처(FDA) 기준에 적합하며, 환경부 인증을
-                        받은 소재를 사용하였습니다.
-                      </span>
+                      <span className="ml-2 text-gray-700">FDA 기준 적합, 환경부 인증 소재 사용</span>
                     </div>
                   </td>
                 </tr>
@@ -129,71 +114,46 @@ const PostDetailPage = () => {
             </table>
           </div>
 
+          {/* 추천 대상 */}
           <div className="border border-[#E6E6E6] rounded-[24px] p-4 sm:p-6 text-[14px] sm:text-[16px]">
             <table className="w-full">
               <tbody>
                 <tr>
-                  <td className="font-bold w-[80px] sm:w-[95px] align-top">
-                    추천 대상
-                  </td>
+                  <td className="font-bold w-[80px] sm:w-[95px] align-top">추천 대상</td>
                   <td className="text-gray-700">
-                    <div className="mb-2">
-                      냉장고 정리를 효율적으로 하고 싶은 분
-                    </div>
-                    <div className="mb-2">
-                      안전하고 위생적인 보관용기를 찾는 분
-                    </div>
-                    <div className="mb-2">
-                      정리도구로 생활의 편리함을 높이고 싶은 자취생 및 1인 가구
-                    </div>
+                    <div className="mb-2">냉장고 정리를 효율적으로 하고 싶은 분</div>
+                    <div className="mb-2">안전하고 위생적인 보관용기를 찾는 분</div>
+                    <div className="mb-2">정리도구로 생활의 편리함을 높이고 싶은 자취생 및 1인 가구</div>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
+          {/* 해시태그 */}
           <div className="flex flex-wrap gap-2">
             {["#해시태그", "#해시태그", "#해시태그"].map((tag, i) => (
-              <span
-                key={i}
-                className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1"
-              >
+              <span key={i} className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1">
                 {tag}
               </span>
             ))}
           </div>
 
+          {/* 좋아요, 신고하기 버튼 */}
           <div className="flex justify-between mt-4 flex-wrap gap-4">
-            <button
-              className="flex items-center gap-2 
-               bg-[#0080FF] text-white font-medium 
-               text-sm sm:text-base lg:text-lg 
-               px-4 sm:px-6 lg:px-8 
-               py-2 sm:py-2.5 lg:py-3 
-               rounded-full"
-            >
-              <img
-                src={heartIcon}
-                alt="like"
-                className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-              />
+            <button className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full">
+              <img src={heartIcon} alt="like" className="w-4 h-4" />
               좋아요
             </button>
 
             <button
-              onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-2 
-               bg-[#0080FF] text-white font-medium 
-               text-sm sm:text-base lg:text-lg 
-               px-4 sm:px-6 lg:px-8 
-               py-2 sm:py-2.5 lg:py-3 
-               rounded-full"
+              onClick={() => {
+                setSelectedTarget("게시물");
+                setShowReportModal(true);
+              }}
+              className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
             >
-              <img
-                src={reportIcon}
-                alt="report"
-                className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-              />
+              <img src={reportIcon} alt="report" className="w-4 h-4" />
               신고하기
             </button>
           </div>
@@ -204,8 +164,8 @@ const PostDetailPage = () => {
       <div className="w-full mt-24">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2 text-[20px] font-bold">
-            <img src={commentsIconB} alt="comments" className="w-5 h-5" /> 댓글{" "}
-            {comments.length}
+            <img src={commentsIconB} alt="comments" className="w-5 h-5" />
+            댓글 {comments.length}
           </div>
           <SortDropdown defaultValue={sortType} onChange={setSortType} />
         </div>
@@ -217,25 +177,15 @@ const PostDetailPage = () => {
                 <div className="flex gap-4 items-center">
                   <div className="w-[40px] h-[40px] rounded-full bg-[#D9D9D9]" />
                   <div>
-                    <div className="text-[16px] sm:text-[20px] font-medium">
-                      {comment.nickname}
-                    </div>
-                    <div className="text-[14px] sm:text-[16px] mt-1">
-                      {comment.content}
-                    </div>
+                    <div className="text-[16px] sm:text-[20px] font-medium">{comment.nickname}</div>
+                    <div className="text-[14px] sm:text-[16px] mt-1">{comment.content}</div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                       <span>14시간 전</span>
                       <div className="flex items-center gap-1">
-                        <img src={likesIcon} alt="likes" className="w-4 h-4" />{" "}
-                        {comment.likes}
+                        <img src={likesIcon} alt="likes" className="w-4 h-4" /> {comment.likes}
                       </div>
                       <div className="flex items-center gap-1">
-                        <img
-                          src={commentsIcon}
-                          alt="replies"
-                          className="w-4 h-4"
-                        />{" "}
-                        {comment.replies.length}
+                        <img src={commentsIcon} alt="replies" className="w-4 h-4" /> {comment.replies.length}
                       </div>
                     </div>
                   </div>
@@ -244,29 +194,23 @@ const PostDetailPage = () => {
                   src={reportGrayIcon}
                   alt="report"
                   className="w-4 h-4 cursor-pointer"
-                  onClick={() => setShowReportModal(true)}
+                  onClick={() => {
+                    setSelectedTarget("댓글");
+                    setShowReportModal(true);
+                  }}
                 />
               </div>
 
-              {/* 대댓글 */}
               {comment.replies.map((reply) => (
-                <div
-                  key={reply.id}
-                  className="flex gap-4 sm:gap-5 items-center ml-8 sm:ml-12 mt-4"
-                >
+                <div key={reply.id} className="flex gap-4 sm:gap-5 items-center ml-8 sm:ml-12 mt-4">
                   <div className="w-[36px] h-[36px] rounded-full bg-[#D9D9D9]" />
                   <div>
-                    <div className="text-[16px] sm:text-[18px] font-medium">
-                      {reply.nickname}
-                    </div>
-                    <div className="text-[14px] sm:text-[16px] mt-1">
-                      {reply.content}
-                    </div>
+                    <div className="text-[16px] sm:text-[18px] font-medium">{reply.nickname}</div>
+                    <div className="text-[14px] sm:text-[16px] mt-1">{reply.content}</div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                       <span>14시간 전</span>
                       <div className="flex items-center gap-1">
-                        <img src={likesIcon} alt="likes" className="w-4 h-4" />{" "}
-                        {reply.likes}
+                        <img src={likesIcon} alt="likes" className="w-4 h-4" /> {reply.likes}
                       </div>
                     </div>
                   </div>
@@ -276,10 +220,9 @@ const PostDetailPage = () => {
           ))}
         </div>
 
+        {/* 페이지네이션 */}
         <div className="flex justify-center mt-10 gap-4 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
+          <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
             <img src={arrowLeft} alt="prev" className="w-6 h-6" />
           </button>
           {[1, 2, 3].map((page) => (
@@ -291,16 +234,15 @@ const PostDetailPage = () => {
               {page}
             </button>
           ))}
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, 3))}
-          >
+          <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, 3))}>
             <img src={arrowRight} alt="next" className="w-6 h-6" />
           </button>
         </div>
       </div>
 
+      {/* 신고 모달 */}
       {showReportModal && (
-        <ReportModal onClose={() => setShowReportModal(false)} />
+        <ReportModal onClose={() => setShowReportModal(false)} targetType={selectedTarget} />
       )}
     </div>
   );
