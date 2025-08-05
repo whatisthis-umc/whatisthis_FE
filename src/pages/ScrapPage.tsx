@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Pagination from "../components/customer/Pagination";
+import { darkBookmark } from "../assets"; //
 
 interface ScrapItem {
   id: number;
@@ -28,19 +30,20 @@ const ScrapPage = () => {
     );
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const currentItems = scraps.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const startPage = 1;
-  const endPage = Math.min(5, totalPages);
-
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-10">
-      <h2 className="text-xl font-semibold mb-4 text-left">나의 스크랩</h2>
+      <h2 className="text-xl font-semibold mt-15 mb-15 text-left">나의 스크랩</h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-10">
         {currentItems.map((item) => (
           <div key={item.id} className="flex flex-col">
             {/* 회색 이미지 박스 */}
@@ -53,7 +56,7 @@ const ScrapPage = () => {
                 className="absolute bottom-2 right-2"
               >
                 <img
-                  src="/src/assets/darkBookmark.png"
+                  src={darkBookmark}
                   alt="bookmark"
                   className={`w-4 h-4 transition-opacity ${
                     item.bookmarked ? "opacity-100" : "opacity-30"
@@ -76,36 +79,12 @@ const ScrapPage = () => {
       </div>
 
       {/* 페이지네이션 */}
-      <div className="flex justify-center items-center gap-1 text-sm">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-          className={`px-2 ${currentPage === 1 ? "text-gray-400" : "text-gray-600"}`}
-        >
-          &lt;
-        </button>
-
-        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
-          <button
-            key={page}
-            onClick={() => setCurrentPage(page)}
-            className={`w-6 h-6 rounded-full text-center ${
-              currentPage === page
-                ? "bg-blue-500 text-white"
-                : "text-gray-500 hover:text-black"
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-          className={`px-2 ${
-            currentPage === totalPages ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          &gt;
-        </button>
+      <div className="mt-12">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

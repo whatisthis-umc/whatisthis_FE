@@ -37,7 +37,7 @@ const CommunityPage = () => {
   const [sortType, setSortType] = useState<"인기순" | "최신순">("인기순");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
-  const [showLoginModal, setShowLoginModal] = useState(false); // ✅ 추가
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
