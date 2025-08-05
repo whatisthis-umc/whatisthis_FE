@@ -27,3 +27,4 @@ package-lock.json
 
 # 환경 변수 파일
 .env
+node_modules

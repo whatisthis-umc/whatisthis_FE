@@ -1,139 +1,113 @@
-// 신고 관련 API 서비스
-import axios from 'axios';
+import { axiosInstance } from "./axiosInstance";
+import type { 
+  ReportListResponse, 
+  ReportDetailResponse, 
+  ReportListItem 
+} from "../types/report";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL;
 
-// axios 인스턴스 생성
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// 신고 목록 조회
+export const getReportList = async (
+  page: number = 1,
+  status: string = 'ALL', // PROCESSED, UNPROCESSED, ALL
+  keyword?: string
+): Promise<ReportListItem[]> => {
+  const accessToken = localStorage.getItem("accessToken");
+  const adminAccessToken = localStorage.getItem("adminAccessToken");
 
-// 요청 인터셉터: 자동으로 인증 토큰 추가
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    // API Key가 있는 경우 추가
-    const apiKey = import.meta.env.VITE_API_KEY;
-    if (apiKey) {
-      config.headers['X-API-Key'] = apiKey;
-    }
-    
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+  const params: Record<string, string | number> = {
+    page,
+    status,
+  };
+
+  if (keyword && keyword.trim()) {
+    params.keyword = keyword.trim();
   }
-);
 
-// 응답 인터셉터: 에러 처리
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // 인증 에러 시 토큰 제거하고 로그인 페이지로 리다이렉트
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
+  console.log("✅ 신고 목록 조회 URL:", `${API_URL}/admin/reports`);
+  console.log("✅ API 호출 params 확인:", params);
+  console.log("✅ accessToken:", accessToken);
+  console.log("✅ adminAccessToken:", adminAccessToken);
+
+  const response = await axiosInstance.get(`/admin/reports`, {
+    params,
+    headers: {
+      Authorization: `Bearer ${adminAccessToken || accessToken}`,
+    },
+  });
+
+  console.log("🔥 신고 목록 API 응답 데이터", response.data);
+  return response.data.result?.reportList ?? [];
+};
+
+// 신고 상세 조회
+export const getReportDetail = async (reportId: number) => {
+  const accessToken = localStorage.getItem("accessToken");
+  const adminAccessToken = localStorage.getItem("adminAccessToken");
+
+  console.log("✅ 신고 상세 조회 URL:", `${API_URL}/admin/reports/${reportId}`);
+  console.log("✅ reportId:", reportId);
+  console.log("✅ accessToken:", accessToken);
+  console.log("✅ adminAccessToken:", adminAccessToken);
+
+  const response = await axiosInstance.get(`/admin/reports/${reportId}`, {
+    headers: {
+      Authorization: `Bearer ${adminAccessToken || accessToken}`,
+    },
+  });
+
+  console.log("🔥 신고 상세 API 응답 데이터", response.data);
+  return response.data.result;
+};
+
+// 신고 처리 (삭제/유지)
+export const processReport = async (
+  reportId: number,
+  action: 'delete' | 'keep'
+) => {
+  const accessToken = localStorage.getItem("accessToken");
+  const adminAccessToken = localStorage.getItem("adminAccessToken");
+
+  console.log("✅ 신고 처리 URL:", `${API_URL}/admin/reports/${reportId}`);
+  console.log("✅ 처리 요청:", { reportId, action });
+  console.log("✅ accessToken:", accessToken);
+  console.log("✅ adminAccessToken:", adminAccessToken);
+
+  const response = await axiosInstance.post(
+    `/admin/reports/${reportId}`, 
+    { action },
+    {
+      headers: {
+        Authorization: `Bearer ${adminAccessToken || accessToken}`,
+      },
     }
-    return Promise.reject(error);
-  }
-);
+  );
 
-// 신고 상세 조회 타입 정의 (스웨거 문서에 맞춰 나중에 수정 예정)
-export interface ReportDetail {
-  reportId: number;
-  type: string;
-  content: string;
-  reportContent: string;
-  // 상세 정보는 상세조회 API 스웨거 문서 확인 후 추가
-}
+  console.log("🔥 신고 처리 API 응답 데이터", response.data);
+  return response.data;
+};
 
-export interface ReportDetailResponse extends ApiResponse<ReportDetail> {}
+// 신고 상태 변경 (처리 완료로 변경)
+export const updateReportStatus = async (reportId: number) => {
+  const accessToken = localStorage.getItem("accessToken");
+  const adminAccessToken = localStorage.getItem("adminAccessToken");
 
-// 공통 API 응답 타입
-export interface ApiResponse<T> {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: T;
-}
+  console.log("✅ 신고 상태 변경 URL:", `${API_URL}/admin/reports/${reportId}/status`);
+  console.log("✅ reportId:", reportId);
+  console.log("✅ accessToken:", accessToken);
+  console.log("✅ adminAccessToken:", adminAccessToken);
 
-// 신고 목록 조회 타입 정의 (실제 API 응답에 맞춤)
-export interface ReportListItem {
-  reportId: number;
-  type: string; // "COMMENT", "POST" 등
-  content: string; // 신고된 내용
-  reportContent: string; // 신고 사유 ("ETC_CONTENT", "ABUSIVE_LANGUAGE" 등)
-  reportedAt: string; // 신고 일시
-  status: string; // "PROCESSED", "UNPROCESSED"
-}
-
-export interface ReportListResult {
-  reportList: ReportListItem[];
-  listSize: number; // 페이지 크기
-  totalPage: number; // 전체 페이지 수
-  totalElements: number; // 전체 요소 수
-  isFirst: boolean; // 첫 페이지 여부
-  isLast: boolean; // 마지막 페이지 여부
-}
-
-export interface ReportListResponse extends ApiResponse<ReportListResult> {}
-
-// API 호출 함수들
-export const reportApi = {
-  // 신고 상세 조회
-  getReportDetail: async (reportId: number): Promise<ReportDetailResponse> => {
-    try {
-      const response = await apiClient.get(`/admin/reports/${reportId}`);
-      return response.data;
-    } catch (error) {
-      console.error('신고 상세 조회 실패:', error);
-      throw error;
+  const response = await axiosInstance.patch(
+    `/admin/reports/${reportId}/status`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${adminAccessToken || accessToken}`,
+      },
     }
-  },
+  );
 
-  // 신고 목록 조회 (실제 API 파라미터에 맞춤)
-  getReportList: async (
-    page: number = 1,
-    status: string = 'ALL', // PROCESSED, UNPROCESSED, ALL
-    keyword?: string
-  ): Promise<ReportListResponse> => {
-    try {
-      const params: Record<string, string | number> = {
-        page,
-        status,
-      };
-
-      if (keyword && keyword.trim()) {
-        params.keyword = keyword.trim();
-      }
-
-      const response = await apiClient.get('/admin/reports', { params });
-      return response.data;
-    } catch (error) {
-      console.error('신고 목록 조회 실패:', error);
-      throw error;
-    }
-  },
-
-  // 신고 처리
-  processReport: async (
-    reportId: number,
-    action: 'delete' | 'keep'
-  ): Promise<{ message: string }> => {
-    try {
-      const response = await apiClient.post(`/admin/reports/${reportId}`, { action });
-      return response.data;
-    } catch (error) {
-      console.error('신고 처리 실패:', error);
-      throw error;
-    }
-  },
+  console.log("🔥 신고 상태 변경 API 응답 데이터", response.data);
+  return response.data;
 }; 
