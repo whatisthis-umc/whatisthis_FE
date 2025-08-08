@@ -1,19 +1,19 @@
 import { axiosInstance } from "./axiosInstance";
-import type { CustomResponse, TipPostDetail } from "./types";
+import type { CustomResponse, ItemPostDetail} from "./types";
 
-// 꿀팁 상세조회
-export const tipDetailService = {
-  getTipDetail: (postId: number): Promise<TipPostDetail> => {
+// 꿀템 상세조회
+export const itemDetailService = {
+  getTipDetail: (postId: number): Promise<ItemPostDetail> => {
     const accessToken = localStorage.getItem("accessToken");
     
     return axiosInstance
-      .get<CustomResponse<TipPostDetail>>(`/posts/${postId}`, {
+      .get<CustomResponse<ItemPostDetail>>(`/posts/${postId}`, {
         headers: {
           ...(accessToken && { Authorization: `Bearer ${accessToken}` })
         }
       })
       .then((res) => {
-        console.log("Tip detail API response:", res.data);
+        console.log("Item detail API response:", res.data);
         
         if (!res.data.isSuccess) {
           return Promise.reject(res.data.message);

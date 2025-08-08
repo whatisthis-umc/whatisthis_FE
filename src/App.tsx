@@ -43,6 +43,7 @@ import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditP
 import FindAccountPages from "./pages/FindAccountPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   return (
@@ -54,7 +55,7 @@ function App() {
             <main className="flex-grow pb-60">
               <Routes>
                 <Route path="/" element={<MainPage />} />
-                <Route path="/search" element={<MainPage />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup/*" element={<SignupPage />} />
@@ -100,28 +101,19 @@ function App() {
                     path="notice/edit/:id"
                     element={<AdminNoticeEditPage />}
                   />
-                  <Route
-                    path="notice/:id"
-                    element={<AdminNoticeDetailPage />}
-                  />
+                  <Route path="notice/:id" element={<AdminNoticeDetailPage />} />
                   <Route path="post" element={<AdminPostPage />} />
+                  <Route path="post/new" element={<AdminNewPostPage />} />
                   <Route path="post/:id" element={<AdminPostDetailPage />} />
                   <Route path="post/edit/:id" element={<AdminPostEditPage />} />
-                  <Route path="post/new" element={<AdminNewPostPage />} />
-                  <Route path="reports" element={<AdminReportPage />} />
-                  <Route
-                    path="reports/:id"
-                    element={<AdminReportDetailPage />}
-                  />
-                  <Route path="inquiries" element={<AdminInquiryPage />} />
-                  <Route
-                    path="inquiries/:id"
-                    element={<AdminInquiryDetailPage />}
-                  />
+                  <Route path="report" element={<AdminReportPage />} />
+                  <Route path="report/:id" element={<AdminReportDetailPage />} />
+                  <Route path="inquiry" element={<AdminInquiryPage />} />
+                  <Route path="inquiry/:id" element={<AdminInquiryDetailPage />} />
                   <Route path="qna" element={<AdminQnaPage />} />
+                  <Route path="qna/new" element={<AdminNewQnaPage />} />
                   <Route path="qna/:id" element={<AdminQnaDetailPage />} />
                   <Route path="qna/edit/:id" element={<AdminQnaEditPage />} />
-                  <Route path="qna/new" element={<AdminNewQnaPage />} />
                 </Route>
               </Routes>
             </main>
