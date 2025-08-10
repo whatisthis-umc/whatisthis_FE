@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logo } from "../assets";
+import { useState, useEffect } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,10 +10,55 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const accessToken = localStorage.getItem("accessToken");
+      setIsLoggedIn(!!accessToken);
+    };
+
+    checkLoginStatus();
+
+    // 주기적으로 로그인 상태 확인 (0.5초마다)
+    const interval = setInterval(checkLoginStatus, 500);
+
+    const handleStorageChange = () => {
+      checkLoginStatus();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const handleClick = (path: string) => {
     navigate(path);
     onClose();
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+    onClose();
+  };
+
+  const handleSignup = () => {
+    navigate("/signup");
+    onClose();
+  };
+  // 로그아웃
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setIsLoggedIn(false);
+    onClose();
+
+    // 홈페이지로 이동
+    navigate("/");
   };
 
   if (!isOpen) return null;
@@ -51,12 +97,29 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </ul>
         </div>
         <div className="mt-70 absolute bottom-10">
-          <button className="w-[80px] h-[40px] border-2 rounded-4xl px-3 py-2 cursor-pointer ml-2 bg-[#0080FF] text-white text-[14px]">
-            로그인
-          </button>
-          <button className="w-[80px] h-[40px] border-2 rounded-4xl px-3 py-2 cursor-pointer ml-2 bg-[#0080FF] text-white text-[14px]">
-            회원가입
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="w-[80px] h-[40px] border-2 rounded-4xl px-3 py-2 cursor-pointer ml-2 bg-[#0080FF] text-white text-[14px] hover:bg-red-600 transition-colors"
+            >
+              로그아웃
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleLogin}
+                className="w-[80px] h-[40px] border-2 rounded-4xl px-3 py-2 cursor-pointer ml-2 bg-[#0080FF] text-white text-[14px] hover:bg-blue-600 transition-colors"
+              >
+                로그인
+              </button>
+              <button
+                onClick={handleSignup}
+                className="w-[80px] h-[40px] border-2 rounded-4xl px-3 py-2 cursor-pointer ml-2 bg-[#0080FF] text-white text-[14px] hover:bg-blue-600 transition-colors"
+              >
+                회원가입
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,

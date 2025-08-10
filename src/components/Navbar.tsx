@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { profile, favorite, bookmark, logo, menu } from "../assets";
 import Searchbar from "./Searchbar";
@@ -8,13 +8,50 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 로그인
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const accessToken = localStorage.getItem("accessToken");
+      setIsLoggedIn(!!accessToken);
+    };
+
+    checkLoginStatus();
+
+    // 주기적으로 로그인 상태 확인
+    const interval = setInterval(checkLoginStatus, 100);
+
+    const handleStorageChange = () => {
+      checkLoginStatus();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const isAdmin =
     location.pathname.startsWith("/admin") ||
     location.pathname === "/adminlogin"; //admin관리자 부분은 navbar 숨겨야해서
   const currentPath = location.pathname;
+
   const handleSearch = (input: string) => {
     navigate(`/search?keyword=${encodeURIComponent(input)}`);
+  };
+
+  const handleLoginLogout = () => {
+    if (isLoggedIn) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setIsLoggedIn(false);
+      navigate("/");
+    } else {
+      navigate("/login");
+    }
   };
 
   const getButton = (path: string) => {
@@ -22,15 +59,20 @@ const Navbar = () => {
     return `text-sm sm:text-lg md:text-xl w-[80px] sm:w-[100px] md:w-[116px] h-[36px] sm:h-[45px] md:h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
     ${isActive ? "bg-black text-white" : "bg-white text-black"}`;
   };
+
   if (isAdmin) return null; //admin 관리자 부분은 navbar 적용 안해야함
+
   return (
     <div className="sticky w-full">
       <div className="hidden sm:flex justify-end w-full gap-3">
-        <button className="cursor-pointer" onClick={() => navigate("/login")}>
-          로그인/회원가입
+        <button
+          className="cursor-pointer hover:font-semibold transition-all"
+          onClick={handleLoginLogout}
+        >
+          {isLoggedIn ? "로그아웃" : "로그인/회원가입"}
         </button>
         <button
-          className="cursor-pointer"
+          className="cursor-pointer hover:font-semibold transition-all"
           onClick={() => navigate("/customer/notice")}
         >
           고객센터
