@@ -27,3 +27,5 @@ export { default as addPhotoIcon } from "./add_photo.png";
 export { default as cancelIcon } from "./cancel.png";
 export { default as logo } from "./logo.png";
 export { default as bArrowDown } from "./b_arrow_down.png";
+export { default as darkHeart } from "./darkHeart.png";
+export { default as darkBookmark } from "./darkBookmark.png";

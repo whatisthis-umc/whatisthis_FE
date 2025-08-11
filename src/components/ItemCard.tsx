@@ -36,8 +36,9 @@ const ItemCard = ({
   return (
     <div className="flex flex-col justify-center w-[90px]  md:w-57 h-[225px] md:h-96 bg-transparent gap-2  ml-1 md:ml-2 mr-0 md:mr-2 mt-4 md:mt-7 ">
       {/* 해시태그 */}
+      {(() => { console.log("ItemCard hashtag prop:", hashtag); return null; })()}
       <div className="flex flex-row gap-1 md:gap-2 ml-1 md:ml-2 md:mt-1">
-        {Array.isArray(hashtag) ? (
+        {Array.isArray(hashtag) && hashtag.length > 0 ? (
           hashtag.slice(0, 2).map((tag, idx) => (
             <div
               key={idx}
@@ -46,9 +47,13 @@ const ItemCard = ({
               #{tag}
             </div>
           ))
-        ) : (
+        ) : hashtag && typeof hashtag === 'string' && hashtag.trim() !== '' ? (
           <div className=" w-fit px-1.5 md:px-3 h-[16px] md:h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[10px] md:text-[16px] md: text-[#666666]">
             #{hashtag}
+          </div>
+        ) : (
+          <div className=" w-fit px-1.5 md:px-3 h-[16px] md:h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[10px] md:text-[16px] md: text-[#666666]">
+            #라이프팁
           </div>
         )}
       </div>

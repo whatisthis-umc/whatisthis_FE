@@ -31,16 +31,16 @@ const PostCard = ({ post, navigate }: { post: TipPost; navigate: any }) => (
   </div>
 );
 
-// 섹션 헤더 컴포넌트
-const SectionHeader = ({ 
-  title, 
-  onMoreClick 
-}: { 
-  title: string; 
+// 공통 구역 컴포넌트
+const SectionHeader = ({
+  title,
+  onMoreClick,
+}: {
+  title: string;
   onMoreClick: () => void;
 }) => (
   <div className="flex justify-between h-12">
-    <span className="font-[700] text-[24px] md:text-[32px] ml-4 md:ml-0">
+    <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
       {title}
     </span>
     <button
@@ -59,7 +59,6 @@ const SectionHeader = ({
 
 const TipsPage = () => {
   const navigate = useNavigate();
-  const [keyword, setKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<TipPost[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,10 +67,10 @@ const TipsPage = () => {
   // 데이터 로딩
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       if (!isMounted) return;
-      
+
       setLoading(true);
       setError(null);
 
@@ -81,7 +80,7 @@ const TipsPage = () => {
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {
-          const result = await tipService.getAllTips(page);
+          const result = await tipService.getAllPosts(page);
 
           if (result.posts.length === 0) {
             hasMoreData = false;
@@ -108,7 +107,6 @@ const TipsPage = () => {
       } catch (e) {
         if (!isMounted) return;
         console.error("Error loading data:", e);
-        setError(typeof e === "string" ? e : "데이터 로딩 실패");
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -123,7 +121,7 @@ const TipsPage = () => {
     };
   }, []);
 
-  // 카테고리 매핑 (UI 카테고리 -> 서버 카테고리)
+  // 카테고리 매핑
   const getServerCategory = (uiCategory: string): string => {
     if (uiCategory === "전체") return "";
     return (
@@ -137,9 +135,11 @@ const TipsPage = () => {
       ? allPosts
       : allPosts.filter((post) => {
           const serverCategory = getServerCategory(selectedCategory);
-          return post.subCategories?.some((cat: string) =>
-            cat.toLowerCase().includes(serverCategory.toLowerCase())
-          ) || false;
+          return (
+            post.subCategories?.some((cat: string) =>
+              cat.toLowerCase().includes(serverCategory.toLowerCase())
+            ) || false
+          );
         });
 
   // 인기순 정렬 (조회수 + 스크랩 수)
@@ -149,102 +149,82 @@ const TipsPage = () => {
     return popularityB - popularityA;
   });
 
-  // 최신순 정렬 (postId 기준)
+  // 최신순 정렬
   const recentPosts = [...filteredPosts].sort((a, b) => b.postId - a.postId);
 
-  // AI 추천순 (랜덤)
+  // AI 추천순 (일단랜덤)
   function getRandomPosts(posts: TipPost[], count: number) {
     const shuffled = [...posts].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   }
   const recommendedPosts = getRandomPosts(filteredPosts, 4);
 
-  const handleSearch = (input: string) => {
-    setKeyword(input);
-  };
+  const handleSearch = (input: string) => {};
 
-  // 검색 필터링
-  const searchfilteredPosts = keyword
-    ? allPosts.filter((post) =>
-        [post.title, post.summary, ...post.hashtags]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword.toLowerCase())
-      )
-    : allPosts;
+  if (loading) {
+    return (
+      <div className="px-8 py-12 text-center text-gray-500 text-xl">
+        로딩 중...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-8 py-12 text-center text-red-500 text-xl">{error}</div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex justify-between items-center px-4 mt-4 ">
+      <div className="flex justify-between items-center px-4 mt-4">
         <CategoryBar
           categories={["전체", ...tipCategories]}
           selected={selectedCategory}
           onSelect={setSelectedCategory}
         />
-        <div className="hidden md:w-full md:max-w-[1440px]  md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+        <div className="hidden md:block">
           <Searchbar onSearch={handleSearch} />
         </div>
       </div>
-      {keyword ? (
-        // 검색 결과 화면
-        <div className="mt-10 px-8">
-          <h2 className="text-[20px] md:text-[24px] font-bold mb-2 md:mb-4">
-            <span className="inline-block bg-[#F5FFCC] rounded-2xl px-2">
-              {keyword}
-            </span>
-            에 대한 검색 결과
-          </h2>
-          {filteredPosts.length > 0 ? (
-            <div className="flex flex-wrap gap-1 md:gap-6">
-              {searchfilteredPosts.map((post) => (
-                <PostCard key={post.postId} post={post} navigate={navigate} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-gray-500 mt-8">검색 결과가 없습니다.</div>
-          )}
+
+      <div className="w-full h-[400px] md:h-[475px] mt-15 md:mt-36 mb-120 md:mb-300">
+        <SectionHeader
+          title="인기 게시물"
+          onMoreClick={() => navigate("/tips/list?sort=popular")}
+        />
+        {/*게시글 목록*/}
+        <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+          {popularPosts.map((post) => (
+            <PostCard key={post.postId} post={post} navigate={navigate} />
+          ))}
         </div>
-      ) : (
-        <>
-          <div className="w-full h-[400px] md:h-[475px] mt-15 md:mt-36 mb-120 md:mb-300">
-            <SectionHeader 
-              title="인기 게시물" 
-              onMoreClick={() => navigate("/tips/list?sort=popular")} 
+        {/*AI 추천 게시물*/}
+        <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
+          <div className="flex justify-between h-12">
+            <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
+              AI 추천 게시물
+            </span>
+          </div>
+          <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+            {recommendedPosts.map((post) => (
+              <PostCard key={post.postId} post={post} navigate={navigate} />
+            ))}
+          </div>
+          {/*최신 게시물*/}
+          <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
+            <SectionHeader
+              title="최신 게시물"
+              onMoreClick={() => navigate("/tips/list?sort=latest")}
             />
-            {/*게시글 목록*/}
             <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
-              {popularPosts.map((post) => (
+              {recentPosts.map((post) => (
                 <PostCard key={post.postId} post={post} navigate={navigate} />
               ))}
-            </div>
-            {/*AI 추천 게시물*/}
-            <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
-              <SectionHeader 
-                title="AI 추천 게시물" 
-                onMoreClick={() => navigate("./recommend")} 
-              />
-              {/*게시글 목록*/}
-              <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
-                {recommendedPosts.map((post) => (
-                  <PostCard key={post.postId} post={post} navigate={navigate} />
-                ))}
-              </div>
-              {/*최신 게시물*/}
-              <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
-                <SectionHeader 
-                  title="최신 게시물" 
-                  onMoreClick={() => navigate("/tips/list?sort=latest")} 
-                />
-                {/*게시글 목록*/}
-                <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
-                  {recentPosts.map((post) => (
-                    <PostCard key={post.postId} post={post} navigate={navigate} />
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 };

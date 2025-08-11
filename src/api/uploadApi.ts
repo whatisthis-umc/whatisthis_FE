@@ -28,6 +28,7 @@ export const uploadService = {
       .post<UploadResponse>('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`,
         },
       })
       .then((res) => {
@@ -35,6 +36,13 @@ export const uploadService = {
           return Promise.reject(res.data.message);
         }
         return res.data.result;
+      })
+      .catch((error) => {
+        console.error('Upload error:', error);
+        if (error.response?.status === 403) {
+          return Promise.reject('업로드 권한이 없습니다. 로그인을 확인해주세요.');
+        }
+        return Promise.reject(error.message || '업로드에 실패했습니다.');
       });
   },
 
@@ -50,6 +58,7 @@ export const uploadService = {
       .post<UploadResponse>('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`,
         },
       })
       .then((res) => {
@@ -57,6 +66,13 @@ export const uploadService = {
           return Promise.reject(res.data.message);
         }
         return res.data.result[0]; // 첫 번째 URL 반환
+      })
+      .catch((error) => {
+        console.error('Upload error:', error);
+        if (error.response?.status === 403) {
+          return Promise.reject('업로드 권한이 없습니다. 로그인을 확인해주세요.');
+        }
+        return Promise.reject(error.message || '업로드에 실패했습니다.');
       });
   },
 }; 

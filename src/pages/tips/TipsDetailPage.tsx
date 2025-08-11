@@ -15,7 +15,6 @@ const TipsDetailPage = () => {
   const [searchParams] = useSearchParams();
   const sortParam = searchParams.get("sort");
   const categoryParam = searchParams.get("category");
-  const [keyword, setKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(
     categoryParam || "전체"
   );
@@ -44,10 +43,10 @@ const TipsDetailPage = () => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       if (!isMounted) return;
-      
+
       setLoading(true);
       setError(null);
 
@@ -57,7 +56,7 @@ const TipsDetailPage = () => {
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {
-          const result = await tipService.getAllTips(page);
+          const result = await tipService.getAllPosts(page);
 
           if (result.posts.length === 0) {
             hasMoreData = false;
@@ -99,16 +98,6 @@ const TipsDetailPage = () => {
     };
   }, []);
 
-  // 검색
-  const searched = keyword
-    ? allPosts.filter((p: any) =>
-        [p.title, p.summary, ...p.hashtags]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword.toLowerCase())
-      )
-    : allPosts;
-
   // 카테고리 매핑 (UI 카테고리 -> 서버 카테고리)
   const getServerCategory = (uiCategory: string): string => {
     if (uiCategory === "전체") return "";
@@ -120,20 +109,18 @@ const TipsDetailPage = () => {
   // 카테고리 필터 (subCategories 기준)
   const byCategory =
     selectedCategory === "전체"
-      ? searched
-      : searched.filter((p: any) => {
-          // subCategories 필드에서 서버 카테고리와 매칭되는 항목이 있는지 확인
+      ? allPosts
+      : allPosts.filter((p: any) => {
           const serverCategory = getServerCategory(selectedCategory);
           console.log(
             `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
           );
-          console.log(
-            `Post subCategories: ${p.subCategories?.join(", ") || "none"}`
-          );
+          console.log(`Post subCategories:`, p.subCategories);
+
+          // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
           const matches =
-            p.subCategories?.some((cat: string) =>
-              cat.toLowerCase().includes(serverCategory.toLowerCase())
-            ) || false;
+            Array.isArray(p.subCategories) &&
+            p.subCategories.includes(serverCategory);
           console.log(`Matches: ${matches}`);
           return matches;
         });
@@ -156,122 +143,75 @@ const TipsDetailPage = () => {
   const endIndex = startIndex + postsPerPage;
   const currentPosts = sorted.slice(startIndex, endIndex);
 
+  const handleSearch = (input: string) => {};
+
   return (
     <div className="px-4">
       {/* 검색 + 카테고리 */}
-      {!keyword && (
-        <div className="flex justify-between items-center mt-4">
-          <CategoryBar
-            categories={["전체", ...tipCategories]}
-            selected={selectedCategory}
-            onSelect={(category) => {
-              setSelectedCategory(category);
-              setCurrentPage(1); // 카테고리 변경 시 1페이지로 리셋
-            }}
-          />
-          <div className="hidden md:block">
-            <Searchbar onSearch={setKeyword} />
-          </div>
+      <div className="flex justify-between items-center mt-4">
+        <CategoryBar
+          categories={["전체", ...tipCategories]}
+          selected={selectedCategory}
+          onSelect={(category) => {
+            setSelectedCategory(category);
+            setCurrentPage(1); // 카테고리 변경 시 1페이지로 리셋
+          }}
+        />
+        <div className="hidden md:block">
+          <Searchbar onSearch={handleSearch} />
         </div>
-      )}
+      </div>
 
-      {keyword && (
-        <div className="flex justify-end items-center mt-4">
-          <div className="hidden md:block">
-            <Searchbar onSearch={setKeyword} />
-          </div>
-        </div>
-      )}
+      {/* 로딩/에러 */}
+      {loading && <p className="mt-8 text-center">로딩 중…</p>}
+      {error && <p className="mt-8 text-center text-red-500">{error}</p>}
 
-      {keyword ? (
-        <div className="mt-10 px-8">
-          <h2 className="ml-2 md:ml-5 text-[16px] md:text-[24px] font-bold mb-4 text-[#333333]">
-            <span className="w-fit px-1 py-1 bg-[#F5FFCC] rounded-2xl">
-              {keyword}
-            </span>
-            에 대한 통합검색 결과
-          </h2>
-          {searched.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1 md:gap-4">
-              {searched.map((post, index) => (
-                <div
-                  key={`${post.postId}-${index}`}
-                  onClick={() => navigate(`/tips/${post.postId}`)}
-                  className="cursor-pointer"
-                >
-                  <ItemCard
-                    id={post.postId}
-                    category={post.category}
-                    hashtag={post.hashtags}
-                    imageUrl={post.imageUrls}
-                    title={post.title}
-                    description={post.summary}
-                    views={post.views}
-                    scraps={post.scraps}
-                    date={new Date(post.date)}
-                    type="tips"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-gray-500 mt-8">검색 결과가 없습니다.</div>
-          )}
-        </div>
-      ) : (
+      {!loading && !error && (
         <>
-          {/* 로딩/에러 */}
-          {loading && <p className="mt-8 text-center">로딩 중…</p>}
-          {error && <p className="mt-8 text-center text-red-500">{error}</p>}
+          <div className="flex justify-end mt-6">
+            <SortDropdown
+              defaultValue={sortType}
+              onChange={(v) => {
+                setSortType(v);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
 
-          {!loading && !error && (
-            <>
-              <div className="flex justify-end mt-6">
-                <SortDropdown
-                  defaultValue={sortType}
-                  onChange={(v) => {
-                    setSortType(v);
-                    setCurrentPage(1);
-                  }}
+          {/* 카드 그리드 */}
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1 md:gap-4 mt-4">
+            {currentPosts.map((post, index) => (
+              <div
+                key={`${post.postId}-${index}`}
+                onClick={() => navigate(`/tips/${post.postId}`)}
+                className="cursor-pointer"
+              >
+                <ItemCard
+                  id={post.postId}
+                  category={post.category}
+                  hashtag={post.hashtags}
+                  imageUrl={post.imageUrls}
+                  title={post.title}
+                  description={post.summary}
+                  views={post.views}
+                  scraps={post.scraps}
+                  date={new Date(post.date)}
+                  type="tips"
                 />
               </div>
+            ))}
+          </div>
 
-              {/* 카드 그리드 */}
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1 md:gap-4 mt-4">
-                {currentPosts.map((post, index) => (
-                  <div
-                    key={`${post.postId}-${index}`}
-                    onClick={() => navigate(`/tips/${post.postId}`)}
-                    className="cursor-pointer"
-                  >
-                    <ItemCard
-                      id={post.postId}
-                      category={post.category}
-                      hashtag={post.hashtags}
-                      imageUrl={post.imageUrls}
-                      title={post.title}
-                      description={post.summary}
-                      views={post.views}
-                      scraps={post.scraps}
-                      date={new Date(post.date)}
-                      type="tips"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* 페이지네이션 */}
-              <div className="mt-20 ">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={(page: number) => {
-                    setCurrentPage(page);
-                  }}
-                />
-              </div>
-            </>
-          )}
+          {/* 페이지네이션 */}
+          <div className="mt-20 ">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page: number) => {
+                setCurrentPage(page);
+              }}
+            />
+          </div>
         </>
       )}
     </div>

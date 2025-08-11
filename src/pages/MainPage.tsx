@@ -21,7 +21,7 @@ const MainPage = () => {
   };
   const handleNext = () => {
     setCurrentIndex((prev) =>
-      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage),
+      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage)
     );
   };
   const handleSearch = (input: string) => {
@@ -30,7 +30,7 @@ const MainPage = () => {
 
   const visiblePosts = dummyPosts.slice(
     currentIndex,
-    currentIndex + postsPerPage,
+    currentIndex + postsPerPage
   );
   const filteredPosts = keyword
     ? dummyPosts.filter((post) =>
@@ -41,7 +41,7 @@ const MainPage = () => {
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase()),
+          .includes(keyword.toLowerCase())
       )
     : dummyPosts;
 
