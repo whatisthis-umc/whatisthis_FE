@@ -5,6 +5,8 @@ import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
 import { useInquiry, type InquiryItem } from "../../contexts/InquiryContext";
 import InformationModal from "../../components/modals/InformationModal";
+import LoginPromptModal from "../../components/modals/LoginPromptModal";
+import { useAuth } from "../../hooks/useAuth";
 import lockIcon from "../../assets/lock.svg";
 import writingIcon from "../../assets/writing.svg";
 
@@ -18,13 +20,14 @@ const InquiryPage = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [showPrivateModal, setShowPrivateModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showInquiryLoginModal, setShowInquiryLoginModal] = useState(false);
 
   const itemsPerPage = 5;
   const { inquiries } = useInquiry();
+  const { isLoggedIn } = useAuth();
 
-  // 로그인 상태 (false: 로그인 안됨, true: 로그인됨)
-  const isLoggedIn = false; // 테스트용으로 false로 설정
-  const currentUserId = isLoggedIn ? 999 : null; // 로그인하지 않으면 null
+  // 현재 사용자 ID (로그인한 경우에만)
+  const currentUserId = isLoggedIn ? 999 : null; // TODO: 실제 사용자 ID를 토큰에서 가져오기
 
   // 검색 필터링
   const filteredInquiries = keyword
@@ -53,11 +56,12 @@ const InquiryPage = () => {
   };
 
   const handleInquiryClick = () => {
-    // 로그인하지 않은 상태라면 모달 표시
+    // 로그인하지 않은 상태라면 로그인 프롬프트 모달 표시
     if (!isLoggedIn) {
-      setShowLoginModal(true);
+      setShowInquiryLoginModal(true);
       return;
     }
+    // 로그인한 상태라면 문의 작성 페이지로 이동
     navigate("/customer/inquiry/write");
   };
 
@@ -92,6 +96,15 @@ const InquiryPage = () => {
   const handleLoginModalCancel = () => {
     setShowLoginModal(false);
     // 최근에 봤던 게시물로 이동 (현재는 그대로 있음)
+  };
+
+  const handleInquiryLoginModalClose = () => {
+    setShowInquiryLoginModal(false);
+  };
+
+  const handleInquiryLoginModalLogin = () => {
+    setShowInquiryLoginModal(false);
+    navigate("/login"); // 로그인 페이지로 이동
   };
 
   const renderInquiryList = () => (
@@ -414,6 +427,14 @@ const InquiryPage = () => {
         isOpen={showLoginModal}
         message="이 기능은 로그인 후 이용 가능합니다."
         onClose={handleLoginModalCancel}
+      />
+
+      {/* 문의하기 로그인 프롬프트 모달 */}
+      <LoginPromptModal
+        open={showInquiryLoginModal}
+        message="문의하기 기능은 로그인 후 이용 가능합니다."
+        onClose={handleInquiryLoginModalClose}
+        onLogin={handleInquiryLoginModalLogin}
       />
     </div>
   );
