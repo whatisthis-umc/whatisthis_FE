@@ -43,6 +43,8 @@ import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditP
 import FindAccountPages from "./pages/FindAccountPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
+import OAuthCallbackPage from "./pages/Signup/SocialLogin/OAuthCallbackPage";
+import LinkSocialPage from "./pages/Signup/SocialLogin/LinkSocialPage";
 
 function App() {
   return (
@@ -57,6 +59,8 @@ function App() {
                 <Route path="/search" element={<MainPage />} />
                 <Route path="/my" element={<MyPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
+                <Route path="/link-social" element={<LinkSocialPage />} />
                 <Route path="/signup/*" element={<SignupPage />} />
                 <Route path="/find/*" element={<FindAccountPages />} />
 
