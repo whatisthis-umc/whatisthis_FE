@@ -16,11 +16,8 @@ export const getCommunityPosts = async (
   size: number,
   sort: CommunitySortType
 ): Promise<CommunityPost[]> => {
-  const accessToken = localStorage.getItem("accessToken");
-
   console.log("✅ 최종 요청 URL:", `${API_URL}/posts/communities`);
   console.log("✅ API 호출 params 확인:", { page, size, sort });
-  console.log("✅ accessToken:", accessToken);
 
   const response = await axiosInstance.get(`/posts/communities`, {
   params: {

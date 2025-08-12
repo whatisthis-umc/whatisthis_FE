@@ -1,24 +1,13 @@
-import { useState } from "react";
-import {
-  Box,
-  Select,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  InputBase,
-  IconButton,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import { useInquiry } from "../../../contexts/InquiryContext";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { getInquiryList, updateInquiryStatus } from "../../../api/inquiryApi";
+import type { InquiryListItem, InquiryStatus } from "../../../types/adminInquiry";
+import Pagination from "../../../components/customer/Pagination";
+import LoginPromptModal from "../../../components/modals/LoginPromptModal";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 
 const inquiryStatuses = [
   { id: "all", name: "전체" },
@@ -26,386 +15,197 @@ const inquiryStatuses = [
   { id: "processed", name: "답변완료" },
 ];
 
-type InquiryStatus = "all" | "unprocessed" | "processed";
-
 export default function AdminInquiryPage() {
   const [selectedStatus, setSelectedStatus] = useState<InquiryStatus>("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 400);
   const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [inquiries, setInquiries] = useState<InquiryListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const inquiriesPerPage = 5;
   const navigate = useNavigate();
-  const { inquiries, updateInquiry } = useInquiry();
 
-  // 필터링
-  const filteredInquiries = inquiries.filter((inquiry) => {
-    const statusMatch =
-      selectedStatus === "all" ||
-      (selectedStatus === "unprocessed" && inquiry.status === "미답변") ||
-      (selectedStatus === "processed" && inquiry.status === "답변완료");
-    const searchMatch =
-      inquiry.title.toLowerCase().includes(search.toLowerCase()) ||
-      inquiry.authorId.toString().includes(search.toLowerCase());
-    return statusMatch && searchMatch;
-  });
+  const fetchInquiries = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getInquiryList(
+        currentPage,
+        inquiriesPerPage,
+        selectedStatus,
+        debouncedSearch || undefined
+      );
+      if (response.isSuccess) {
+        setInquiries(response.result.inquiries);
+        setTotalPages(response.result.totalPages);
+      } else {
+        setError(response.message || "문의 목록을 불러오는데 실패했습니다.");
+        setInquiries([]);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error("문의 목록 조회 오류:", err);
+      setError("문의 목록을 불러오는데 실패했습니다.");
+      setInquiries([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, inquiriesPerPage, selectedStatus, debouncedSearch]);
 
-  // 페이지네이션
-  const totalPages = Math.ceil(filteredInquiries.length / inquiriesPerPage);
-  const paginatedInquiries = filteredInquiries.slice(
-    (currentPage - 1) * inquiriesPerPage,
-    currentPage * inquiriesPerPage,
-  );
+  useEffect(() => {
+    fetchInquiries();
+  }, [fetchInquiries]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const displayInquiries = useMemo(() => inquiries, [inquiries]);
+
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-  };
+  }, []);
 
-  // 상태 변경 처리
-  const handleStatusChange = (inquiryId: number) => {
-    const inquiry = inquiries.find((i) => i.id === inquiryId);
-    if (inquiry) {
-      // 상태를 답변완료로 변경
-      updateInquiry(inquiryId, { status: "답변완료" });
-      setModalMessage("답변완료로 처리되었습니다.");
+  const handleStatusChange = useCallback(async (inquiryId: number) => {
+    try {
+      const response = await updateInquiryStatus(inquiryId, { status: "processed" });
+      if (response.isSuccess) {
+        setModalMessage("답변완료로 처리되었습니다.");
+        setModalOpen(true);
+        fetchInquiries();
+      } else {
+        setModalMessage("상태 변경에 실패했습니다.");
+        setModalOpen(true);
+      }
+    } catch (err) {
+      console.error("상태 변경 오류:", err);
+      setModalMessage("상태 변경에 실패했습니다.");
       setModalOpen(true);
     }
-  };
+  }, [fetchInquiries]);
 
-  const handleModalClose = () => {
+  const handleModalClose = useCallback(() => {
     setModalOpen(false);
     setModalMessage("");
-  };
+  }, []);
+
+  const handleWriteClick = useCallback(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const adminAccessToken = localStorage.getItem("adminAccessToken");
+    if (!accessToken && !adminAccessToken) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    navigate("/customer/inquiry/write");
+  }, [navigate]);
+
+  const handleLoginPromptClose = useCallback(() => setShowLoginPrompt(false), []);
+  const handleLoginPromptLogin = useCallback(() => {
+    setShowLoginPrompt(false);
+    navigate("/login");
+  }, [navigate]);
 
   return (
     <AdminLayout>
-      <Box className="px-10 py-6">
-        {/* 상단 제목 */}
-        <Box className="text-left mb-20">
+      <div className="px-10 py-6">
+        {/* 상단 제목 + 작성 버튼 */}
+        <div className="text-left mb-20 flex items-center justify-between">
           <h2 className="text-2xl font-bold">문의내역</h2>
-        </Box>
+          <button onClick={handleWriteClick} className="bg-[#0080FF] text-white px-4 py-2 rounded-[32px] hover:bg-[#0070e6]">
+            문의글 작성
+          </button>
+        </div>
 
         {/* 필터 + 검색 */}
-        <Box
-          className="mb-6"
-          sx={{
-            width: 921,
-            height: 72,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
+        <div className="mb-6 w-[921px] h-[72px] flex items-center justify-between">
+          <div className="w-[567px] h-[72px] rounded-[32px] bg-[#E6E6E6] px-6 flex items-center justify-between">
+            <select
               value={selectedStatus}
               onChange={(e) => {
                 setSelectedStatus(e.target.value as InquiryStatus);
                 setCurrentPage(1);
               }}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => null}
-              sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
-              }}
+              className="flex-grow bg-transparent text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] outline-none"
             >
               {inquiryStatuses.map((status) => (
-                <MenuItem key={status.id} value={status.id}>
+                <option key={status.id} value={status.id}>
                   {status.name}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
+            </select>
+            <img src={arrowDown} alt="arrow" width={24} height={24} className="opacity-80" />
+          </div>
 
-            {/* 화살표 아이콘 */}
-            <img
-              src={arrowDown}
-              alt="arrow"
-              width={24}
-              height={24}
-              style={{ opacity: 0.8 }}
-            />
-          </Box>
-
-          {/* 검색창 */}
-          <Box
-            component="form"
-            onSubmit={handleSearchSubmit}
-            sx={{
-              width: 216,
-              height: 40,
-              display: "flex",
-              alignItems: "center",
-              borderBottom: "1px solid #333333",
-              justifyContent: "space-between",
-            }}
-          >
-            <InputBase
-              fullWidth
+          <form onSubmit={handleSearchSubmit} className="w-[216px] h-10 flex items-center border-b border-[#333333] justify-between">
+            <input
+              type="text"
               placeholder="검색어를 입력하세요."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 500,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                letterSpacing: "-1%",
-                px: 1,
-                "&::placeholder": {
-                  color: "#333333",
-                  opacity: 1,
-                  fontFamily: "Pretendard",
-                  fontWeight: 500,
-                  fontSize: "16px",
-                  lineHeight: "150%",
-                  letterSpacing: "-1%",
-                },
-                "& input::placeholder": {
-                  color: "#333333 !important",
-                  opacity: 1,
-                },
-              }}
+              className="flex-grow font-[Pretendard] font-medium text-base text-[#333333] leading-[150%] tracking-[-0.01em] px-1 outline-none placeholder:text-[#333333] placeholder:opacity-100 placeholder:font-[Pretendard] placeholder:font-medium placeholder:text-base placeholder:leading-[150%] placeholder:tracking-[-0.01em]"
             />
-            <IconButton type="submit">
-              <SearchIcon sx={{ color: "#333333" }} />
-            </IconButton>
-          </Box>
-        </Box>
+            <button type="submit" className="p-1">
+              <svg className="w-6 h-6 text-[#333333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </form>
+        </div>
 
         {/* 문의 테이블 */}
-        <Table
-          sx={{
-            borderCollapse: "separate",
-            "& th": {
-              borderBottom: "none",
-            },
-          }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                유형
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                문의 내용
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                작성일
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                처리 상태
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody
-            sx={{
-              fontFamily: "Pretendard",
-              fontWeight: 500,
-              fontSize: "20px",
-              lineHeight: "150%",
-              letterSpacing: "-2%",
-              color: "#333333",
-              textAlign: "left",
-            }}
-          >
-            {paginatedInquiries.map((inquiry) => (
-              <TableRow
-                key={inquiry.id}
-                onClick={() => navigate(`/admin/inquiries/${inquiry.id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <TableCell>
-                  <Box
-                    sx={{
-                      display: "inline-block",
-                      padding: "4px 12px",
-                      border: "1px solid #999999",
-                      borderRadius: "32px",
-                      fontFamily: "Pretendard",
-                      fontWeight: 500,
-                      fontSize: "20px",
-                      lineHeight: "150%",
-                      letterSpacing: "-2%",
-                      color: "#333333",
-                    }}
-                  >
-                    {inquiry.type === "comment" ? "댓글" : "게시물"}
-                  </Box>
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "left",
-                  }}
-                >
-                  {inquiry.title}
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "150%",
-                    letterSpacing: "-2%",
-                    color: "#333333",
-                    textAlign: "center",
-                  }}
-                >
-                  {inquiry.date}
-                </TableCell>
-                <TableCell>
-                  {inquiry.status === "미답변" ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(inquiry.id);
-                      }}
-                      style={{
-                        backgroundColor: "#E6E6E6",
-                        color: "#333333",
-                        fontFamily: "Pretendard",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        lineHeight: "150%",
-                        letterSpacing: "-1%",
-                        padding: "4px 12px",
-                        borderRadius: "32px",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      미답변
-                    </button>
-                  ) : (
-                    <span
-                      style={{
-                        backgroundColor: "#0080FF",
-                        color: "#FFFFFF",
-                        fontFamily: "Pretendard",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        lineHeight: "150%",
-                        letterSpacing: "-1%",
-                        padding: "4px 12px",
-                        borderRadius: "32px",
-                        display: "inline-block",
-                      }}
-                    >
-                      답변완료
-                    </span>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="w-full">
+          <table className="w-full border-separate">
+            <thead>
+              <tr>
+                <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">유형</th>
+                <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">문의 내용</th>
+                <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">작성일</th>
+                <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">처리 상태</th>
+              </tr>
+            </thead>
+            <tbody className="font-[Pretendard] font-medium text-xl leading-[150%] tracking-[-0.02em] text-[#333333]">
+              {loading ? (
+                <tr><td colSpan={4} className="text-center py-8">로딩 중...</td></tr>
+              ) : error ? (
+                <tr><td colSpan={4} className="text-center py-8 text-red-500">{error}</td></tr>
+              ) : displayInquiries.length === 0 ? (
+                <tr><td colSpan={4} className="text-center py-8">문의 내역이 없습니다.</td></tr>
+              ) : (
+                displayInquiries.map((inquiry: InquiryListItem) => (
+                  <tr key={inquiry.id} onClick={() => navigate(`/admin/inquiries/${inquiry.id}`)} className="cursor-pointer hover:bg-gray-50">
+                    <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px]">문의</div></td>
+                    <td className="py-3">{inquiry.title}</td>
+                    <td className="py-3 text-center">{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</td>
+                    <td className="py-3">
+                      {inquiry.status === "UNPROCESSED" ? (
+                        <button onClick={(e) => { e.stopPropagation(); handleStatusChange(inquiry.id); }} className="bg-[#E6E6E6] text-[#333333] text-sm font-medium py-1 px-3 rounded-[32px] border-none cursor-pointer">미답변</button>
+                      ) : (
+                        <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">답변완료</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* 페이지네이션 */}
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            <ChevronLeftIcon sx={{ color: "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setCurrentPage(num)}
-                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                  num === currentPage
-                    ? "bg-[#0080FF] text-white"
-                    : "text-[#999999] hover:text-black"
-                }`}
-                style={{ fontFamily: "Pretendard" }}
-              >
-                {num}
-              </button>
-            ),
-          )}
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
-            <ChevronRightIcon sx={{ color: "#999999" }} />
-          </button>
-        </Box>
+        {totalPages >= 1 && (
+          <div className="mt-20">
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          </div>
+        )}
 
         {/* 확인 모달 */}
-        <ConfirmModal
-          open={modalOpen}
-          onClose={handleModalClose}
-          message={modalMessage}
-        />
-      </Box>
+        <ConfirmModal open={modalOpen} onClose={handleModalClose} message={modalMessage} />
+
+        {/* 로그인 프롬프트 모달 */}
+        <LoginPromptModal open={showLoginPrompt} onClose={handleLoginPromptClose} onLogin={handleLoginPromptLogin} message={"이 기능은 로그인 후 이용 가능합니다.\n로그인하시겠습니까?"} />
+      </div>
     </AdminLayout>
   );
 }

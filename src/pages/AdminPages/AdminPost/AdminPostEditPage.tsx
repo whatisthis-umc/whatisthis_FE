@@ -1,27 +1,119 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
-import { dummyPosts3 } from "../../../data/dummyPosts3";
 import { addPhotoIcon, cancelIcon } from "../../../assets";
 import add from "/src/assets/add.png";
+import { adminPostDetail, type AdminPostDetailResponse } from "../../../api/adminPostDetail";
+import { adminPostEdit } from "../../../api/adminPostEdit";
+import { uploadService } from "../../../api/uploadApi";
+import { subCategoryEnumMap } from "../../../constants/subCategoryEnumMap";
+import type { AdminPostEditRequest } from "../../../types/request/adminPost";
 
 const AdminPostEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const post = dummyPosts3.find((p) => p.id === Number(id));
-
-  const [image, setImage] = useState<File | null>(null);
-  const [title, setTitle] = useState(post?.title || "");
-  const [content1, setContent1] = useState(post?.content || "");
-  const [content2, setContent2] = useState(post?.content2 || "");
-  const [tagInputs, setTagInputs] = useState<string[]>(post?.tags || [""]);
+  
+  // 상태 관리
+  const [post, setPost] = useState<AdminPostDetailResponse["result"] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // 폼 상태
+  const [imageUrls, setImageUrls] = useState<string[]>([]); // 기존 이미지 URL들
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]); // 새로 업로드할 이미지 파일들
+  const [title, setTitle] = useState("");
+  const [content1, setContent1] = useState("");
+  const [content2, setContent2] = useState("");
+  const [tagInputs, setTagInputs] = useState<string[]>([""]);
   const [mainCategory, setMainCategory] = useState("생활꿀팁");
-  const [subCategory, setSubCategory] = useState(post?.category || "");
+  const [subCategory, setSubCategory] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const subCategoryMap: { [key: string]: string[] } = {
     생활꿀팁: ["조리/주방", "청소/분리수거", "욕실/청결", "세탁/의류관리", "보관/유통기한"],
     생활꿀템: ["자취 필수템", "주방템", "청소템", "살림도구템", "브랜드 꿀템"],
   };
+
+  // 서브카테고리 enum 매핑 (역방향)
+  const reverseSubCategoryMap: { [key: string]: string } = {
+    'COOK_TIP': '조리/주방',
+    'CLEAN_TIP': '청소/분리수거',
+    'BATHROOM_TIP': '욕실/청결',
+    'CLOTH_TIP': '세탁/의류관리',
+    'STORAGE_TIP': '보관/유통기한',
+    'SELF_LIFE_ITEM': '자취 필수템',
+    'KITCHEN_ITEM': '주방템',
+    'CLEAN_ITEM': '청소템',
+    'HOUSEHOLD_ITEM': '살림도구템',
+    'BRAND_ITEM': '브랜드 꿀템',
+  };
+
+  // 게시물 데이터 로드
+  useEffect(() => {
+    const fetchPostDetail = async () => {
+      if (!id) {
+        setError("게시물 ID가 없습니다.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await adminPostDetail(Number(id));
+        const postData = response.result;
+        setPost(postData);
+        
+        console.log("받은 게시물 데이터:", postData);
+        console.log("hashtags:", postData.hashtags);
+        console.log("imageUrls:", postData.imageUrls);
+        
+        // 폼 데이터 초기화
+        setTitle(postData.title);
+        
+        // 내용을 두 부분으로 분리 (첫 번째 줄바꿈 기준)
+        const contentParts = postData.content.split('\n\n');
+        setContent1(contentParts[0] || "");
+        setContent2(contentParts.slice(1).join('\n\n') || "");
+        
+        // 해시태그 설정 (안전하게 처리)
+        setTagInputs(postData.hashtags && postData.hashtags.length > 0 ? postData.hashtags : [""]);
+        
+        // 카테고리 설정
+        if (postData.category === 'LIFE_TIP') {
+          setMainCategory("생활꿀팁");
+        } else if (postData.category === 'LIFE_ITEM') {
+          setMainCategory("생활꿀템");
+        }
+        
+        // 서브카테고리 설정
+        const subCategoryDisplay = reverseSubCategoryMap[postData.subCategory];
+        setSubCategory(subCategoryDisplay || "");
+        
+        // 기존 이미지 URL 설정 (안전하게 처리)
+        const validImageUrls = postData.imageUrls?.filter(url => 
+          url && url !== 'string' && url.startsWith('http')
+        ) || [];
+        setImageUrls(validImageUrls);
+        
+      } catch (err: any) {
+        console.error("게시물 상세 조회 실패:", err);
+        if (err.response?.status === 404) {
+          setError("존재하지 않는 게시물입니다.");
+        } else if (err.response?.status === 403) {
+          setError("접근 권한이 없습니다.");
+        } else {
+          setError("게시물을 불러오는데 실패했습니다.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPostDetail();
+  }, [id]);
 
   const handleTagChange = (value: string, index: number) => {
     const newTags = [...tagInputs];
@@ -30,15 +122,51 @@ const AdminPostEditPage = () => {
   };
 
   const handleAddTagInput = () => setTagInputs([...tagInputs, ""]);
+  
   const handleRemoveTagInput = (index: number) => {
     const newTags = [...tagInputs];
     newTags.splice(index, 1);
     setTagInputs(newTags);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setImage(file);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    try {
+      setUploadingImages(true);
+      
+      // 이미지 업로드
+      const uploadedUrls = await uploadService.uploadImages(files);
+      
+      // 새 이미지 URL들을 기존 URL에 추가 (클로저 문제 해결)
+      setImageUrls(prev => {
+        const newUrls = [...prev, ...uploadedUrls];
+        // 새 이미지로 포커스
+        setCurrentImageIndex(prev.length);
+        return newUrls;
+      });
+      
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      alert("이미지 업로드에 실패했습니다.");
+    } finally {
+      setUploadingImages(false);
+      // 파일 입력 초기화
+      if (e.target) {
+        e.target.value = "";
+      }
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImageUrls(prev => {
+      const newUrls = prev.filter((_, i) => i !== index);
+      if (currentImageIndex >= newUrls.length) {
+        setCurrentImageIndex(Math.max(0, newUrls.length - 1));
+      }
+      return newUrls;
+    });
   };
 
   const handleMainCategoryChange = (value: string) => {
@@ -46,22 +174,62 @@ const AdminPostEditPage = () => {
     setSubCategory("");
   };
 
-  const handleSubmit = () => {
-    const updatedPost = {
-      id: post?.id,
-      title,
-      content: [content1, content2].filter(Boolean).join("\n\n"),
-      tags: tagInputs,
-      imageUrl: image ? URL.createObjectURL(image) : post?.imageUrl || "",
-      category: subCategory,
-    };
+  const handleSubmit = async () => {
+    if (!post) return;
 
-    console.log("수정된 데이터:", updatedPost);
-    alert("수정이 완료되었습니다. (콘솔 확인)");
-    navigate("/admin/post");
+    try {
+      setSubmitting(true);
+      
+      const content = [content1, content2].filter(Boolean).join("\n\n");
+      
+      // 이미지 URL 필터링 - 'string' 값과 유효하지 않은 URL 제거
+      const validImageUrls = imageUrls.filter(url => 
+        url && url !== 'string' && url.startsWith('http')
+      );
+      
+      const payload: AdminPostEditRequest = {
+        title,
+        content,
+        category: mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
+        subCategory: subCategoryEnumMap[subCategory as keyof typeof subCategoryEnumMap],
+        imageUrls: validImageUrls, // 필터링된 이미지 URL 배열
+        hashtags: tagInputs.filter(tag => tag && tag.trim()),
+      };
+
+      console.log("수정할 데이터:", payload);
+      console.log("필터링된 이미지 URL들:", validImageUrls);
+      
+      await adminPostEdit(post.postId, payload);
+      alert("게시물이 성공적으로 수정되었습니다.");
+      navigate(`/admin/post/${post.postId}`);
+      
+    } catch (err: any) {
+      console.error("게시물 수정 실패:", err);
+      alert("게시물 수정에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (!post) return <div className="p-10 text-xl">존재하지 않는 게시글입니다.</div>;
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="w-[1040px] px-10 py-8 flex justify-center items-center">
+          <div className="text-xl">로딩 중...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <AdminLayout>
+        <div className="w-[1040px] px-10 py-8 flex justify-center items-center">
+          <div className="text-xl text-red-500">{error || "게시물을 찾을 수 없습니다."}</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -71,28 +239,60 @@ const AdminPostEditPage = () => {
             <div className="w-full mb-6 ml-4">
               <p className="font-[700] text-[32px]">게시글 내용</p>
             </div>
-            <div className="w-[500px] h-[500px] bg-gray-100 rounded-4xl flex justify-center items-center overflow-hidden">
-              {(image || post.imageUrl) && (
-                <img
-                  src={image ? URL.createObjectURL(image) : post.imageUrl}
-                  alt="미리보기"
-                  className="w-full h-full object-cover rounded-xl"
-                />
+            <div className="w-[500px] h-[500px] bg-gray-100 rounded-4xl flex justify-center items-center overflow-hidden relative">
+              {imageUrls.length > 0 ? (
+                <>
+                  <img
+                    src={imageUrls[currentImageIndex]}
+                    alt="이미지 미리보기"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                  <img
+                    src={cancelIcon}
+                    alt="cancel"
+                    onClick={() => handleRemoveImage(currentImageIndex)}
+                    className="absolute top-2 right-2 w-6 h-6 cursor-pointer opacity-80 hover:opacity-100"
+                  />
+                  {currentImageIndex === 0 && (
+                    <div className="absolute top-2 left-2 bg-[#0080FF] text-white text-xs px-3 py-2 rounded-4xl !rounded-4xl">
+                      대표
+                    </div>
+                  )}
+                  {imageUrls.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 md:gap-3 bg-[#FFFFFF80] bg-opacity-50 px-3 py-1 rounded-4xl">
+                      {imageUrls.map((_, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`w-3 h-3 md:w-4 md:h-4 rounded-4xl cursor-pointer ${
+                            currentImageIndex === idx
+                              ? "bg-[#0080FF]"
+                              : "bg-gray-400"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <span className="text-[#999999]">이미지 없음</span>
               )}
             </div>
             <label
               htmlFor="imageUpload"
-              className="mt-4 gap-3 w-[500px] h-[54px] rounded-4xl flex justify-center items-center bg-[#0080FF] text-white text-[20px] cursor-pointer "
+              className="mt-4 gap-3 w-[500px] h-[54px] rounded-4xl flex justify-center items-center bg-[#0080FF] text-white text-[20px] cursor-pointer"
             >
               <img src={addPhotoIcon} />
-              파일에서 업로드
+              {uploadingImages ? "업로드 중..." : "파일에서 업로드"}
             </label>
             <input
               id="imageUpload"
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageChange}
               className="hidden"
+              disabled={uploadingImages}
             />
           </div>
         </div>
@@ -183,15 +383,17 @@ const AdminPostEditPage = () => {
           <div className="flex justify-end gap-4 mt-6">
             <button
               onClick={() => navigate(-1)}
-              className="bg-blue-500 text-white px-6 py-2 rounded-4xl"
+              className="bg-gray-300 text-black px-6 py-2 rounded-4xl"
+              disabled={submitting}
             >
               취소
             </button>
             <button
               onClick={handleSubmit}
               className="bg-blue-500 text-white px-6 py-2 rounded-4xl"
+              disabled={submitting}
             >
-              저장
+              {submitting ? "수정 중..." : "저장"}
             </button>
           </div>
         </div>

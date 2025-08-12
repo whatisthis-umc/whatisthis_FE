@@ -61,6 +61,8 @@ const ItemsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
+  const [popularPosts, setPopularPosts] = useState<ItemPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<ItemPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +78,7 @@ const ItemsPage = () => {
 
       try {
         const allData: any[] = [];
-        let page = 1;
+        let page = 0; // 서버와 동일하게 0부터 시작
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {
@@ -106,10 +108,40 @@ const ItemsPage = () => {
         }, []);
 
         setAllPosts(uniqueData);
+
+        // 카테고리 필터링
+        const filteredPosts =
+          selectedCategory === "전체"
+            ? uniqueData
+            : uniqueData.filter((post) => {
+                const serverCategory = getServerCategory(selectedCategory);
+                console.log(
+                  `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
+                );
+                console.log(`Post subCategories:`, post.subCategories);
+
+                // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
+                const matches =
+                  Array.isArray(post.subCategories) &&
+                  post.subCategories.includes(serverCategory);
+                console.log(`Matches: ${matches}`);
+                return matches;
+              });
+
+        // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
+        const popular = [...filteredPosts].sort((a, b) => {
+          const popularityA = (a.views || 0) + (a.scraps || 0);
+          const popularityB = (b.views || 0) + (b.scraps || 0);
+          return popularityB - popularityA;
+        });
+        setPopularPosts(popular);
+
+        // 최신순 정렬 - 카테고리 필터링 적용
+        const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
+        setRecentPosts(recent);
       } catch (e) {
         if (!isMounted) return;
         console.error("Error loading data:", e);
-        setError(typeof e === "string" ? e : "데이터 로딩 실패");
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -123,6 +155,42 @@ const ItemsPage = () => {
       isMounted = false;
     };
   }, []);
+
+  // 카테고리 변경 시 인기순/최신순 업데이트
+  useEffect(() => {
+    if (allPosts.length === 0) return;
+
+    // 카테고리 필터링
+    const filteredPosts =
+      selectedCategory === "전체"
+        ? allPosts
+        : allPosts.filter((post) => {
+            const serverCategory = getServerCategory(selectedCategory);
+            console.log(
+              `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
+            );
+            console.log(`Post subCategories:`, post.subCategories);
+
+            // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
+            const matches =
+              Array.isArray(post.subCategories) &&
+              post.subCategories.includes(serverCategory);
+            console.log(`Matches: ${matches}`);
+            return matches;
+          });
+
+    // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
+    const popular = [...filteredPosts].sort((a, b) => {
+      const popularityA = (a.views || 0) + (a.scraps || 0);
+      const popularityB = (b.views || 0) + (b.scraps || 0);
+      return popularityB - popularityA;
+    });
+    setPopularPosts(popular);
+
+    // 최신순 정렬 - 카테고리 필터링 적용
+    const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
+    setRecentPosts(recent);
+  }, [selectedCategory, allPosts]);
 
   // 카테고리 매핑
   const getServerCategory = (uiCategory: string): string => {
@@ -151,15 +219,7 @@ const ItemsPage = () => {
           return matches;
         });
 
-  // 인기순 정렬 (조회수 + 스크랩 수)
-  const popularPosts = [...filteredPosts].sort((a, b) => {
-    const popularityA = (a.views || 0) + (a.scraps || 0);
-    const popularityB = (b.views || 0) + (b.scraps || 0);
-    return popularityB - popularityA;
-  });
 
-  // 최신순 정렬
-  const recentPosts = [...filteredPosts].sort((a, b) => b.postId - a.postId);
 
   // AI 추천순 (일단랜덤)
   function getRandomPosts(posts: ItemPost[], count: number) {

@@ -8,7 +8,7 @@ export type ReportContent =
   | 'ETC_CONTENT';
 
 // 신고 상태 enum 타입 정의
-export type ReportStatus = 'PROCESSED' | 'UNPROCESSED';
+export type ReportStatus = 'PROCESSED' | 'UNPROCESSED' | 'all';
 
 // 신고 타입 enum 정의
 export type ReportType = 'POST' | 'COMMENT';
@@ -53,7 +53,36 @@ export interface ReportDetail {
   // 추가 상세 정보는 상세조회 API 스웨거 문서 확인 후 추가
 }
 
-export interface ReportDetailResponse extends ApiResponse<ReportDetail> {}
+export interface ReportDetailResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: {
+    reportId: number;
+    type: string;
+    category: 'LIFE_TIP' | 'COMMUNITY' | 'ITEM';
+    postTitle: string;
+    commentContent: string;
+    nickname: string;
+    reportedAt: string;
+    content: 'ABUSIVE_LANGUAGE' | 'SPAM' | 'INAPPROPRIATE_CONTENT' | 'COPYRIGHT_INFRINGEMENT' | 'OTHER';
+    description: string;
+    postPreview: any; // 구체적인 타입이 명시되지 않아 any로 설정
+  };
+}
+
+export interface ReportDetailData {
+  reportId: number;
+  type: string;
+  category: 'LIFE_TIP' | 'COMMUNITY' | 'ITEM';
+  postTitle: string;
+  commentContent: string;
+  nickname: string;
+  reportedAt: string;
+  content: 'ABUSIVE_LANGUAGE' | 'SPAM' | 'INAPPROPRIATE_CONTENT' | 'COPYRIGHT_INFRINGEMENT' | 'OTHER';
+  description: string;
+  postPreview: any;
+}
 
 // 신고 사유 한국어 매핑
 export const REPORT_CONTENT_LABELS: Record<ReportContent, string> = {
@@ -69,4 +98,29 @@ export const REPORT_CONTENT_LABELS: Record<ReportContent, string> = {
 export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   POST: '게시글',
   COMMENT: '댓글',
-}; 
+};
+
+export interface ReportDeleteResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: {
+    reportId: number;
+    status: string;
+  };
+}
+
+// 신고 처리 요청/응답 타입 추가
+export interface ProcessReportRequest {
+  delete: boolean; // true: 삭제, false: 유지
+}
+
+export interface ProcessReportResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: {
+    reportId: number;
+    status: 'PROCESSED' | 'UNPROCESSED';
+  };
+} 
