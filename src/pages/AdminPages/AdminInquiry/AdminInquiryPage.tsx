@@ -5,6 +5,8 @@ import ConfirmModal from "../../../components/modals/ConfirmModal";
 import arrowDown from "../../../assets/arrow_down.png";
 import { getInquiryList, updateInquiryStatus } from "../../../api/inquiryApi";
 import type { InquiryListItem, InquiryStatus } from "../../../types/adminInquiry";
+import Pagination from "../../../components/customer/Pagination";
+import LoginPromptModal from "../../../components/modals/LoginPromptModal";
 
 const inquiryStatuses = [
   { id: "all", name: "전체" },
@@ -22,6 +24,7 @@ export default function AdminInquiryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const inquiriesPerPage = 5;
   const navigate = useNavigate();
 
@@ -91,12 +94,35 @@ export default function AdminInquiryPage() {
     setModalMessage("");
   };
 
+  const handleWriteClick = () => {
+    const accessToken = localStorage.getItem("accessToken");
+    const adminAccessToken = localStorage.getItem("adminAccessToken");
+    if (!accessToken && !adminAccessToken) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    // 로그인되어 있다면 고객 문의 작성 페이지로 이동(요구사항에 맞게 경로 조정 가능)
+    navigate("/customer/inquiry/write");
+  };
+
+  const handleLoginPromptClose = () => setShowLoginPrompt(false);
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    navigate("/login");
+  };
+
   return (
     <AdminLayout>
       <div className="px-10 py-6">
-        {/* 상단 제목 */}
-        <div className="text-left mb-20">
+        {/* 상단 제목 + 작성 버튼 */}
+        <div className="text-left mb-20 flex items-center justify-between">
           <h2 className="text-2xl font-bold">문의내역</h2>
+          <button
+            onClick={handleWriteClick}
+            className="bg-[#0080FF] text-white px-4 py-2 rounded-[32px] hover:bg-[#0070e6]"
+          >
+            문의글 작성
+          </button>
         </div>
 
         {/* 필터 + 검색 */}
@@ -239,68 +265,29 @@ export default function AdminInquiryPage() {
         </div>
 
         {/* 페이지네이션 */}
-        <div className="flex justify-center mt-20 gap-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className="p-1"
-          >
-            <svg
-              className="w-6 h-6 text-[#999999]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setCurrentPage(num)}
-                className={`w-6 h-6 rounded-full flex items-center justify-center font-medium text-xl leading-[150%] tracking-[-0.02em] font-[Pretendard] ${
-                  num === currentPage
-                    ? "bg-[#0080FF] text-white"
-                    : "text-[#999999] hover:text-black"
-                }`}
-              >
-                {num}
-              </button>
-            ),
-          )}
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            className="p-1"
-          >
-            <svg
-              className="w-6 h-6 text-[#999999]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
+        {totalPages >= 1 && (
+          <div className="mt-20">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
 
         {/* 확인 모달 */}
         <ConfirmModal
           open={modalOpen}
           onClose={handleModalClose}
           message={modalMessage}
+        />
+
+        {/* 로그인 프롬프트 모달 */}
+        <LoginPromptModal
+          open={showLoginPrompt}
+          onClose={handleLoginPromptClose}
+          onLogin={handleLoginPromptLogin}
+          message="이 기능은 로그인 후 이용 가능합니다.\n로그인하시겠습니까?"
         />
       </div>
     </AdminLayout>

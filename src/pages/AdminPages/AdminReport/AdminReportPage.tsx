@@ -11,6 +11,7 @@ import {
   type ReportListItem
 } from "../../../types/report";
 import * as reportApi from "../../../api/reportApi";
+import Pagination from "../../../components/customer/Pagination";
 
 export default function AdminReportPage() {
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus>("all");
@@ -103,16 +104,34 @@ export default function AdminReportPage() {
   const handleStatusChange = async (reportId: number) => {
     try {
       setProcessing(true);
-      await reportApi.processReport(reportId, 'delete');
-      
-      setModalMessage("삭제 처리되었습니다.");
+      const response = await reportApi.processReport(reportId, 'delete');
+
+      if (response && response.isSuccess) {
+        setModalMessage("삭제 처리되었습니다.");
+        // 로컬 상태도 처리완료로 반영
+        setReports((prev) => prev.map((r) => r.reportId === reportId ? { ...r, status: 'PROCESSED' } : r));
+      } else if (response && (response as any).code === 'REPORT4001') {
+        setModalMessage('이미 처리 완료된 신고입니다.');
+        // 이미 처리됨 응답이어도 로컬 상태 반영
+        setReports((prev) => prev.map((r) => r.reportId === reportId ? { ...r, status: 'PROCESSED' } : r));
+      } else {
+        setModalMessage(response?.message || '처리 중 오류가 발생했습니다.');
+      }
       setModalOpen(true);
-      
+
       // 목록 새로고침
       fetchReports();
     } catch (error) {
       console.error('신고 처리 실패:', error);
-      setModalMessage("처리 중 오류가 발생했습니다.");
+      const axiosError = error as any;
+      const code = axiosError?.response?.data?.code;
+      if (code === 'REPORT4001') {
+        setModalMessage('이미 처리 완료된 신고입니다.');
+      } else if (axiosError?.response?.status === 403) {
+        setModalMessage('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
+      } else {
+        setModalMessage('처리 중 오류가 발생했습니다.');
+      }
       setModalOpen(true);
     } finally {
       setProcessing(false);
@@ -319,63 +338,12 @@ export default function AdminReportPage() {
 
         {/* 페이지네이션 */}
         {!loading && !error && totalPages >= 1 && (
-          <div className="flex justify-center mt-20 gap-2 items-center">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-1"
-            >
-              <svg
-                className="w-6 h-6 text-[#999999]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-
-            {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-              (num) => (
-                <button
-                  key={num}
-                  onClick={() => setCurrentPage(num)}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center font-medium text-xl leading-[150%] tracking-[-0.02em] font-[Pretendard] ${
-                    num === currentPage
-                      ? "bg-[#0080FF] text-white"
-                      : "text-[#999999] hover:text-black"
-                  }`}
-                >
-                  {num}
-                </button>
-              ),
-            )}
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="p-1"
-            >
-              <svg
-                className="w-6 h-6 text-[#999999]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+          <div className="mt-20">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
 

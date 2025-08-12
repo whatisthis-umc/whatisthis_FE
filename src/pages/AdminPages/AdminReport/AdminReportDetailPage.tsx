@@ -175,7 +175,7 @@ export default function AdminReportDetailPage() {
       if (response && response.isSuccess) {
         // 성공 시 모달 없이 바로 목록 페이지로 이동
         navigate('/admin/reports');
-      } else if (response && response.code === 'REPORT4001') {
+      } else if (response && (response as any).code === 'REPORT4001') {
         // 이미 처리 완료된 신고인 경우
         setIsProcessed(true);
         setModalMessage('이미 처리 완료된 신고입니다.');
@@ -192,7 +192,7 @@ export default function AdminReportDetailPage() {
       if (code === 'REPORT4001') {
         setIsProcessed(true);
         setModalMessage('이미 처리 완료된 신고입니다.');
-      } else if (error instanceof Error && error.message.includes('403')) {
+      } else if (axiosError?.response?.status === 403) {
         setModalMessage('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
       } else {
         setModalMessage('처리 중 오류가 발생했습니다.');
@@ -226,9 +226,10 @@ export default function AdminReportDetailPage() {
       
       // 응답 구조 확인 후 성공 여부 판단
       if (response && response.isSuccess) {
+        setIsProcessed(true);
         setModalMessage('신고가 삭제되었습니다.');
         setModalOpen(true);
-      } else if (response && response.code === 'REPORT4001') {
+      } else if (response && (response as any).code === 'REPORT4001') {
         setIsProcessed(true);
         setModalMessage('이미 처리 완료된 신고입니다.');
         setModalOpen(true);
@@ -251,8 +252,13 @@ export default function AdminReportDetailPage() {
         console.log("- Request Headers:", axiosError.config?.headers);
       }
       
-      // 403 오류인 경우 특별한 처리
-      if (error instanceof Error && error.message.includes('403')) {
+      // 에러 코드에 따른 처리
+      const axiosError = error as any;
+      const code = axiosError?.response?.data?.code;
+      if (code === 'REPORT4001') {
+        setIsProcessed(true);
+        setModalMessage('이미 처리 완료된 신고입니다.');
+      } else if (axiosError?.response?.status === 403) {
         setModalMessage('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
       } else {
         setModalMessage('삭제 중 오류가 발생했습니다.');

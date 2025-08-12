@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
-import { useInquiry } from "../../contexts/InquiryContext";
 import InformationModal from "../../components/modals/InformationModal";
 import { useAuth } from "../../hooks/useAuth";
 import addPhotoIcon from "../../assets/add_photo.png";
+import { createSupportInquiry } from "../../api/inquiryApi";
 
 const InquiryWritePage = () => {
   const navigate = useNavigate();
-  const { addInquiry } = useInquiry();
   const { isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
@@ -18,6 +17,8 @@ const InquiryWritePage = () => {
   });
   const [isPublicDropdownOpen, setIsPublicDropdownOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string | boolean | null) => {
     setFormData((prev) => ({
@@ -26,8 +27,12 @@ const InquiryWritePage = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    // 로그인 체크
+  const handleFileSelect: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const selected = Array.from(e.target.files ?? []);
+    setFiles(selected);
+  };
+
+  const handleSubmit = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
@@ -46,16 +51,22 @@ const InquiryWritePage = () => {
       return;
     }
 
-    // Context에 새 문의글 추가
-    addInquiry({
-      title: formData.title,
-      content: formData.content,
-      isPublic: formData.isPublic,
-      authorId: 999, // TODO: 실제 사용자 ID를 토큰에서 가져오기
-    });
-
-    alert("문의가 등록되었습니다.");
-    navigate("/customer/inquiry");
+    try {
+      setSubmitting(true);
+      const payload = {
+        title: formData.title,
+        content: formData.content,
+        isSecret: !formData.isPublic, // 공개 여부 반전
+      };
+      await createSupportInquiry(payload, files);
+      alert("문의가 등록되었습니다.");
+      navigate("/customer/inquiry");
+    } catch (e) {
+      console.error("문의 등록 실패:", e);
+      alert("문의 등록 중 오류가 발생했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -63,8 +74,9 @@ const InquiryWritePage = () => {
   };
 
   const handleFileUpload = () => {
-    // 파일 업로드 기능
-    alert("파일 업로드 기능을 구현해주세요!");
+    // 파일 선택 input 클릭 트리거
+    const input = document.getElementById("file-input") as HTMLInputElement | null;
+    input?.click();
   };
 
   const togglePublicDropdown = () => {
@@ -85,6 +97,15 @@ const InquiryWritePage = () => {
       <div className="w-full pt-16 pb-8">
         {/* 고객센터 네비게이션 */}
         <CustomerNav />
+
+        {/* 숨김 파일 입력 */}
+        <input
+          id="file-input"
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
 
         {/* 문의 작성 폼 */}
         <div className="max-w-full md:max-w-2xl lg:max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
@@ -282,11 +303,13 @@ const InquiryWritePage = () => {
           <div className="mt-5 md:mt-6 lg:mt-6">
             <button
               onClick={handleFileUpload}
+              disabled={submitting}
               className="w-full transition-colors flex items-center justify-center py-3 md:py-3 lg:py-3 px-6 md:px-8 lg:px-8 rounded-2xl md:rounded-3xl lg:rounded-[32px]"
               style={{
                 background: "var(--WIT-Blue, #0080FF)",
                 border: "none",
                 cursor: "pointer",
+                opacity: submitting ? 0.7 : 1,
               }}
             >
               <img src={addPhotoIcon} alt="사진 추가" className="w-6 h-6" />
@@ -304,17 +327,22 @@ const InquiryWritePage = () => {
                 파일에서 업로드
               </span>
             </button>
+            {files.length > 0 && (
+              <div className="mt-2 text-sm text-gray-500">선택된 파일 {files.length}개</div>
+            )}
           </div>
 
           {/* 취소/게시 버튼 */}
           <div className="flex mt-10 md:mt-11 lg:mt-11 gap-4 md:gap-5 lg:gap-6 justify-end w-full">
             <button
               onClick={handleCancel}
+              disabled={submitting}
               className="transition-colors flex justify-center items-center px-4 md:px-4 lg:px-4 py-3 md:py-3 lg:py-3 w-32 md:w-36 lg:w-40 h-12 md:h-13 lg:h-[54px] rounded-2xl md:rounded-3xl lg:rounded-[32px]"
               style={{
                 background: "var(--WIT-Blue, #0080FF)",
                 border: "none",
                 cursor: "pointer",
+                opacity: submitting ? 0.7 : 1,
               }}
             >
               <span
@@ -333,11 +361,13 @@ const InquiryWritePage = () => {
             </button>
             <button
               onClick={handleSubmit}
+              disabled={submitting}
               className="transition-colors flex justify-center items-center px-4 md:px-4 lg:px-4 py-3 md:py-3 lg:py-3 w-32 md:w-36 lg:w-40 h-12 md:h-13 lg:h-[54px] rounded-2xl md:rounded-3xl lg:rounded-[32px]"
               style={{
                 background: "var(--WIT-Blue, #0080FF)",
                 border: "none",
                 cursor: "pointer",
+                opacity: submitting ? 0.7 : 1,
               }}
             >
               <span
