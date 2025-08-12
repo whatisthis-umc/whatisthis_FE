@@ -52,11 +52,19 @@ const ItemsDetailPage = () => {
 
       try {
         const allData: any[] = [];
-        let page = 1;
+        let page = 0; // 서버와 동일하게 0부터 시작
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {
+          console.log(`=== ItemsDetailPage - 페이지 ${page} 요청 중 ===`);
           const result = await itemService.getAllPosts(page);
+          
+          console.log(`페이지 ${page} 결과:`, result.posts.length, "개 게시물");
+          console.log(`페이지 ${page} postIds:`, result.posts.map((p: any) => p.postId));
+          
+          // 관리자 등록 게시물 확인 (예: postId: 139)
+          const hasAdminPost = result.posts.some((p: any) => p.postId === 139);
+          console.log(`페이지 ${page}에 관리자 게시물 포함:`, hasAdminPost);
 
           if (result.posts.length === 0) {
             hasMoreData = false;
@@ -69,15 +77,29 @@ const ItemsDetailPage = () => {
         if (!isMounted) return;
 
         // 전체 데이터에서 중복 제거
+        console.log("=== ItemsDetailPage 중복 제거 전 ===");
+        console.log("전체 데이터 수:", allData.length);
+        console.log("전체 postIds:", allData.map((item: any) => item.postId));
+        
         const uniqueData = allData.reduce((acc: any[], current: any) => {
           const exists = acc.find(
             (item: any) => item.postId === current.postId
           );
           if (!exists) {
             acc.push(current);
+          } else {
+            console.log(`중복 제거됨: postId ${current.postId}`);
           }
           return acc;
         }, []);
+        
+        console.log("=== ItemsDetailPage 중복 제거 후 ===");
+        console.log("고유 데이터 수:", uniqueData.length);
+        console.log("고유 postIds:", uniqueData.map((item: any) => item.postId));
+        
+        // 관리자 게시물 최종 확인
+        const finalHasAdminPost = uniqueData.some((item: any) => item.postId === 139);
+        console.log("최종 결과에 관리자 게시물 포함:", finalHasAdminPost);
 
         setAllPosts(uniqueData);
       } catch (e) {
