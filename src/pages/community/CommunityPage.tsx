@@ -1,26 +1,34 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SortDropdown from "../../components/common/SortDropdown";
+import useGetCommunity from "../../hooks/queries/useGetCommunity";
+import SortDropdown, { type SortAPIType } from "../../components/common/SortDropdown";
 import Pagination from "../../components/customer/Pagination";
 import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
-import useGetCommunity from "../../hooks/queries/useGetCommunity";
 import LoginModal from "../../components/modals/LoginModal";
 import type { CommunityPost, CommunitySortType } from "../../types/community";
 
-const categories = ["전체", "인기글", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"];
+const categories = [
+  "전체",
+  "인기글",
+  "생활꿀팁",
+  "꿀템 추천",
+  "살까말까?",
+  "궁금해요!",
+] as const;
+
+type CategoryType = typeof categories[number];
 
 // 정렬 변환
 const convertToAPIType = (uiType: "인기순" | "최신순"): CommunitySortType =>
   uiType === "인기순" ? "BEST" : "LATEST";
 
 const CommunityPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]>("전체");
-  // ✅ 기본은 최신순으로 시작 (BEST가 서버에서 500나는 현상 회피)
-  const [sortType, setSortType] = useState<"인기순" | "최신순">("최신순");
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("전체");
+  const [sortType, setSortType] = useState<SortAPIType>("BEST");
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const updateItemsPerPage = () => setItemsPerPage(window.innerWidth < 768 ? 4 : 6);
@@ -31,15 +39,28 @@ const CommunityPage = () => {
 
   // "인기글" 탭을 누르면 정렬을 BEST로 맞추되, 실제 요청은 popular 엔드포인트가 사용됨
   useEffect(() => {
-    if (selectedCategory === "인기글" && sortType !== "인기순") {
-      setSortType("인기순");
+    if (selectedCategory === "인기글" && sortType !== "BEST") {
+      setSortType("BEST");
     }
   }, [selectedCategory, sortType]);
+
+  // UI 카테고리를 API 카테고리로 변환
+  const convertToAPICategory = (uiCategory: CategoryType): string => {
+    const categoryMap: Record<CategoryType, string> = {
+      "전체": "ALL",
+      "인기글": "POPULAR",
+      "생활꿀팁": "LIFE_TIP",
+      "꿀템 추천": "ITEM_RECOMMEND",
+      "살까말까?": "SHOULD_I_BUY",
+      "궁금해요!": "CURIOUS",
+    };
+    return categoryMap[uiCategory];
+  };
 
   const { data, isLoading, isError } = useGetCommunity({
     page: currentPage,
     size: itemsPerPage,
-    sort: convertToAPIType(sortType),
+    sort: sortType,
     uiCategory: selectedCategory,
   });
 
