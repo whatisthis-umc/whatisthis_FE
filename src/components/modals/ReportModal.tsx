@@ -1,4 +1,3 @@
-import React from "react";
 import { useState } from "react";
 import { reportIcon } from "../../assets";
 import { checkCircle } from "../../assets";
@@ -41,11 +40,7 @@ const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
               onClick={() => setSelected(reason)}
               className="flex items-center gap-3 cursor-pointer text-[16px] text-[#333333] leading-[24px]"
             >
-              <img
-                src={selected === reason ? checkedCircle : checkCircle}
-                alt="check"
-                className="w-6 h-6"
-              />
+              <img src={selected === reason ? checkedCircle : checkCircle} alt="check" className="w-6 h-6" />
               {reason === "기타(직접입력)" ? (
                 <div className="flex items-center gap-2 flex-1">
                   <span>{reason}</span>
@@ -53,9 +48,7 @@ const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
                     type="text"
                     placeholder="입력"
                     className="w-[70%] border-b text-[16px] leading-[24px] py-1 pl-1 outline-none"
-                    style={{
-                      borderColor: "#999999",
-                    }}
+                    style={{ borderColor: "#999999" }}
                     onFocus={(e) => (e.target.style.borderColor = "#333333")}
                     onBlur={(e) => (e.target.style.borderColor = "#999999")}
                   />
