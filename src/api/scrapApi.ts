@@ -1,5 +1,4 @@
 import { axiosInstance } from "./axiosInstance";
-import type { Post } from "./types";
 
 export interface ScrapItem {
   id: number; 
