@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import AgreementPage from './Signup/AgreementPage';
 import CompletePage from './Signup/CompletePage';
 import InfoPage from './Signup/InfoPage';
+import SocialNickNamePage from './Signup/SocialLogin/NicknamePage';
 
 export default function SignupPages() {
   return (
@@ -10,6 +11,7 @@ export default function SignupPages() {
       <Route path="/" element={<AgreementPage />} />
       <Route path="/nickname" element={<InfoPage />} />
       <Route path="/complete" element={<CompletePage />} />
+      <Route path="/socialNickName" element={<SocialNickNamePage />} />
     </Routes>
   );
 }
