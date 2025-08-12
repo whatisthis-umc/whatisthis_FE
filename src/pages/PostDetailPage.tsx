@@ -14,7 +14,7 @@ import arrowRight from "../assets/chevron_forward.svg";
 import { darkHeart } from "../assets";
 
 import ReportModal from "../components/modals/ReportModal";
-import SortDropdown from "../components/common/SortDropdown";
+import SortDropdown, { type SortAPIType } from "../components/common/SortDropdown";
 
 import useGetCommunityDetail from "../hooks/queries/useGetCommunityDetail";
 import useCreateComment from "../hooks/queries/useCreateComment";
@@ -54,7 +54,7 @@ const PostDetailPage = () => {
   const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
 
   // 댓글 정렬/페이지
-  const [sortType, setSortType] = useState<"인기순" | "최신순">("인기순");
+  const [sortType, setSortType] = useState<SortAPIType>("BEST");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -64,12 +64,11 @@ const PostDetailPage = () => {
   const [replyInputs, setReplyInputs] = useState<Record<number, string>>({}); // 각 댓글별 대댓글 입력값
 
   // ----- 서버 데이터 -----
-  const apiSort = sortType === "인기순" ? "BEST" : "LATEST";
   const { data, isLoading, isError } = useGetCommunityDetail({
     postId,
     page: currentPage,
     size: pageSize,
-    sort: apiSort,
+    sort: sortType,
   });
 
   // 모든 훅은 가드 리턴보다 위에서 한 번만 호출
@@ -189,7 +188,7 @@ const PostDetailPage = () => {
         onSuccess: async () => {
           setNewComment("");
           await queryClient.invalidateQueries({
-            queryKey: ["communityDetail", postId, currentPage, apiSort],
+            queryKey: ["communityDetail", postId, currentPage, sortType],
           });
         },
         onError: (err) => {
@@ -219,7 +218,7 @@ const PostDetailPage = () => {
       await createCommentApi(postId, { content, parentCommentId: parentId });
       setReplyInputs((m) => ({ ...m, [parentId]: "" }));
       await queryClient.invalidateQueries({
-        queryKey: ["communityDetail", postId, currentPage, apiSort],
+        queryKey: ["communityDetail", postId, currentPage, sortType],
       });
     } catch (e: any) {
       console.error("대댓글 작성 실패:", e);
@@ -368,7 +367,7 @@ const PostDetailPage = () => {
             댓글 {detail.comments ?? detail.commentCount ?? detail.result?.commentCount ?? 0}
           </div>
           <div className="justify-self-end">
-            <SortDropdown defaultValue={sortType} onChange={(v: any) => setSortType(v)} />
+            <SortDropdown defaultValue={sortType} onChange={(v: SortAPIType) => setSortType(v)} />
           </div>
         </div>
 
