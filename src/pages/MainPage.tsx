@@ -1,12 +1,13 @@
-import React from "react";
 import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import { left, right, more } from "../assets";
 import { useNavigate, useLocation } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
-import { useState } from "react";
-import { dummyPosts } from "../data/dummyPosts";
+import { useState, useEffect } from "react";
 import { dummyPosts2 } from "../data/dummyPosts2";
+import { tipService } from "../api/lifeTipsApi";
+import { itemService } from "../api/lifeItemsApi";
+import type { TipPost } from "../api/types";
 
 const MainPage = () => {
   const location = useLocation();
@@ -15,35 +16,116 @@ const MainPage = () => {
 
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [tipPosts, setTipPosts] = useState<TipPost[]>([]);
+  const [itemPosts, setItemPosts] = useState<ItemPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const postsPerPage = 4;
+
+  // 실제 데이터 로딩
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 팁 데이터 로딩 (첫 페이지만)
+        const tipResult = await tipService.getAllPosts(0);
+        const uniqueTipPosts = Array.from(
+          new Map(tipResult.posts.map((post) => [post.postId, post])).values()
+        ) as TipPost[];
+
+        // 최신순 정렬
+        const sortedTipPosts = uniqueTipPosts.sort(
+          (a, b) => b.postId - a.postId
+        );
+        setTipPosts(sortedTipPosts);
+
+        // 아이템 데이터 로딩 (첫 페이지만)
+        const itemResult = await itemService.getAllPosts(0);
+        const uniqueItemPosts = Array.from(
+          new Map(itemResult.posts.map((post) => [post.postId, post])).values()
+        ) as ItemPost[];
+
+        // 최신순 정렬
+        const sortedItemPosts = uniqueItemPosts.sort(
+          (a, b) => b.postId - a.postId
+        );
+        setItemPosts(sortedItemPosts);
+      } catch (e) {
+        console.error("데이터 로딩 실패:", e);
+        setError("데이터를 불러오는 중 오류가 발생했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(prev - postsPerPage, 0));
   };
+
   const handleNext = () => {
     setCurrentIndex((prev) =>
-      Math.min(prev + postsPerPage, dummyPosts.length - postsPerPage)
+      Math.min(prev + postsPerPage, tipPosts.length - postsPerPage)
     );
   };
+
   const handleSearch = (input: string) => {
     navigate(`/search?keyword=${encodeURIComponent(input)}`);
   };
 
-  const visiblePosts = dummyPosts.slice(
+  // 메인 포스터(바꿀 예정)
+  const visiblePosts = tipPosts.slice(
     currentIndex,
     currentIndex + postsPerPage
   );
+
+  // 검색 필터링 (팁 + 아이템 데이터 모두 검색)
+  const allPosts = [...tipPosts, ...itemPosts];
   const filteredPosts = keyword
-    ? dummyPosts.filter((post) =>
+    ? allPosts.filter((post) =>
         [
           post.title,
-          post.description,
-          ...(Array.isArray(post.hashtag) ? post.hashtag : [post.hashtag]),
+          post.summary,
+          ...(Array.isArray(post.hashtags) ? post.hashtags : [post.hashtags]),
         ]
           .join(" ")
           .toLowerCase()
           .includes(keyword.toLowerCase())
       )
-    : dummyPosts;
+    : allPosts;
+
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div>
+        <div className="hidden md:w-full md:max-w-[1440px] md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+          <Searchbar onSearch={handleSearch} />
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div>
+        <div className="hidden md:w-full md:max-w-[1440px] md:mx-auto md:flex md:justify-between md:items-center md:px-4 md:mt-4">
+          <Searchbar onSearch={handleSearch} />
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -63,11 +145,18 @@ const MainPage = () => {
             <div className="flex flex-wrap gap-1 md:gap-6">
               {filteredPosts.map((post) => (
                 <div
-                  key={post.id}
-                  onClick={() => navigate(`/${post.type}/${post.id}`)}
+                  key={post.postId}
+                  onClick={() => navigate(`/${post.type}/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard {...post} />
+                  <ItemCard 
+                    hashtag={post.hashtags}
+                    imageUrl={post.imageUrls}
+                    title={post.title}
+                    description={post.summary}
+                    views={post.views}
+                    scraps={post.scraps}
+                  />
                 </div>
               ))}
             </div>
@@ -89,11 +178,18 @@ const MainPage = () => {
             <div className="flex w-85 sm:w-[700px] md:w-[1218px] h-[250px] md:h-[435px] rounded-4xl bg-[#E6E6E6] gap-4 sm:gap-12 md:gap-21 overflow-hidden">
               {visiblePosts.map((post) => (
                 <div
-                  key={post.id}
-                  onClick={() => navigate(`/items/${post.id}`)}
+                  key={post.postId}
+                  onClick={() => navigate(`/tips/${post.postId}`)}
                   className="cursor-pointer flex-shrink-0 w-28 sm:w-[150px] md:w-[230px]"
                 >
-                  <ItemCard {...post} />
+                  <ItemCard 
+                    hashtag={post.hashtags}
+                    imageUrl={post.imageUrls}
+                    title={post.title}
+                    description={post.summary}
+                    views={post.views}
+                    scraps={post.scraps}
+                  />
                 </div>
               ))}
             </div>
@@ -106,6 +202,7 @@ const MainPage = () => {
               />
             </div>
           </div>
+
           {/* 오늘의 생활꿀팁 */}
           <div className="w-full md:w-[1392px] h-[250px] md:h-[475px] mt-20  md:mt-36">
             <div className="flex justify-between h-12 ">
@@ -125,13 +222,20 @@ const MainPage = () => {
               </button>
             </div>
             <div className="w-full mt-[-15px] md:mt-0 h-110 flex flex-row gap-7 md:gap-20 overflow-x-hidden">
-              {dummyPosts.map((post) => (
+              {tipPosts.slice(0, 4).map((post) => (
                 <div
-                  key={post.id}
-                  onClick={() => navigate(`/tips/${post.id}`)}
+                  key={post.postId}
+                  onClick={() => navigate(`/tips/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard {...post} />
+                  <ItemCard 
+                    hashtag={post.hashtags}
+                    imageUrl={post.imageUrls}
+                    title={post.title}
+                    description={post.summary}
+                    views={post.views}
+                    scraps={post.scraps}
+                  />
                 </div>
               ))}
             </div>
@@ -156,13 +260,20 @@ const MainPage = () => {
               </button>
             </div>
             <div className="w-full mt-[-15px] md:mt-0 h-110 flex flex-row gap-7 md:gap-20 overflow-x-hidden">
-              {dummyPosts.map((post) => (
+              {itemPosts.slice(0, 4).map((post) => (
                 <div
-                  key={post.id}
-                  onClick={() => navigate(`/items/${post.id}`)}
+                  key={post.postId}
+                  onClick={() => navigate(`/items/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard {...post} />
+                  <ItemCard 
+                    hashtag={post.hashtags}
+                    imageUrl={post.imageUrls}
+                    title={post.title}
+                    description={post.summary}
+                    views={post.views}
+                    scraps={post.scraps}
+                  />
                 </div>
               ))}
             </div>
