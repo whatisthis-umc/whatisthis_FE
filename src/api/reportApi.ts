@@ -28,10 +28,7 @@ export const getReportList = async (
   console.log("✅ 신고 목록 조회 URL:", `${API_URL}/admin/reports`);
   console.log("✅ API 호출 params 확인:", params);
 
-  const response = await axiosInstance.get(`/admin/reports`, {
-    params,
-  });
-
+  const response = await axiosInstance.get(`/admin/reports`, { params });
   console.log("🔥 신고 목록 API 응답 데이터", response.data);
   return response.data;
 };
