@@ -95,7 +95,7 @@ export default function AdminReportDetailPage() {
             <p className="text-red-500 mb-4">{error}</p>
             <div className="flex justify-center gap-4">
               <button 
-                onClick={() => navigate('/admin/reports')}
+                onClick={() => navigate('/admin/report')}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
               >
                 목록으로 돌아가기
@@ -124,7 +124,7 @@ export default function AdminReportDetailPage() {
           <div className="text-center py-8">
             <p className="mb-4">신고를 찾을 수 없습니다.</p>
             <button 
-              onClick={() => navigate('/admin/reports')}
+              onClick={() => navigate('/admin/report')}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
             >
               목록으로 돌아가기
@@ -174,7 +174,7 @@ export default function AdminReportDetailPage() {
       // 응답 구조 확인 후 성공 여부 판단
       if (response && response.isSuccess) {
         // 성공 시 모달 없이 바로 목록 페이지로 이동
-        navigate('/admin/reports');
+        navigate('/admin/report');
       } else if (response && (response as any).code === 'REPORT4001') {
         // 이미 처리 완료된 신고인 경우
         setIsProcessed(true);
@@ -270,7 +270,7 @@ export default function AdminReportDetailPage() {
   const handleModalClose = () => {
     setModalOpen(false);
     setModalMessage("");
-    navigate('/admin/reports');
+    navigate('/admin/report');
   };
 
   // 신고 사유 매핑

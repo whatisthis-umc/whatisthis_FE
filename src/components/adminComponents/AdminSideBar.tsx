@@ -5,8 +5,8 @@ export default function AdminSidebar() {
   const location = useLocation();
 
   const menuItems = [
-    { label: "신고내역", path: "/admin/reports" },
-    { label: "문의내역", path: "/admin/inquiries" },
+    { label: "신고내역", path: "/admin/report" },
+    { label: "문의내역", path: "/admin/inquiry" },
     { label: "게시글 관리", path: "/admin/post" },
     { label: "공지사항 관리", path: "/admin/notice" },
     { label: "Q&A 관리", path: "/admin/qna" },
