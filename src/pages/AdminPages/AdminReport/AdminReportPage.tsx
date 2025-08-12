@@ -1,26 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Select,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  InputBase,
-  IconButton,
-  CircularProgress,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import { reportStatuses } from "../../../data/dummyReports";
 import type { ReportStatus } from "../../../types/report";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { 
   REPORT_TYPE_LABELS, 
   REPORT_CONTENT_LABELS,
@@ -42,10 +26,22 @@ export default function AdminReportPage() {
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
 
+  // 관리자 인증 상태 확인
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const adminAccessToken = localStorage.getItem("adminAccessToken");
+    
+    if (!accessToken && !adminAccessToken) {
+      console.warn("❌ 인증 토큰이 없습니다. 로그인 페이지로 이동합니다.");
+      navigate('/admin/login');
+      return;
+    }
+  }, [navigate]);
+
   // API 파라미터를 스웨거 문서에 맞게 변환
   const getApiStatus = (status: ReportStatus) => {
-    if (status === 'processed') return 'PROCESSED';
-    if (status === 'unprocessed') return 'UNPROCESSED';
+    if (status === 'PROCESSED') return 'PROCESSED';
+    if (status === 'UNPROCESSED') return 'UNPROCESSED';
     return 'ALL';
   };
 
@@ -55,20 +51,39 @@ export default function AdminReportPage() {
       setLoading(true);
       setError(null);
 
-      const reportList = await reportApi.getReportList(
+      // 토큰 상태 디버깅
+      const accessToken = localStorage.getItem("accessToken");
+      const adminAccessToken = localStorage.getItem("adminAccessToken");
+      console.log("🔍 토큰 상태 확인:");
+      console.log("- accessToken:", accessToken ? "존재" : "없음");
+      console.log("- adminAccessToken:", adminAccessToken ? "존재" : "없음");
+
+      const response = await reportApi.getReportList(
         currentPage,
         getApiStatus(selectedStatus),
         search || undefined
       );
 
-      setReports(reportList);
-      // 임시로 하드코딩된 값들 (실제 API 응답에서 가져와야 함)
-      setTotalPages(5);
-      setTotalElements(reportList.length);
+      if (response.isSuccess && response.result) {
+        setReports(response.result.reportList);
+        setTotalPages(response.result.totalPage);
+        setTotalElements(response.result.totalElements);
+      } else {
+        throw new Error(response.message || '신고 목록 조회에 실패했습니다.');
+      }
     } catch (err) {
       console.error('신고 목록 조회 실패:', err);
-      setError('신고 목록을 불러오는데 실패했습니다.');
+      
+      // 403 오류인 경우 특별한 처리
+      if (err instanceof Error && err.message.includes('403')) {
+        setError('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
+      } else {
+        setError('신고 목록을 불러오는데 실패했습니다.');
+      }
+      
       setReports([]);
+      setTotalPages(1);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
@@ -125,64 +140,33 @@ export default function AdminReportPage() {
 
   return (
     <AdminLayout>
-      <Box className="px-10 py-6">
+      <div className="px-10 py-6">
         {/* 상단 제목 */}
-        <Box className="text-left mb-20">
+        <div className="text-left mb-20">
           <h2 className="text-2xl font-bold">신고내역</h2>
           {totalElements > 0 && (
             <p className="text-gray-600 mt-2">총 {totalElements}건의 신고가 있습니다.</p>
           )}
-        </Box>
+        </div>
 
         {/* 필터 + 검색 */}
-        <Box
-          className="mb-6"
-          sx={{
-            width: 921,
-            height: 72,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="mb-6 w-[921px] h-[72px] flex items-center justify-between">
           {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
+          <div className="w-[567px] h-[72px] rounded-[32px] bg-[#E6E6E6] px-6 flex items-center justify-between">
+            <select
               value={selectedStatus}
               onChange={(e) => {
                 setSelectedStatus(e.target.value as ReportStatus);
                 setCurrentPage(1);
               }}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => null}
-              sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
-              }}
+              className="flex-grow bg-transparent text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] outline-none"
             >
               {reportStatuses.map((status) => (
-                <MenuItem key={status.id} value={status.id}>
+                <option key={status.id} value={status.id}>
                   {status.name}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
+            </select>
 
             {/* 화살표 아이콘 */}
             <img
@@ -190,305 +174,170 @@ export default function AdminReportPage() {
               alt="arrow"
               width={24}
               height={24}
-              style={{ opacity: 0.8 }}
+              className="opacity-80"
             />
-          </Box>
+          </div>
 
           {/* 검색창 */}
-          <Box
-            component="form"
+          <form
             onSubmit={handleSearchSubmit}
-            sx={{
-              width: 216,
-              height: 40,
-              display: "flex",
-              alignItems: "center",
-              borderBottom: "1px solid #333333",
-              justifyContent: "space-between",
-            }}
+            className="w-[216px] h-10 flex items-center border-b border-[#333333] justify-between"
           >
-            <InputBase
-              fullWidth
+            <input
+              type="text"
               placeholder="검색어를 입력하세요."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 500,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                letterSpacing: "-1%",
-                px: 1,
-                "&::placeholder": {
-                  color: "#333333",
-                  opacity: 1,
-                  fontFamily: "Pretendard",
-                  fontWeight: 500,
-                  fontSize: "16px",
-                  lineHeight: "150%",
-                  letterSpacing: "-1%",
-                },
-                "& input::placeholder": {
-                  color: "#333333 !important",
-                  opacity: 1,
-                },
-              }}
+              className="flex-grow font-[Pretendard] font-medium text-base text-[#333333] leading-[150%] tracking-[-0.01em] px-1 outline-none placeholder:text-[#333333] placeholder:opacity-100 placeholder:font-[Pretendard] placeholder:font-medium placeholder:text-base placeholder:leading-[150%] placeholder:tracking-[-0.01em]"
             />
-            <IconButton type="submit">
-              <SearchIcon sx={{ color: "#333333" }} />
-            </IconButton>
-          </Box>
-        </Box>
+            <button type="submit" className="p-1">
+              <svg
+                className="w-6 h-6 text-[#333333]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+          </form>
+        </div>
 
         {/* 로딩 상태 */}
         {loading && (
-          <Box className="flex justify-center py-8">
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
         )}
 
         {/* 에러 상태 */}
         {error && (
-          <Box className="text-center py-8">
+          <div className="text-center py-8">
             <p className="text-red-500 mb-4">{error}</p>
-            <button
-              onClick={fetchReports}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              다시 시도
-            </button>
-          </Box>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={fetchReports}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                다시 시도
+              </button>
+              {error.includes('권한') && (
+                <button
+                  onClick={() => navigate('/admin/login')}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  로그인 페이지로
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {/* 신고 테이블 */}
         {!loading && !error && (
-          <Table
-          sx={{
-            borderCollapse: "separate",
-            "& th": {
-              borderBottom: "none",
-            },
-          }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                유형
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                신고 내용
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                신고 사유
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                신고일
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontFamily: "Pretendard",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "150%",
-                  letterSpacing: "-2%",
-                  color: "#333333",
-                  textAlign: "left",
-                }}
-              >
-                처리 상태
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody
-            sx={{
-              fontFamily: "Pretendard",
-              fontWeight: 500,
-              fontSize: "20px",
-              lineHeight: "150%",
-              letterSpacing: "-2%",
-              color: "#333333",
-              textAlign: "left",
-            }}
-          >
-            {reports.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} sx={{ textAlign: "center", py: 4 }}>
-                  신고 내역이 없습니다.
-                </TableCell>
-              </TableRow>
-            ) : (
-              reports.map((report) => (
-                <TableRow
-                  key={report.reportId}
-                  onClick={() => navigate(`/admin/reports/${report.reportId}`)}
-                  style={{ cursor: "pointer" }}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                >
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "inline-block",
-                        padding: "4px 12px",
-                        border: "1px solid #999999",
-                        borderRadius: "32px",
-                        fontFamily: "Pretendard",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: "150%",
-                        letterSpacing: "-2%",
-                        color: "#333333",
-                      }}
+          <div className="w-full">
+            <table className="w-full border-separate">
+              <thead>
+                <tr>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
+                    유형
+                  </th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
+                    신고 내용
+                  </th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
+                    신고 사유
+                  </th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
+                    신고일
+                  </th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
+                    처리 상태
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="font-[Pretendard] font-medium text-xl leading-[150%] tracking-[-0.02em] text-[#333333]">
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">
+                      신고 내역이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  reports.map((report) => (
+                    <tr
+                      key={report.reportId}
+                      onClick={() => navigate(`/admin/reports/${report.reportId}`)}
+                      className="cursor-pointer hover:bg-gray-50"
                     >
-                      {REPORT_TYPE_LABELS[report.type]}
-                    </Box>
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontFamily: "Pretendard",
-                      fontWeight: 500,
-                      fontSize: "18px",
-                      lineHeight: "150%",
-                      letterSpacing: "-2%",
-                      color: "#333333",
-                      textAlign: "left",
-                      maxWidth: "200px",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {report.content}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontFamily: "Pretendard",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: "150%",
-                      letterSpacing: "-2%",
-                      color: "#666666",
-                      textAlign: "left",
-                    }}
-                  >
-                    {REPORT_CONTENT_LABELS[report.reportContent]}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontFamily: "Pretendard",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: "150%",
-                      letterSpacing: "-2%",
-                      color: "#333333",
-                      textAlign: "center",
-                    }}
-                  >
-                    {formatReportDate(report.reportedAt)}
-                  </TableCell>
-                  <TableCell>
-                    {report.status === "UNPROCESSED" ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStatusChange(report.reportId);
-                        }}
-                        disabled={processing}
-                        style={{
-                          backgroundColor: processing ? "#cccccc" : "#0080FF",
-                          color: "#FFFFFF",
-                          fontFamily: "Pretendard",
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          lineHeight: "150%",
-                          letterSpacing: "-1%",
-                          padding: "4px 12px",
-                          borderRadius: "32px",
-                          border: "none",
-                          cursor: processing ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {processing ? "처리중..." : "처리하기"}
-                      </button>
-                    ) : (
-                      <span
-                        style={{
-                          backgroundColor: "#28a745",
-                          color: "#FFFFFF",
-                          fontFamily: "Pretendard",
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          lineHeight: "150%",
-                          letterSpacing: "-1%",
-                          padding: "4px 12px",
-                          borderRadius: "32px",
-                          display: "inline-block",
-                        }}
-                      >
-                        처리완료
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-          </Table>
+                      <td className="py-3">
+                        <div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#333333]">
+                          {REPORT_TYPE_LABELS[report.type]}
+                        </div>
+                      </td>
+                      <td className="py-3 font-[Pretendard] font-medium text-lg leading-[150%] tracking-[-0.02em] text-[#333333] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+                        {report.content}
+                      </td>
+                      <td className="py-3 font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#666666]">
+                        {REPORT_CONTENT_LABELS[report.reportContent]}
+                      </td>
+                      <td className="py-3 text-center font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#333333]">
+                        {formatReportDate(report.reportedAt)}
+                      </td>
+                      <td className="py-3">
+                        {report.status === "UNPROCESSED" ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusChange(report.reportId);
+                            }}
+                            disabled={processing}
+                            className={`${
+                              processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] cursor-pointer"
+                            } text-white font-[Pretendard] text-sm font-medium leading-[150%] tracking-[-0.01em] py-1 px-3 rounded-[32px] border-none`}
+                          >
+                            {processing ? "처리중..." : "처리하기"}
+                          </button>
+                        ) : (
+                          <span className="bg-green-500 text-white font-[Pretendard] text-sm font-medium leading-[150%] tracking-[-0.01em] py-1 px-3 rounded-[32px] inline-block">
+                            처리완료
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 페이지네이션 */}
-        {!loading && !error && totalPages > 1 && (
-          <Box className="flex justify-center mt-20 gap-2 items-center">
+        {!loading && !error && totalPages >= 1 && (
+          <div className="flex justify-center mt-20 gap-2 items-center">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              style={{ opacity: currentPage === 1 ? 0.3 : 1 }}
+              className="p-1"
             >
-              <ChevronLeftIcon sx={{ color: "#999999" }} />
+              <svg
+                className="w-6 h-6 text-[#999999]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
             </button>
 
             {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
@@ -496,12 +345,11 @@ export default function AdminReportPage() {
                 <button
                   key={num}
                   onClick={() => setCurrentPage(num)}
-                  className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center font-medium text-xl leading-[150%] tracking-[-0.02em] font-[Pretendard] ${
                     num === currentPage
                       ? "bg-[#0080FF] text-white"
                       : "text-[#999999] hover:text-black"
                   }`}
-                  style={{ fontFamily: "Pretendard" }}
                 >
                   {num}
                 </button>
@@ -512,11 +360,23 @@ export default function AdminReportPage() {
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
-              style={{ opacity: currentPage === totalPages ? 0.3 : 1 }}
+              className="p-1"
             >
-              <ChevronRightIcon sx={{ color: "#999999" }} />
+              <svg
+                className="w-6 h-6 text-[#999999]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </button>
-          </Box>
+          </div>
         )}
 
         {/* 확인 모달 */}
@@ -525,7 +385,7 @@ export default function AdminReportPage() {
           onClose={handleModalClose}
           message={modalMessage}
         />
-      </Box>
+      </div>
     </AdminLayout>
   );
 }

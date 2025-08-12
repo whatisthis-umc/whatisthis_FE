@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import { useInquiry } from "../../contexts/InquiryContext";
 import InformationModal from "../../components/modals/InformationModal";
+import { useAuth } from "../../hooks/useAuth";
 import addPhotoIcon from "../../assets/add_photo.png";
 
 const InquiryWritePage = () => {
   const navigate = useNavigate();
   const { addInquiry } = useInquiry();
+  const { isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -16,9 +18,6 @@ const InquiryWritePage = () => {
   });
   const [isPublicDropdownOpen, setIsPublicDropdownOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  // 로그인 상태 (테스트용으로 false로 설정)
-  const isLoggedIn = false;
 
   const handleInputChange = (field: string, value: string | boolean | null) => {
     setFormData((prev) => ({
@@ -52,7 +51,7 @@ const InquiryWritePage = () => {
       title: formData.title,
       content: formData.content,
       isPublic: formData.isPublic,
-      authorId: 999, // 현재 로그인한 사용자 ID
+      authorId: 999, // TODO: 실제 사용자 ID를 토큰에서 가져오기
     });
 
     alert("문의가 등록되었습니다.");
