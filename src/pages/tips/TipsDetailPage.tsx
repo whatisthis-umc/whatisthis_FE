@@ -5,10 +5,10 @@ import Searchbar from "../../components/Searchbar";
 import SortDropdown from "../../components/common/SortDropdown";
 import ItemCard from "../../components/ItemCard";
 import { tipCategories } from "../../data/categoryList";
-import { tipService } from "../../api/lifeTipsApi";
 import type { TipPost } from "../../api/types";
 import Pagination from "../../components/customer/Pagination";
 import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
+import { tipService } from "../../api/lifeTipsApi";
 
 const TipsDetailPage = () => {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ const TipsDetailPage = () => {
 
       try {
         const allData: any[] = [];
-        let page = 1;
+        let page = 0; // 서버와 동일하게 0부터 시작
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {

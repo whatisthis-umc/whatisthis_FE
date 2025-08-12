@@ -4,13 +4,14 @@ import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { itemCategories } from "../../data/categoryList";
-import { whitescrap, reportIcon } from "../../assets";
+import { whitescrap, afterscrap, reportIcon } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
 import { tipService } from "../../api/lifeTipsApi";
 import type { ItemPost, ItemPostDetail } from "../../api/types";
 import { itemDetailService } from "../../api/itemDetailApi";
+import { useScrap } from "../../hooks/useInteraction";
 
 const ItemsPostDetailPage = () => {
   const { id } = useParams();
@@ -25,6 +26,11 @@ const ItemsPostDetailPage = () => {
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
   const relatedPosts = dummyPosts.slice(0, 5);
 
+  // 스크랩 Hook (postId가 있을 때만 초기화)
+  const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
+
+  console.log(`ItemsPostDetailPage - postId: ${id}, scrap state:`, scrap.state);
+
   useEffect(() => {
     if (!id) return;
 
@@ -36,7 +42,7 @@ const ItemsPostDetailPage = () => {
       .then((data: ItemPostDetail) => {
         setPost(data);
 
-        console.log("Tip detail data:", data);
+        console.log("Item detail data:", data);
 
         // 서버 카테고리를 UI 카테고리로 변환
         const getUICategory = (serverCategory: string): string => {
@@ -233,11 +239,25 @@ const ItemsPostDetailPage = () => {
 
           <div className="flex gap-4 mt-8 justify-between">
             <button
-              className="w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-white text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
-              onClick={() => setShowLoginModal(true)}
+              className={`w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 rounded-4xl flex justify-center items-center 
+              ${
+                scrap.state.isActive
+                  ? "bg-[#E6E6E6] text-[#999999] cursor-not-allowed"
+                  : "bg-[#0080FF] text-white"
+              } ${scrap.state.isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={scrap.state.isActive ? undefined : scrap.toggle}
+              disabled={scrap.state.isLoading || scrap.state.isActive}
             >
-              <img src={whitescrap} alt="스크랩" className="w-5 h-5 md:mr-2" />
-              스크랩
+              <img
+                src={scrap.state.isActive ? afterscrap : whitescrap}
+                alt="스크랩"
+                className={`w-5 h-5 md:mr-2 ${scrap.state.isActive ? "opacity-50" : ""}`}
+              />
+              {scrap.state.isLoading
+                ? "처리중..."
+                : scrap.state.isActive
+                  ? "스크랩"
+                  : "스크랩"}
             </button>
             <button
               className="w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-white text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
