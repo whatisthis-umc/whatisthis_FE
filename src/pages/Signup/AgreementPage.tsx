@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import checkIcon from '/src/assets/_check .png';
 
 export default function AgreementPage() {
@@ -8,6 +8,15 @@ export default function AgreementPage() {
   const [termsChecked, setTermsChecked] = useState(false);
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
+
+  //  OAuthCallbackPage에서 넘겨준 값 받기 (일반 가입이면 state는 없을 수 있음)
+  const { state } = useLocation() as {
+    state?: { from?: 'social'; email?: string; provider?: string; providerId?: string };
+  };
+
+   useEffect(() => {
+    console.log('Agreement state ▶', state); // 컴포넌트 내부에서 확인
+  }, [state]);
 
   const handleAllChange = (checked: boolean) => {
     setAllChecked(checked);
@@ -20,6 +29,13 @@ export default function AgreementPage() {
       navigate('/signup/nickname');
     } else {
       alert('모든 필수 항목에 동의해주세요.');
+    }
+    if (state?.from === 'social') {
+      // 소셜 가입 플로우 → 닉네임 설정
+      navigate('/signup/socialnickname', { state }); // email, provider, providerId 그대로 전달
+    } else {
+      // 일반 가입 플로우 → 기존 Info 페이지
+      navigate('/signup/nickname');
     }
   };
 

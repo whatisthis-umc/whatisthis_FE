@@ -61,6 +61,8 @@ const TipsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<TipPost[]>([]);
+  const [popularPosts, setPopularPosts] = useState<TipPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<TipPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,8 +77,9 @@ const TipsPage = () => {
       setError(null);
 
       try {
+        // 전체 데이터 로딩
         const allData: any[] = [];
-        let page = 1;
+        let page = 0;
         let hasMoreData = true;
 
         while (hasMoreData && isMounted) {
@@ -104,6 +107,31 @@ const TipsPage = () => {
         }, []);
 
         setAllPosts(uniqueData);
+
+        // 카테고리 필터링
+        const filteredPosts =
+          selectedCategory === "전체"
+            ? uniqueData
+            : uniqueData.filter((post) => {
+                const serverCategory = getServerCategory(selectedCategory);
+                return (
+                  post.subCategories?.some((cat: string) =>
+                    cat.toLowerCase().includes(serverCategory.toLowerCase())
+                  ) || false
+                );
+              });
+
+        // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
+        const popular = [...filteredPosts].sort((a, b) => {
+          const popularityA = (a.views || 0) + (a.scraps || 0);
+          const popularityB = (b.views || 0) + (b.scraps || 0);
+          return popularityB - popularityA;
+        });
+        setPopularPosts(popular);
+
+        // 최신순 정렬 - 카테고리 필터링 적용
+        const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
+        setRecentPosts(recent);
       } catch (e) {
         if (!isMounted) return;
         console.error("Error loading data:", e);
@@ -120,6 +148,36 @@ const TipsPage = () => {
       isMounted = false;
     };
   }, []);
+
+  // 카테고리 변경 시 인기순/최신순 업데이트
+  useEffect(() => {
+    if (allPosts.length === 0) return;
+
+    // 카테고리 필터링
+    const filteredPosts =
+      selectedCategory === "전체"
+        ? allPosts
+        : allPosts.filter((post) => {
+            const serverCategory = getServerCategory(selectedCategory);
+            return (
+              post.subCategories?.some((cat: string) =>
+                cat.toLowerCase().includes(serverCategory.toLowerCase())
+              ) || false
+            );
+          });
+
+    // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
+    const popular = [...filteredPosts].sort((a, b) => {
+      const popularityA = (a.views || 0) + (a.scraps || 0);
+      const popularityB = (b.views || 0) + (b.scraps || 0);
+      return popularityB - popularityA;
+    });
+    setPopularPosts(popular);
+
+    // 최신순 정렬 - 카테고리 필터링 적용
+    const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
+    setRecentPosts(recent);
+  }, [selectedCategory, allPosts]);
 
   // 카테고리 매핑
   const getServerCategory = (uiCategory: string): string => {
@@ -141,16 +199,6 @@ const TipsPage = () => {
             ) || false
           );
         });
-
-  // 인기순 정렬 (조회수 + 스크랩 수)
-  const popularPosts = [...filteredPosts].sort((a, b) => {
-    const popularityA = (a.views || 0) + (a.scraps || 0);
-    const popularityB = (b.views || 0) + (b.scraps || 0);
-    return popularityB - popularityA;
-  });
-
-  // 최신순 정렬
-  const recentPosts = [...filteredPosts].sort((a, b) => b.postId - a.postId);
 
   // AI 추천순 (일단랜덤)
   function getRandomPosts(posts: TipPost[], count: number) {

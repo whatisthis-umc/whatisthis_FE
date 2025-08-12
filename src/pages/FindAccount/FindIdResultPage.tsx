@@ -1,7 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function FindIdResultPage() {
   const navigate = useNavigate();
+  const { state } = useLocation() as { state?: { maskedEmail?: string } };
+
+  useEffect(() => {
+    if (!state?.maskedEmail) {
+      // state가 없으면 이전 화면으로 강제 이동
+      navigate("/find", { replace: true });
+    }
+  }, [state, navigate]);
+
+  if (!state?.maskedEmail) return null; 
 
   return (
     <div className="flex justify-center pt-[80px]">
@@ -32,7 +43,7 @@ export default function FindIdResultPage() {
         <div className="mt-[50px] md:mt-[70px] md:ml-[12px] ">
           <input
             type="text"
-            value="example@email.com"
+            value={state.maskedEmail}
             readOnly
             className="pb-[6px] w-[223px] h-[29px] border-b border-[#999] text-[16px] text-[#000000] font-medium font-[Pretendard] outline-none bg-transparent placeholder-[#999] md:w-[352px] md:h-[32px]"
           />

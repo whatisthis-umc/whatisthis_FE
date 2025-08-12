@@ -8,7 +8,6 @@ import add from "/src/assets/add.png";
 import { adminNewPost } from "../../../api/adminNewPost";
 import { useNavigate } from "react-router-dom";
 import { subCategoryEnumMap } from "../../../constants/subCategoryEnumMap";
-import { uploadService } from "../../../api/uploadApi";
 
 const subCategoryMap = {
   생활꿀팁: [
@@ -34,8 +33,6 @@ type PostFormData = z.infer<typeof postSchema>;
 
 const AdminNewPostPage = () => {
   const [images, setImages] = useState<File[]>([]);
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigate = useNavigate();
   const {
@@ -63,29 +60,14 @@ const AdminNewPostPage = () => {
 
   const mainCategory = watch("mainCategory");
 
-  const handleImageUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const imageUrl = await uploadService.uploadImage(file);
-      setUploadedImageUrls((prev) => [...prev, imageUrl]);
-      console.log("업로드된 이미지 URL:", imageUrl);
-    } catch (error) {
-      console.error("이미지 업로드 실패:", error);
-      alert("이미지 업로드에 실패했습니다.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const onSubmit = async (data: PostFormData) => {
     const content = [data.content1, data.content2].filter(Boolean).join("\n\n");
     const payload = {
       title: data.title,
       content,
       category: data.mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
-      subCategory:
-        subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
-      imageUrls: uploadedImageUrls,
+      subCategory: subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
+      images: images, // 파일 배열 직접 전송
       hashtags: data.tags.map((t) => t.value.trim()).filter(Boolean),
     };
     try {
@@ -111,47 +93,7 @@ const AdminNewPostPage = () => {
             <p className="font-bold text-2xl">게시글 내용</p>
           </div>
           <div className="w-[500px] h-[500px] bg-gray-100 rounded-4xl flex justify-center items-center overflow-hidden relative">
-            {uploadedImageUrls.length > 0 ? (
-              <>
-                <img
-                  src={uploadedImageUrls[currentImageIndex]}
-                  alt="업로드된 이미지"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-                <img
-                  src={cancelIcon}
-                  alt="cancel"
-                  onClick={() => {
-                    const newUrls = uploadedImageUrls.filter(
-                      (_, idx) => idx !== currentImageIndex
-                    );
-                    setUploadedImageUrls(newUrls);
-                    setCurrentImageIndex(0);
-                  }}
-                  className="absolute top-2 right-2 w-6 h-6 cursor-pointer opacity-80 hover:opacity-100"
-                />
-                {currentImageIndex === 0 && (
-                  <div className="absolute top-2 left-2 bg-[#0080FF] text-white text-xs px-2 py-1 rounded-lg">
-                    대표
-                  </div>
-                )}
-                {uploadedImageUrls.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 md:gap-3 bg-[#FFFFFF80] bg-opacity-50 px-3 py-1 rounded-4xl">
-                    {uploadedImageUrls.map((_, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={`w-3 h-3 md:w-4 md:h-4 rounded-4xl cursor-pointer ${
-                          currentImageIndex === idx
-                            ? "bg-[#0080FF]"
-                            : "bg-gray-400"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : images.length > 0 ? (
+            {images.length > 0 ? (
               <>
                 <img
                   src={URL.createObjectURL(images[currentImageIndex])}
@@ -195,12 +137,10 @@ const AdminNewPostPage = () => {
           </div>
           <label
             htmlFor="imageUpload"
-            className={`mt-4 w-[500px] h-[54px] ${
-              uploading ? "bg-gray-400" : "bg-[#0080FF]"
-            } text-white rounded-4xl flex justify-center items-center gap-3 cursor-pointer`}
+            className="mt-4 w-[500px] h-[54px] bg-[#0080FF] text-white rounded-4xl flex justify-center items-center gap-3 cursor-pointer"
           >
             <img src={addPhotoIcon} />
-            {uploading ? "업로드 중..." : "파일에서 업로드"}
+            파일에서 업로드
           </label>
           <input
             id="imageUpload"
@@ -208,11 +148,11 @@ const AdminNewPostPage = () => {
             accept="image/*"
             multiple
             className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                setImages([file]);
-                await handleImageUpload(file);
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length > 0) {
+                setImages(files);
+                setCurrentImageIndex(0);
               }
             }}
           />

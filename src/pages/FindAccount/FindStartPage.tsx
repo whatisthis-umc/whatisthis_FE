@@ -2,19 +2,43 @@ import { useNavigate } from 'react-router-dom';
 import arrowDown from '/src/assets/arrow_down.png';
 import { useState } from 'react';
 import SelectDropdown from '../../components/common/SelectDropdown';
+import { findId, getErrorMessage, splitEmail } from '../../api/findAccount';
 
 
 export default function FindStartPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [domain, setDomain] = useState('');
-  const [error, setError] = useState('해당 이메일로 가입된 계정이 없습니다. 다시 확인해주세요.');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const isValid = email.trim() !== '' && domain.trim() !== '';
-  const handleSubmit = () => {
-    if (!isValid) return;
-    navigate('/find/id-result');
-  };
+  
 
+
+  const handleSubmit = async () => {
+    if (!isValid || loading) return;
+    setError('');
+    try {
+      setLoading(true);
+      // 이메일 한 칸 + 도메인 셀렉트 → API 바디 구성
+      const { emailLocal } = splitEmail(`${email}@${domain}`);
+      const resp = await findId({ emailLocal, emailDomain: domain.toLowerCase() });
+
+      // 정상(200, isSuccess=true) → 결과 페이지로 이동
+      if (resp?.isSuccess && resp?.result?.maskedEmail) {
+        navigate('/find/id-result', { state: { maskedEmail: resp.result.maskedEmail } });
+      } else {
+        setError(resp?.message || '알 수 없는 오류가 발생했습니다.');
+      }
+    } catch (e: any) {
+      // 404: "해당 이메일로 가입된 회원이 존재하지 않습니다."
+      const msg = getErrorMessage(e);
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <div className="flex justify-center pt-[80px]">
       <div
@@ -61,7 +85,7 @@ export default function FindStartPage() {
             >
               <option value="" disabled hidden>선택</option>
               <option value="naver.com">naver.com</option>
-              <option value="google.com">google.com</option>
+              <option value="gmail.com">gmail.com</option>
               <option value="daum.net">daum.net</option>
             </select>
             <img
@@ -80,7 +104,7 @@ export default function FindStartPage() {
               md:ml-[32px] md:w-[49px] md:h-[29px] md:text-[12px]
             `}
           >
-            입력
+            {loading ? '조회 중...' : '입력'}
           </button>
         </div>
 
