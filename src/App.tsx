@@ -43,12 +43,12 @@ import AdminNoticeEditPage from "./pages/AdminPages/AdminNotice/AdminNoticeEditP
 import FindAccountPages from "./pages/FindAccountPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
-<<<<<<< HEAD
+
 import OAuthCallbackPage from "./pages/Signup/SocialLogin/OAuthCallbackPage";
 import LinkSocialPage from "./pages/Signup/SocialLogin/LinkSocialPage";
-=======
+
 import SearchPage from "./pages/SearchPage";
->>>>>>> dev
+
 
 function App() {
   return (
