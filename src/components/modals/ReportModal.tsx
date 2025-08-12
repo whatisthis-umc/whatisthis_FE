@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { reportIcon } from "../../assets";
 import { checkCircle } from "../../assets";
@@ -6,6 +7,8 @@ import { checkedCircle } from "../../assets";
 interface ReportModalProps {
   onClose: () => void;
   targetType?: "댓글" | "게시물";
+  /** 부모에서 실제 신고 API 호출 */
+  onSubmit?: (data: { content: string; description: string }) => void;
 }
 
 const reasonsList = [
@@ -15,10 +18,35 @@ const reasonsList = [
   "도배 또는 중복",
   "잘못된 정보/허위 사실",
   "기타(직접입력)",
-];
+] as const;
 
-const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
-  const [selected, setSelected] = useState<string>("");
+// 서버 enum 매핑(필요시 값 조정)
+const reasonCodeMap: Record<(typeof reasonsList)[number], string> = {
+  "욕설 및 비하 표현": "ABUSIVE_LANGUAGE",
+  "음란성/선정적 내용": "OBSCENE",
+  "광고/홍보성": "SPAM",
+  "도배 또는 중복": "DUPLICATE",
+  "잘못된 정보/허위 사실": "MISINFORMATION",
+  "기타(직접입력)": "OTHER",
+};
+
+const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalProps) => {
+  const [selected, setSelected] = useState<(typeof reasonsList)[number] | "">("");
+  const [customText, setCustomText] = useState("");
+
+  const handleSubmit = () => {
+    if (!onSubmit) {
+      onClose(); // 기능 미연결 시 기존 동작 유지
+      return;
+    }
+    if (!selected) {
+      alert("신고 사유를 선택해 주세요.");
+      return;
+    }
+    const content = reasonCodeMap[selected] ?? "OTHER";
+    const description = selected === "기타(직접입력)" ? customText.trim() : "";
+    onSubmit({ content, description });
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-[Pretendard]">
@@ -34,30 +62,45 @@ const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
         </p>
 
         <div className="flex flex-col gap-6 mb-12">
-          {reasonsList.map((reason, idx) => (
-            <label
-              key={idx}
-              onClick={() => setSelected(reason)}
-              className="flex items-center gap-3 cursor-pointer text-[16px] text-[#333333] leading-[24px]"
-            >
-              <img src={selected === reason ? checkedCircle : checkCircle} alt="check" className="w-6 h-6" />
-              {reason === "기타(직접입력)" ? (
-                <div className="flex items-center gap-2 flex-1">
+          {reasonsList.map((reason, idx) => {
+            const isSelected = selected === reason;
+            return (
+              <label
+                key={idx}
+                onClick={() => setSelected(reason)}
+                className="flex items-center gap-3 cursor-pointer text-[16px] text-[#333333] leading-[24px]"
+              >
+                <img
+                  src={isSelected ? checkedCircle : checkCircle}
+                  alt="check"
+                  className="w-6 h-6"
+                />
+                {reason === "기타(직접입력)" ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <span>{reason}</span>
+                    <input
+                      type="text"
+                      placeholder="입력"
+                      value={customText}
+                      onChange={(e) => setCustomText(e.target.value)}
+                      onFocus={() => setSelected("기타(직접입력)")}
+                      className="w-[70%] border-b text-[16px] leading-[24px] py-1 pl-1 outline-none"
+                      style={{ borderColor: "#999999" }}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "#999999")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSubmit();
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
                   <span>{reason}</span>
-                  <input
-                    type="text"
-                    placeholder="입력"
-                    className="w-[70%] border-b text-[16px] leading-[24px] py-1 pl-1 outline-none"
-                    style={{ borderColor: "#999999" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#333333")}
-                    onBlur={(e) => (e.target.style.borderColor = "#999999")}
-                  />
-                </div>
-              ) : (
-                <span>{reason}</span>
-              )}
-            </label>
-          ))}
+                )}
+              </label>
+            );
+          })}
         </div>
 
         <div className="flex justify-end gap-4">
@@ -77,7 +120,7 @@ const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
           </button>
 
           <button
-            onClick={onClose}
+            onClick={handleSubmit}
             className="text-white flex items-center justify-center text-[18px] font-normal gap-2"
             style={{
               backgroundColor: "#0080FF",
@@ -97,4 +140,4 @@ const ReportModal = ({ onClose, targetType = "댓글" }: ReportModalProps) => {
   );
 };
 
-export default ReportModal;
+export default ReportModal; 
