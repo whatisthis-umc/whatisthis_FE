@@ -8,6 +8,7 @@ import { dummyPosts2 } from "../data/dummyPosts2";
 import { tipService } from "../api/lifeTipsApi";
 import { itemService } from "../api/lifeItemsApi";
 import type { TipPost } from "../api/types";
+import type { ItemPost } from "../api/types";
 
 const MainPage = () => {
   const location = useLocation();
@@ -149,7 +150,7 @@ const MainPage = () => {
                   onClick={() => navigate(`/${post.type}/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard 
+                  <ItemCard
                     hashtag={post.hashtags}
                     imageUrl={post.imageUrls}
                     title={post.title}
@@ -182,7 +183,7 @@ const MainPage = () => {
                   onClick={() => navigate(`/tips/${post.postId}`)}
                   className="cursor-pointer flex-shrink-0 w-28 sm:w-[150px] md:w-[230px]"
                 >
-                  <ItemCard 
+                  <ItemCard
                     hashtag={post.hashtags}
                     imageUrl={post.imageUrls}
                     title={post.title}
@@ -228,7 +229,7 @@ const MainPage = () => {
                   onClick={() => navigate(`/tips/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard 
+                  <ItemCard
                     hashtag={post.hashtags}
                     imageUrl={post.imageUrls}
                     title={post.title}
@@ -266,7 +267,7 @@ const MainPage = () => {
                   onClick={() => navigate(`/items/${post.postId}`)}
                   className="cursor-pointer"
                 >
-                  <ItemCard 
+                  <ItemCard
                     hashtag={post.hashtags}
                     imageUrl={post.imageUrls}
                     title={post.title}

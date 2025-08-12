@@ -20,15 +20,12 @@ export const getCommunityPosts = async (
   console.log("✅ API 호출 params 확인:", { page, size, sort });
 
   const response = await axiosInstance.get(`/posts/communities`, {
-  params: {
-    page: `${page}`,
-    size: `${size}`,
-    sort: `${sort}`,
-  },
-  headers: {
-    Authorization: `Bearer ${accessToken}`,
-  },
-});
+    params: {
+      page: `${page}`,
+      size: `${size}`,
+      sort: `${sort}`,
+    },
+  });
 
   console.log("🔥 API 응답 데이터", response.data);
   return response.data.result?.postList ?? [];
