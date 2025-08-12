@@ -1,5 +1,3 @@
-import React from "react";
-
 interface CategoryBarProps {
   categories: string[];
   selected: string;

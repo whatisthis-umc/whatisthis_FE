@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,7 +66,8 @@ const AdminNewPostPage = () => {
       title: data.title,
       content,
       category: data.mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
-      subCategory: subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
+      subCategory:
+        subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
       images: images, // 파일 배열 직접 전송
       hashtags: data.tags.map((t) => t.value.trim()).filter(Boolean),
     };

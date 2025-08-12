@@ -237,7 +237,7 @@ export default function AdminReportPage() {
                   <tr><td colSpan={5} className="text-center py-4">신고 내역이 없습니다.</td></tr>
                 ) : (
                   displayReports.map((report) => (
-                    <tr key={report.reportId} onClick={() => navigate(`/admin/reports/${report.reportId}`)} className="cursor-pointer hover:bg-gray-50">
+                    <tr key={report.reportId} onClick={() => navigate(`/admin/report/${report.reportId}`)} className="cursor-pointer hover:bg-gray-50">
                       <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">{REPORT_TYPE_LABELS[report.type]}</div></td>
                       <td className="py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{report.content}</td>
                       <td className="py-3 text-[#666666]">{REPORT_CONTENT_LABELS[report.reportContent]}</td>

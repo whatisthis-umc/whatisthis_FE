@@ -140,4 +140,4 @@ const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalPr
   );
 };
 
-export default ReportModal;
+export default ReportModal; 
