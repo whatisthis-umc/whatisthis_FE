@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
@@ -9,6 +9,28 @@ import type { TipPost } from "../../api/types";
 import Pagination from "../../components/customer/Pagination";
 import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
 import { tipService } from "../../api/lifeTipsApi";
+
+// 게시물 카드 렌더링 컴포넌트
+const PostCard = React.memo(({ post, navigate, index }: { post: TipPost; navigate: any; index: number }) => (
+  <div
+    key={`${post.postId}-${index}`}
+    onClick={() => navigate(`/tips/${post.postId}`)}
+    className="cursor-pointer"
+  >
+    <ItemCard
+      id={post.postId}
+      category={post.category}
+      hashtag={post.hashtags}
+      imageUrl={post.imageUrls}
+      title={post.title}
+      description={post.summary}
+      views={post.views}
+      scraps={post.scraps}
+      date={new Date(post.date)}
+      type="tips"
+    />
+  </div>
+));
 
 const TipsDetailPage = () => {
   const navigate = useNavigate();
@@ -26,63 +48,100 @@ const TipsDetailPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [postsPerPage, setPostsPerPage] = useState(8);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentApiPage, setCurrentApiPage] = useState(0);
 
-  // 화면 크기에 따라 페이지당 게시물 수 바뀜
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setPostsPerPage(6);
-      } else {
-        setPostsPerPage(8);
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+  // 화면 크기에 따라 페이지당 게시물 수 바뀜 (메모이제이션)
+  const handleResize = useCallback(() => {
+    if (window.innerWidth < 768) {
+      setPostsPerPage(6);
+    } else {
+      setPostsPerPage(8);
+    }
   }, []);
 
   useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleResize]);
+
+  // 카테고리 매핑 (메모이제이션)
+  const getServerCategory = useCallback((uiCategory: string): string => {
+    if (uiCategory === "전체") return "";
+    return (
+      subCategoryEnumMap[uiCategory as keyof typeof subCategoryEnumMap] || ""
+    );
+  }, []);
+
+  // 카테고리 필터링된 포스트 (메모이제이션)
+  const filteredPosts = useMemo(() => {
+    if (selectedCategory === "전체") return allPosts;
+    
+    const serverCategory = getServerCategory(selectedCategory);
+    return allPosts.filter((post) => {
+      return (
+        Array.isArray(post.subCategories) &&
+        post.subCategories.includes(serverCategory)
+      );
+    });
+  }, [allPosts, selectedCategory, getServerCategory]);
+
+  // 정렬된 포스트 (메모이제이션)
+  const sortedPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      if (sortType === "BEST") {
+        // 조회수 + 스크랩 수로 인기도
+        const popularityA = (a.views || 0) + (a.scraps || 0);
+        const popularityB = (b.views || 0) + (b.scraps || 0);
+        return popularityB - popularityA;
+      } else {
+        return b.postId - a.postId;
+      }
+    });
+  }, [filteredPosts, sortType]);
+
+  // 페이지네이션 계산 (메모이제이션)
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
+    const startIndex = (currentPage - 1) * postsPerPage;
+    const endIndex = startIndex + postsPerPage;
+    const currentPosts = sortedPosts.slice(startIndex, endIndex);
+    
+    return {
+      totalPages,
+      currentPosts,
+      hasMoreData: currentPosts.length < sortedPosts.length
+    };
+  }, [sortedPosts, currentPage, postsPerPage]);
+
+  // 초기 데이터 로딩 (첫 페이지만)
+  useEffect(() => {
     let isMounted = true;
 
-    const loadData = async () => {
+    const loadInitialData = async () => {
       if (!isMounted) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const allData: any[] = [];
-        let page = 0; // 서버와 동일하게 0부터 시작
-        let hasMoreData = true;
-
-        while (hasMoreData && isMounted) {
-          const result = await tipService.getAllPosts(page);
-
-          if (result.posts.length === 0) {
-            hasMoreData = false;
-          } else {
-            allData.push(...result.posts);
-            page++;
-          }
-        }
-
+        // 첫 페이지만 로딩 (성능 최적화)
+        const result = await tipService.getAllPosts(0);
+        
         if (!isMounted) return;
 
-        // 전체 데이터에서 중복 제거
-        const uniqueData = allData.reduce((acc: any[], current: any) => {
-          const exists = acc.find(
-            (item: any) => item.postId === current.postId
-          );
-          if (!exists) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
+        // 중복 제거 (Set 사용으로 성능 향상)
+        const uniquePosts = Array.from(
+          new Map(result.posts.map(post => [post.postId, post])).values()
+        ) as TipPost[];
 
-        setAllPosts(uniqueData);
+        setAllPosts(uniquePosts);
+        setHasMore(result.posts.length > 0);
+        setCurrentApiPage(0);
       } catch (e) {
         if (!isMounted) return;
-        console.error("Error loading data:", e);
+        console.error("Error loading initial data:", e);
         setError(typeof e === "string" ? e : "데이터 로딩 실패");
       } finally {
         if (isMounted) {
@@ -91,59 +150,62 @@ const TipsDetailPage = () => {
       }
     };
 
-    loadData();
+    loadInitialData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 카테고리 매핑 (UI 카테고리 -> 서버 카테고리)
-  const getServerCategory = (uiCategory: string): string => {
-    if (uiCategory === "전체") return "";
-    return (
-      subCategoryEnumMap[uiCategory as keyof typeof subCategoryEnumMap] || ""
-    );
-  };
+  // 추가 데이터 로딩 (필요시)
+  const loadMoreData = useCallback(async () => {
+    if (loading || !hasMore) return;
 
-  // 카테고리 필터 (subCategories 기준)
-  const byCategory =
-    selectedCategory === "전체"
-      ? allPosts
-      : allPosts.filter((p: any) => {
-          const serverCategory = getServerCategory(selectedCategory);
-          console.log(
-            `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
-          );
-          console.log(`Post subCategories:`, p.subCategories);
+    setLoading(true);
+    try {
+      const nextPage = currentApiPage + 1;
+      const result = await tipService.getAllPosts(nextPage);
+      
+      if (result.posts.length === 0) {
+        setHasMore(false);
+        return;
+      }
 
-          // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
-          const matches =
-            Array.isArray(p.subCategories) &&
-            p.subCategories.includes(serverCategory);
-          console.log(`Matches: ${matches}`);
-          return matches;
-        });
+      // 기존 데이터와 새 데이터 합치기 (중복 제거)
+      const newPosts = result.posts.filter(
+        newPost => !allPosts.some(existingPost => existingPost.postId === newPost.postId)
+      ) as TipPost[];
 
-  // 정렬 적용
-  const sorted = [...byCategory].sort((a, b) => {
-    if (sortType === "BEST") {
-      // 조회수 + 스크랩 수로 인기도
-      const popularityA = (a.views || 0) + (a.scraps || 0);
-      const popularityB = (b.views || 0) + (b.scraps || 0);
-      return popularityB - popularityA;
-    } else {
-      return b.postId - a.postId;
+      setAllPosts(prev => [...prev, ...newPosts]);
+      setCurrentApiPage(nextPage);
+    } catch (e) {
+      console.error("Error loading more data:", e);
+    } finally {
+      setLoading(false);
     }
-  });
+  }, [loading, hasMore, currentApiPage, allPosts]);
 
-  // 페이지네이션 적용
-  const totalPages = Math.ceil(sorted.length / postsPerPage);
-  const startIndex = (currentPage - 1) * postsPerPage;
-  const endIndex = startIndex + postsPerPage;
-  const currentPosts = sorted.slice(startIndex, endIndex);
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = useCallback((category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1); // 카테고리 변경 시 1페이지로 리셋
+  }, []);
 
-  const handleSearch = (input: string) => {};
+  // 정렬 변경 핸들러
+  const handleSortChange = useCallback((sort: "BEST" | "LATEST") => {
+    setSortType(sort);
+    setCurrentPage(1);
+  }, []);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  // 검색 핸들러
+  const handleSearch = useCallback((input: string) => {
+    // 검색 기능 구현
+  }, []);
 
   return (
     <div className="px-4">
@@ -152,10 +214,7 @@ const TipsDetailPage = () => {
         <CategoryBar
           categories={["전체", ...tipCategories]}
           selected={selectedCategory}
-          onSelect={(category) => {
-            setSelectedCategory(category);
-            setCurrentPage(1); // 카테고리 변경 시 1페이지로 리셋
-          }}
+          onSelect={handleCategoryChange}
         />
         <div className="hidden md:block">
           <Searchbar onSearch={handleSearch} />
@@ -171,45 +230,28 @@ const TipsDetailPage = () => {
           <div className="flex justify-end mt-6">
             <SortDropdown
               defaultValue={sortType}
-              onChange={(v) => {
-                setSortType(v);
-                setCurrentPage(1);
-              }}
+              onChange={handleSortChange}
             />
           </div>
 
           {/* 카드 그리드 */}
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1 md:gap-4 mt-4">
-            {currentPosts.map((post, index) => (
-              <div
-                key={`${post.postId}-${index}`}
-                onClick={() => navigate(`/tips/${post.postId}`)}
-                className="cursor-pointer"
-              >
-                <ItemCard
-                  id={post.postId}
-                  category={post.category}
-                  hashtag={post.hashtags}
-                  imageUrl={post.imageUrls}
-                  title={post.title}
-                  description={post.summary}
-                  views={post.views}
-                  scraps={post.scraps}
-                  date={new Date(post.date)}
-                  type="tips"
-                />
-              </div>
+            {paginationData.currentPosts.map((post, index) => (
+              <PostCard 
+                key={`${post.postId}-${index}`} 
+                post={post} 
+                navigate={navigate} 
+                index={index} 
+              />
             ))}
           </div>
 
           {/* 페이지네이션 */}
-          <div className="mt-20 ">
+          <div className="mt-20">
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page: number) => {
-                setCurrentPage(page);
-              }}
+              totalPages={paginationData.totalPages}
+              onPageChange={handlePageChange}
             />
           </div>
         </>

@@ -70,10 +70,8 @@ const ScrapPage = () => {
       // 스크랩 해제 API 호출
       await deleteScrap(scrapId);
 
-      // 성공 시 목록에서 제거 (postId 기준으로 제거)
+      // 성공 시 목록에서 제거 (id 기준으로 제거)
       setAllScraps((prev) => {
-        const item = prev.find((item) => item.id === scrapId);
-        const postId = item?.postId || item?.id;
         return prev.filter((item) => item.id !== scrapId);
       });
 
@@ -101,7 +99,13 @@ const ScrapPage = () => {
   const handleItemClick = (item: ScrapItem) => {
     // API에서 postId가 없으므로 id를 postId로 사용
     const postId = item.id;
-    const type = item.category?.includes("TIP") ? "tips" : "items";
+    
+    // category 필드가 API 응답에 없으므로 기본값 사용
+    // 실제로는 백엔드에서 category 정보를 추가하거나
+    // 다른 방법으로 타입을 결정해야 함
+    const type = "tips"; // 기본값으로 tips 사용
+    
+    console.log(`스크랩 아이템 클릭 - id: ${postId}, type: ${type}`);
     navigate(`/${type}/${postId}`);
   };
 

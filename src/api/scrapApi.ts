@@ -1,15 +1,12 @@
 import { axiosInstance } from "./axiosInstance";
-import type { Post } from "./types";
 
 export interface ScrapItem {
   id: number; 
-  postId: number; 
   title: string;
   content: string;
   thumbnailUrl: string;
   viewCount: number;
-  category: string;
-  subCategory: string;
+  // category, subCategory, postId는 API 응답에 없음
 }
 
 export interface ScrapListResponse {
@@ -18,8 +15,7 @@ export interface ScrapListResponse {
   message: string;
   result: {
     scraps: ScrapItem[];
-    totalPages: number;
-    totalElements: number;
+    // totalPages, totalElements는 API 응답에 없을 수 있음
   };
 }
 
@@ -72,8 +68,8 @@ export const getScrapList = async (
 
     return {
       scraps: response.data.result?.scraps || [],
-      totalPages: response.data.result?.totalPages || 1,
-      totalElements: response.data.result?.totalElements || 0,
+      totalPages: 1, // API에서 제공하지 않으므로 기본값
+      totalElements: response.data.result?.scraps?.length || 0, // scraps 배열 길이로 계산
     };
   } catch (error) {
     console.error("스크랩 목록 조회 실패:", error);
