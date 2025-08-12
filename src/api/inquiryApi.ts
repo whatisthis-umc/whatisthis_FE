@@ -7,6 +7,7 @@ import type {
   InquiryStatusUpdateRequest,
   InquiryStatus
 } from "../types/adminInquiry";
+import type { SupportInquiryListResponse, SupportInquiryDetailResponse, SupportInquiryCreateRequest, SupportInquiryCreateResponse } from "../types/supportInquiry";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -17,9 +18,6 @@ export const getInquiryList = async (
   status: InquiryStatus = 'all',
   keyword?: string
 ): Promise<InquiryListResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   const params: Record<string, string | number> = {
     page: page - 1, // API는 0부터 시작하는 페이지 번호 사용
     size,
@@ -39,27 +37,74 @@ export const getInquiryList = async (
 
   const response = await axiosInstance.get(`/admin/inquiries`, {
     params,
-    headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
-    },
   });
 
   console.log("🔥 문의 목록 API 응답 데이터", response.data);
   return response.data;
 };
 
+// 고객 문의 목록 조회
+export const getSupportInquiryList = async (
+  page: number = 1,
+  size: number = 5,
+  keyword?: string
+): Promise<SupportInquiryListResponse> => {
+  const params: Record<string, string | number> = {
+    page, // 스웨거 스펙: 1부터 시작
+    size,
+  };
+
+  if (keyword && keyword.trim()) {
+    params.keyword = keyword.trim();
+  }
+
+  console.log("✅ 고객 문의 목록 조회 URL:", `${API_URL}/support/inquiries`);
+  console.log("✅ API 호출 params 확인:", params);
+
+  const response = await axiosInstance.get(`/support/inquiries`, { params });
+  console.log("🔥 고객 문의 목록 API 응답 데이터", response.data);
+  return response.data;
+};
+
+// 고객 문의 상세 조회
+export const getSupportInquiryDetail = async (
+  inquiryId: number
+): Promise<SupportInquiryDetailResponse> => {
+  console.log("✅ 고객 문의 상세 조회 URL:", `${API_URL}/support/inquiries/${inquiryId}`);
+  const response = await axiosInstance.get(`/support/inquiries/${inquiryId}`);
+  console.log("🔥 고객 문의 상세 API 응답 데이터", response.data);
+  return response.data;
+};
+
+// 고객 문의 작성
+export const createSupportInquiry = async (
+  payload: SupportInquiryCreateRequest,
+  files?: File[]
+): Promise<SupportInquiryCreateResponse> => {
+  const formData = new FormData();
+  // Spring @RequestPart DTO 호환: JSON 파트를 application/json으로 보냄
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(payload)], { type: "application/json" })
+  );
+  if (files && files.length > 0) {
+    files.forEach((file) => formData.append("files", file));
+  }
+
+  console.log("✅ 고객 문의 작성 URL:", `${API_URL}/support/inquiries`);
+  // axiosInstance의 기본 JSON 헤더를 덮어써 멀티파트로 전송
+  const response = await axiosInstance.post(`/support/inquiries`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  console.log("🔥 고객 문의 작성 API 응답 데이터", response.data);
+  return response.data;
+};
+
 // 관리자 문의 상세 조회
 export const getInquiryDetail = async (inquiryId: number): Promise<InquiryDetailResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   console.log("✅ 문의 상세 조회 URL:", `${API_URL}/admin/inquiries/${inquiryId}`);
 
-  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}`, {
-    headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
-    },
-  });
+  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}`);
 
   console.log("🔥 문의 상세 API 응답 데이터", response.data);
   return response.data;
@@ -70,15 +115,11 @@ export const createInquiryAnswer = async (
   inquiryId: number, 
   answerData: InquiryAnswerRequest
 ): Promise<InquiryAnswerResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   console.log("✅ 문의 답변 등록 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
   console.log("✅ 답변 데이터:", answerData);
 
   const response = await axiosInstance.post(`/admin/inquiries/${inquiryId}/answer`, answerData, {
     headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -92,15 +133,11 @@ export const updateInquiryAnswer = async (
   inquiryId: number, 
   answerData: InquiryAnswerRequest
 ): Promise<InquiryAnswerResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   console.log("✅ 문의 답변 수정 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
   console.log("✅ 수정 답변 데이터:", answerData);
 
   const response = await axiosInstance.put(`/admin/inquiries/${inquiryId}/answer`, answerData, {
     headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -111,16 +148,9 @@ export const updateInquiryAnswer = async (
 
 // 관리자 문의 답변 조회
 export const getInquiryAnswer = async (inquiryId: number): Promise<InquiryAnswerResponse & { result: { answer?: string } }> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   console.log("✅ 문의 답변 조회 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
 
-  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}/answer`, {
-    headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
-    },
-  });
+  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}/answer`);
 
   console.log("🔥 문의 답변 조회 API 응답 데이터", response.data);
   return response.data;
@@ -131,15 +161,11 @@ export const updateInquiryStatus = async (
   inquiryId: number, 
   statusData: InquiryStatusUpdateRequest
 ): Promise<InquiryAnswerResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-  const adminAccessToken = localStorage.getItem("adminAccessToken");
-
   console.log("✅ 문의 상태 변경 URL:", `${API_URL}/admin/inquiries/${inquiryId}/status`);
   console.log("✅ 상태 변경 데이터:", statusData);
 
   const response = await axiosInstance.patch(`/admin/inquiries/${inquiryId}/status`, statusData, {
     headers: {
-      Authorization: `Bearer ${adminAccessToken || accessToken}`,
       'Content-Type': 'application/json',
     },
   });

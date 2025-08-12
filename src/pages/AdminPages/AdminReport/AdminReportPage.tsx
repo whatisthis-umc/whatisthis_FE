@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { reportStatuses } from "../../../data/dummyReports";
 import type { ReportStatus } from "../../../types/report";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
@@ -11,10 +11,13 @@ import {
   type ReportListItem
 } from "../../../types/report";
 import * as reportApi from "../../../api/reportApi";
+import Pagination from "../../../components/customer/Pagination";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 
 export default function AdminReportPage() {
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus>("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 400);
   const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -38,30 +41,21 @@ export default function AdminReportPage() {
     }
   }, [navigate]);
 
-  // API 파라미터를 스웨거 문서에 맞게 변환
-  const getApiStatus = (status: ReportStatus) => {
+  const getApiStatus = useCallback((status: ReportStatus) => {
     if (status === 'PROCESSED') return 'PROCESSED';
     if (status === 'UNPROCESSED') return 'UNPROCESSED';
     return 'ALL';
-  };
+  }, []);
 
-  // 신고 목록 조회
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // 토큰 상태 디버깅
-      const accessToken = localStorage.getItem("accessToken");
-      const adminAccessToken = localStorage.getItem("adminAccessToken");
-      console.log("🔍 토큰 상태 확인:");
-      console.log("- accessToken:", accessToken ? "존재" : "없음");
-      console.log("- adminAccessToken:", adminAccessToken ? "존재" : "없음");
-
       const response = await reportApi.getReportList(
         currentPage,
         getApiStatus(selectedStatus),
-        search || undefined
+        debouncedSearch || undefined
       );
 
       if (response.isSuccess && response.result) {
@@ -69,63 +63,68 @@ export default function AdminReportPage() {
         setTotalPages(response.result.totalPage);
         setTotalElements(response.result.totalElements);
       } else {
-        throw new Error(response.message || '신고 목록 조회에 실패했습니다.');
+        setError(response.message || '신고 목록을 불러오는데 실패했습니다.');
+        setReports([]);
+        setTotalPages(1);
+        setTotalElements(0);
       }
     } catch (err) {
       console.error('신고 목록 조회 실패:', err);
-      
-      // 403 오류인 경우 특별한 처리
-      if (err instanceof Error && err.message.includes('403')) {
-        setError('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
-      } else {
-        setError('신고 목록을 불러오는데 실패했습니다.');
-      }
-      
+      setError('신고 목록을 불러오는데 실패했습니다.');
       setReports([]);
       setTotalPages(1);
       setTotalElements(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, selectedStatus, debouncedSearch, getApiStatus]);
 
   // 초기 로드 및 필터/검색 변경시 재조회
   useEffect(() => {
     fetchReports();
-  }, [currentPage, selectedStatus, search]);
+  }, [fetchReports]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-  };
+  }, []);
 
-  // 상태 변경 처리
-  const handleStatusChange = async (reportId: number) => {
+  const handleStatusChange = useCallback(async (reportId: number) => {
     try {
       setProcessing(true);
-      await reportApi.processReport(reportId, 'delete');
-      
-      setModalMessage("삭제 처리되었습니다.");
+      const response = await reportApi.processReport(reportId, 'delete');
+
+      if (response && response.isSuccess) {
+        setModalMessage("삭제 처리되었습니다.");
+        setReports((prev) => prev.map((r) => r.reportId === reportId ? { ...r, status: 'PROCESSED' } : r));
+      } else if (response && (response as any).code === 'REPORT4001') {
+        setModalMessage('이미 처리 완료된 신고입니다.');
+        setReports((prev) => prev.map((r) => r.reportId === reportId ? { ...r, status: 'PROCESSED' } : r));
+      } else {
+        setModalMessage(response?.message || '처리 중 오류가 발생했습니다.');
+      }
       setModalOpen(true);
-      
-      // 목록 새로고침
       fetchReports();
     } catch (error) {
       console.error('신고 처리 실패:', error);
-      setModalMessage("처리 중 오류가 발생했습니다.");
+      const axiosError = error as any;
+      const code = axiosError?.response?.data?.code;
+      if (code === 'REPORT4001') {
+        setModalMessage('이미 처리 완료된 신고입니다.');
+      } else if (axiosError?.response?.status === 403) {
+        setModalMessage('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
+      } else {
+        setModalMessage('처리 중 오류가 발생했습니다.');
+      }
       setModalOpen(true);
     } finally {
       setProcessing(false);
     }
-  };
+  }, [fetchReports]);
 
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setModalMessage("");
-  };
+  const displayReports = useMemo(() => reports, [reports]);
 
-  // 신고일 포맷팅 함수
-  const formatReportDate = (dateString: string) => {
+  const formatReportDate = useCallback((dateString: string) => {
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('ko-KR', {
@@ -136,7 +135,7 @@ export default function AdminReportPage() {
     } catch {
       return dateString;
     }
-  };
+  }, []);
 
   return (
     <AdminLayout>
@@ -208,105 +207,52 @@ export default function AdminReportPage() {
           </form>
         </div>
 
-        {/* 로딩 상태 */}
-        {loading && (
+        {/* 로딩/에러/테이블 */}
+        {loading ? (
           <div className="flex justify-center py-8">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        )}
-
-        {/* 에러 상태 */}
-        {error && (
+        ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 mb-4">{error}</p>
             <div className="flex justify-center gap-4">
-              <button
-                onClick={fetchReports}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                다시 시도
-              </button>
-              {error.includes('권한') && (
-                <button
-                  onClick={() => navigate('/admin/login')}
-                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  로그인 페이지로
-                </button>
-              )}
+              <button onClick={fetchReports} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">다시 시도</button>
+              <button onClick={() => navigate('/admin/login')} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">로그인 페이지로</button>
             </div>
           </div>
-        )}
-
-        {/* 신고 테이블 */}
-        {!loading && !error && (
+        ) : (
           <div className="w-full">
             <table className="w-full border-separate">
               <thead>
                 <tr>
-                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
-                    유형
-                  </th>
-                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
-                    신고 내용
-                  </th>
-                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
-                    신고 사유
-                  </th>
-                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
-                    신고일
-                  </th>
-                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">
-                    처리 상태
-                  </th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">유형</th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">신고 내용</th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">신고 사유</th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">신고일</th>
+                  <th className="text-left font-[Pretendard] font-bold text-xl leading-[150%] tracking-[-0.02em] text-[#333333] pb-4">처리 상태</th>
                 </tr>
               </thead>
               <tbody className="font-[Pretendard] font-medium text-xl leading-[150%] tracking-[-0.02em] text-[#333333]">
-                {reports.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-4">
-                      신고 내역이 없습니다.
-                    </td>
-                  </tr>
+                {displayReports.length === 0 ? (
+                  <tr><td colSpan={5} className="text-center py-4">신고 내역이 없습니다.</td></tr>
                 ) : (
-                  reports.map((report) => (
-                    <tr
-                      key={report.reportId}
-                      onClick={() => navigate(`/admin/reports/${report.reportId}`)}
-                      className="cursor-pointer hover:bg-gray-50"
-                    >
-                      <td className="py-3">
-                        <div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#333333]">
-                          {REPORT_TYPE_LABELS[report.type]}
-                        </div>
-                      </td>
-                      <td className="py-3 font-[Pretendard] font-medium text-lg leading-[150%] tracking-[-0.02em] text-[#333333] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {report.content}
-                      </td>
-                      <td className="py-3 font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#666666]">
-                        {REPORT_CONTENT_LABELS[report.reportContent]}
-                      </td>
-                      <td className="py-3 text-center font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.02em] text-[#333333]">
-                        {formatReportDate(report.reportedAt)}
-                      </td>
+                  displayReports.map((report) => (
+                    <tr key={report.reportId} onClick={() => navigate(`/admin/reports/${report.reportId}`)} className="cursor-pointer hover:bg-gray-50">
+                      <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">{REPORT_TYPE_LABELS[report.type]}</div></td>
+                      <td className="py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{report.content}</td>
+                      <td className="py-3 text-[#666666]">{REPORT_CONTENT_LABELS[report.reportContent]}</td>
+                      <td className="py-3 text-center">{formatReportDate(report.reportedAt)}</td>
                       <td className="py-3">
                         {report.status === "UNPROCESSED" ? (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(report.reportId);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); handleStatusChange(report.reportId); }}
                             disabled={processing}
-                            className={`${
-                              processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] cursor-pointer"
-                            } text-white font-[Pretendard] text-sm font-medium leading-[150%] tracking-[-0.01em] py-1 px-3 rounded-[32px] border-none`}
+                            className={`${processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] cursor-pointer"} text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none`}
                           >
                             {processing ? "처리중..." : "처리하기"}
                           </button>
                         ) : (
-                          <span className="bg-green-500 text-white font-[Pretendard] text-sm font-medium leading-[150%] tracking-[-0.01em] py-1 px-3 rounded-[32px] inline-block">
-                            처리완료
-                          </span>
+                          <span className="bg-green-500 text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
                         )}
                       </td>
                     </tr>
@@ -319,72 +265,13 @@ export default function AdminReportPage() {
 
         {/* 페이지네이션 */}
         {!loading && !error && totalPages >= 1 && (
-          <div className="flex justify-center mt-20 gap-2 items-center">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-1"
-            >
-              <svg
-                className="w-6 h-6 text-[#999999]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-
-            {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-              (num) => (
-                <button
-                  key={num}
-                  onClick={() => setCurrentPage(num)}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center font-medium text-xl leading-[150%] tracking-[-0.02em] font-[Pretendard] ${
-                    num === currentPage
-                      ? "bg-[#0080FF] text-white"
-                      : "text-[#999999] hover:text-black"
-                  }`}
-                >
-                  {num}
-                </button>
-              ),
-            )}
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="p-1"
-            >
-              <svg
-                className="w-6 h-6 text-[#999999]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+          <div className="mt-20">
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </div>
         )}
 
         {/* 확인 모달 */}
-        <ConfirmModal
-          open={modalOpen}
-          onClose={handleModalClose}
-          message={modalMessage}
-        />
+        <ConfirmModal open={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
       </div>
     </AdminLayout>
   );

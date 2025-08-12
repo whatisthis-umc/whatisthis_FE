@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import CustomerNav from "../../components/customer/CustomerNav";
 import Searchbar from "../../components/Searchbar";
 import Pagination from "../../components/customer/Pagination";
-import { useInquiry, type InquiryItem } from "../../contexts/InquiryContext";
+import type { InquiryItem } from "../../contexts/InquiryContext";
 import InformationModal from "../../components/modals/InformationModal";
 import LoginPromptModal from "../../components/modals/LoginPromptModal";
 import { useAuth } from "../../hooks/useAuth";
 import lockIcon from "../../assets/lock.svg";
 import writingIcon from "../../assets/writing.svg";
+import { getSupportInquiryList, getSupportInquiryDetail } from "../../api/inquiryApi";
 
 const InquiryPage = () => {
   const navigate = useNavigate();
@@ -23,65 +24,125 @@ const InquiryPage = () => {
   const [showInquiryLoginModal, setShowInquiryLoginModal] = useState(false);
 
   const itemsPerPage = 5;
-  const { inquiries } = useInquiry();
   const { isLoggedIn } = useAuth();
 
-  // 현재 사용자 ID (로그인한 경우에만)
-  const currentUserId = isLoggedIn ? 999 : null; // TODO: 실제 사용자 ID를 토큰에서 가져오기
+  // 서버 데이터 상태
+  const [items, setItems] = useState<InquiryItem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [detailLoadedIds, setDetailLoadedIds] = useState<Set<number>>(new Set());
 
-  // 검색 필터링
-  const filteredInquiries = keyword
-    ? inquiries.filter((inquiry) =>
-        [inquiry.title, inquiry.content]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword.toLowerCase()),
-      )
-    : inquiries;
+  // 목록 조회
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getSupportInquiryList(currentPage, itemsPerPage, keyword || undefined);
+        if (res.isSuccess && res.result) {
+          const mapped: InquiryItem[] = res.result.inquiries.map((i) => ({
+            id: i.id,
+            title: i.title,
+            content: i.content,
+            answer: i.answerContent ?? undefined,
+            status: i.answerContent ? "답변완료" as const : "미답변" as const,
+            date: new Date(i.createdAt).toLocaleDateString("ko-KR"),
+            isPublic: !i.isSecret,
+            authorId: 0,
+            type: "post",
+          }));
+          setItems(mapped);
+          setTotalPages(Math.max(res.result.totalPages || 1, 1));
+          setDetailLoadedIds(new Set());
+        } else {
+          setItems([]);
+          setTotalPages(1);
+          setError(res.message || "문의 목록을 불러오지 못했습니다.");
+        }
+      } catch (err) {
+        console.error("고객 문의 목록 조회 실패:", err);
+        setItems([]);
+        setTotalPages(1);
+        setError("문의 목록을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredInquiries.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+    fetchInquiries();
+  }, [currentPage, keyword]);
+
+  const currentItems = useMemo(() => items, [items]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
   const handleSearch = (input: string) => {
+    // 새 검색 시 첫 페이지로
+    setCurrentPage(1);
     navigate(`/customer/inquiry?keyword=${encodeURIComponent(input)}`);
   };
 
+  const fetchDetailIfNeeded = async (inquiryId: number) => {
+    if (detailLoadedIds.has(inquiryId)) return true;
+    try {
+      const res = await getSupportInquiryDetail(inquiryId);
+      if (res.isSuccess && res.result) {
+        setItems((prev) =>
+          prev.map((it) =>
+            it.id === inquiryId
+              ? {
+                  ...it,
+                  content: res.result.content,
+                  answer: res.result.answerContent ?? undefined,
+                  date: new Date(res.result.createdAt).toLocaleDateString("ko-KR"),
+                  isPublic: !res.result.isSecret,
+                }
+              : it,
+          ),
+        );
+        setDetailLoadedIds((prev) => new Set(prev).add(inquiryId));
+        return true;
+      }
+    } catch (e: any) {
+      console.error("고객 문의 상세 조회 실패:", e);
+      // 권한 없는 경우(작성자 아님)
+      if (e?.response?.status === 403) {
+        setShowPrivateModal(true);
+        return false;
+      }
+    }
+    return false;
+  };
+
   const handleInquiryClick = () => {
-    // 로그인하지 않은 상태라면 로그인 프롬프트 모달 표시
     if (!isLoggedIn) {
       setShowInquiryLoginModal(true);
       return;
     }
-    // 로그인한 상태라면 문의 작성 페이지로 이동
     navigate("/customer/inquiry/write");
   };
 
-  const handleItemClick = (item: InquiryItem) => {
-    // 비공개 글인 경우
+  const handleItemClick = async (item: InquiryItem) => {
+    // 비공개 글 처리
     if (!item.isPublic) {
-      // 로그인하지 않은 상태
+      // 로그인하지 않은 경우: 로그인 안내 모달
       if (!isLoggedIn) {
         setShowLoginModal(true);
         return;
       }
-      // 로그인은 했지만 작성자가 아닌 경우
-      if (item.authorId !== currentUserId) {
-        setShowPrivateModal(true);
+      // 로그인한 경우: 상세 권한 확인 후 성공 시에만 확장
+      const ok = await fetchDetailIfNeeded(item.id);
+      if (!ok) return;
+      toggleExpand(item.id);
         return;
-      }
     }
 
-    // 공개 글이거나 작성자 본인인 경우 아코디언 토글
+    // 공개 글은 바로 확장 및 상세 로드(필요 시)
     toggleExpand(item.id);
+    void fetchDetailIfNeeded(item.id);
   };
 
   const toggleExpand = (id: number) => {
@@ -90,12 +151,10 @@ const InquiryPage = () => {
 
   const handlePrivateModalConfirm = () => {
     setShowPrivateModal(false);
-    // 현재 페이지에 그대로 있음
   };
 
   const handleLoginModalCancel = () => {
     setShowLoginModal(false);
-    // 최근에 봤던 게시물로 이동 (현재는 그대로 있음)
   };
 
   const handleInquiryLoginModalClose = () => {
@@ -104,7 +163,7 @@ const InquiryPage = () => {
 
   const handleInquiryLoginModalLogin = () => {
     setShowInquiryLoginModal(false);
-    navigate("/login"); // 로그인 페이지로 이동
+    navigate("/login");
   };
 
   const renderInquiryList = () => (
@@ -119,7 +178,7 @@ const InquiryPage = () => {
               background:
                 expandedId === item.id ? "var(--WIT-Gray10, #E6E6E6)" : "white",
             }}
-            onClick={() => handleItemClick(item)}
+            onClick={() => void handleItemClick(item)}
           >
             <div className="flex items-start justify-between w-full">
               <div className="flex-1">
@@ -169,9 +228,7 @@ const InquiryPage = () => {
           </div>
 
           {/* 아코디언 내용 (Q&A 형태) - 별도의 독립적인 블록들 */}
-          {expandedId === item.id &&
-            (item.isPublic ||
-              (isLoggedIn && item.authorId === currentUserId)) && (
+          {expandedId === item.id && (
               <div className="flex flex-col gap-4">
                 {/* 질문 블록 */}
                 <div
@@ -211,7 +268,9 @@ const InquiryPage = () => {
                       wordBreak: "break-word",
                     }}
                   >
-                    {item.content}
+                  {!item.isPublic && !detailLoadedIds.has(item.id)
+                    ? "비밀글입니다. 작성자만 볼 수 있습니다."
+                    : item.content}
                   </p>
                 </div>
 
@@ -264,10 +323,7 @@ const InquiryPage = () => {
                         >
                           {item.answer}
                         </p>
-                        <div
-                          className="flex justify-end"
-                          style={{ marginTop: "24px" }}
-                        >
+                      <div className="flex justify-end" style={{ marginTop: "24px" }}>
                           <p
                             style={{
                               color: "var(--WIT-Gray200, #999)",
@@ -279,8 +335,7 @@ const InquiryPage = () => {
                               letterSpacing: "-0.14px",
                             }}
                           >
-                            <span>2025.06.21</span>
-                            <span style={{ marginLeft: "8px" }}>17:18:07</span>
+                          <span>{item.date}</span>
                           </p>
                         </div>
                       </div>
@@ -328,11 +383,16 @@ const InquiryPage = () => {
 
           <div className="mt-10 px-8 max-w-[1440px] mx-auto">
             <h2 className="text-[24px] font-bold mb-4">검색 결과</h2>
-            {currentItems.length > 0 ? (
+            {loading ? (
+              <div className="text-gray-500 mt-8">불러오는 중...</div>
+            ) : error ? (
+              <div className="text-red-500 mt-8">{error}</div>
+            ) : currentItems.length > 0 ? (
               <>
                 {renderInquiryList()}
 
                 {/* 페이지네이션 */}
+                {totalPages >= 1 && (
                 <div className="mt-8 md:mt-20">
                   <Pagination
                     currentPage={currentPage}
@@ -340,6 +400,7 @@ const InquiryPage = () => {
                     onPageChange={handlePageChange}
                   />
                 </div>
+                )}
               </>
             ) : (
               <div className="text-gray-500 mt-8">검색 결과가 없습니다.</div>
@@ -352,15 +413,19 @@ const InquiryPage = () => {
           <CustomerNav />
 
           {/* 1:1 문의 목록 */}
-          {renderInquiryList()}
+          {loading ? (
+            <div className="text-center py-8 md:py-16">불러오는 중...</div>
+          ) : error ? (
+            <div className="text-center py-8 md:py-16 text-red-500">{error}</div>
+          ) : (
+            renderInquiryList()
+          )}
 
           {/* 빈 상태일 때 */}
-          {filteredInquiries.length === 0 && (
+          {!loading && !error && currentItems.length === 0 && (
             <div className="text-center py-8 md:py-16 max-w-[1440px] mx-auto px-4">
               <div className="text-gray-400 text-base md:text-lg mb-2">💬</div>
-              <p className="text-gray-500 text-sm md:text-base">
-                등록된 문의가 없습니다.
-              </p>
+              <p className="text-gray-500 text-sm md:text-base">등록된 문의가 없습니다.</p>
             </div>
           )}
 
@@ -406,6 +471,7 @@ const InquiryPage = () => {
           </div>
 
           {/* 페이지네이션 */}
+          {totalPages >= 1 && (
           <div className="mt-8 md:mt-20 max-w-[1440px] mx-auto px-4">
             <Pagination
               currentPage={currentPage}
@@ -413,6 +479,7 @@ const InquiryPage = () => {
               onPageChange={handlePageChange}
             />
           </div>
+          )}
         </div>
       )}
 
@@ -425,7 +492,7 @@ const InquiryPage = () => {
       
       <InformationModal
         isOpen={showLoginModal}
-        message="이 기능은 로그인 후 이용 가능합니다."
+        message="비밀글은 로그인 후 확인할 수 있습니다."
         onClose={handleLoginModalCancel}
       />
 

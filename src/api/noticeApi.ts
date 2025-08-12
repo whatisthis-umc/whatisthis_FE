@@ -7,8 +7,6 @@ export const getNoticeList = async (
   page: number = 1,
   size: number = 5,
 ): Promise<NoticeListResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-
   const params: Record<string, number> = {
     page,
     size,
@@ -19,7 +17,6 @@ export const getNoticeList = async (
 
   const response = await axiosInstance.get(`/support/notices`, {
     params,
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
 
   console.log("🔥 공지 목록 API 응답 데이터", response.data);
@@ -27,13 +24,9 @@ export const getNoticeList = async (
 };
 
 export const getNoticeDetail = async (noticeId: number): Promise<NoticeDetailResponse> => {
-  const accessToken = localStorage.getItem("accessToken");
-
   console.log("✅ 공지 상세 조회 URL:", `${API_URL}/support/notices/${noticeId}`);
 
-  const response = await axiosInstance.get(`/support/notices/${noticeId}`, {
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  });
+  const response = await axiosInstance.get(`/support/notices/${noticeId}`);
 
   console.log("🔥 공지 상세 API 응답 데이터", response.data);
   return response.data;
