@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom"; // 관리자 페이지에서는 푸터 안 보이게
 import { insta } from "../assets";
 import { X } from "../assets";
-import React from "react";
 
 const Footer = () => {
   const location = useLocation(); //// 관리자 페이지에서는 푸터 안 보이게

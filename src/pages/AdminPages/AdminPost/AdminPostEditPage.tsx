@@ -3,7 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { addPhotoIcon, cancelIcon } from "../../../assets";
 import add from "/src/assets/add.png";
-import { adminPostDetail, type AdminPostDetailResponse } from "../../../api/adminPostDetail";
+import {
+  adminPostDetail,
+  type AdminPostDetailResponse,
+} from "../../../api/adminPostDetail";
 import { adminPostEdit } from "../../../api/adminPostEdit";
 import { uploadService } from "../../../api/uploadApi";
 import { subCategoryEnumMap } from "../../../constants/subCategoryEnumMap";
@@ -12,16 +15,17 @@ import type { AdminPostEditRequest } from "../../../types/request/adminPost";
 const AdminPostEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // 상태 관리
-  const [post, setPost] = useState<AdminPostDetailResponse["result"] | null>(null);
+  const [post, setPost] = useState<AdminPostDetailResponse["result"] | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // 폼 상태
   const [imageUrls, setImageUrls] = useState<string[]>([]); // 기존 이미지 URL들
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]); // 새로 업로드할 이미지 파일들
   const [title, setTitle] = useState("");
   const [content1, setContent1] = useState("");
   const [content2, setContent2] = useState("");
@@ -32,22 +36,28 @@ const AdminPostEditPage = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const subCategoryMap: { [key: string]: string[] } = {
-    생활꿀팁: ["조리/주방", "청소/분리수거", "욕실/청결", "세탁/의류관리", "보관/유통기한"],
+    생활꿀팁: [
+      "조리/주방",
+      "청소/분리수거",
+      "욕실/청결",
+      "세탁/의류관리",
+      "보관/유통기한",
+    ],
     생활꿀템: ["자취 필수템", "주방템", "청소템", "살림도구템", "브랜드 꿀템"],
   };
 
   // 서브카테고리 enum 매핑 (역방향)
   const reverseSubCategoryMap: { [key: string]: string } = {
-    'COOK_TIP': '조리/주방',
-    'CLEAN_TIP': '청소/분리수거',
-    'BATHROOM_TIP': '욕실/청결',
-    'CLOTH_TIP': '세탁/의류관리',
-    'STORAGE_TIP': '보관/유통기한',
-    'SELF_LIFE_ITEM': '자취 필수템',
-    'KITCHEN_ITEM': '주방템',
-    'CLEAN_ITEM': '청소템',
-    'HOUSEHOLD_ITEM': '살림도구템',
-    'BRAND_ITEM': '브랜드 꿀템',
+    COOK_TIP: "조리/주방",
+    CLEAN_TIP: "청소/분리수거",
+    BATHROOM_TIP: "욕실/청결",
+    CLOTH_TIP: "세탁/의류관리",
+    STORAGE_TIP: "보관/유통기한",
+    SELF_LIFE_ITEM: "자취 필수템",
+    KITCHEN_ITEM: "주방템",
+    CLEAN_ITEM: "청소템",
+    HOUSEHOLD_ITEM: "살림도구템",
+    BRAND_ITEM: "브랜드 꿀템",
   };
 
   // 게시물 데이터 로드
@@ -65,39 +75,43 @@ const AdminPostEditPage = () => {
         const response = await adminPostDetail(Number(id));
         const postData = response.result;
         setPost(postData);
-        
+
         console.log("받은 게시물 데이터:", postData);
         console.log("hashtags:", postData.hashtags);
         console.log("imageUrls:", postData.imageUrls);
-        
+
         // 폼 데이터 초기화
         setTitle(postData.title);
-        
+
         // 내용을 두 부분으로 분리 (첫 번째 줄바꿈 기준)
-        const contentParts = postData.content.split('\n\n');
+        const contentParts = postData.content.split("\n\n");
         setContent1(contentParts[0] || "");
-        setContent2(contentParts.slice(1).join('\n\n') || "");
-        
+        setContent2(contentParts.slice(1).join("\n\n") || "");
+
         // 해시태그 설정 (안전하게 처리)
-        setTagInputs(postData.hashtags && postData.hashtags.length > 0 ? postData.hashtags : [""]);
-        
+        setTagInputs(
+          postData.hashtags && postData.hashtags.length > 0
+            ? postData.hashtags
+            : [""]
+        );
+
         // 카테고리 설정
-        if (postData.category === 'LIFE_TIP') {
+        if (postData.category === "LIFE_TIP") {
           setMainCategory("생활꿀팁");
-        } else if (postData.category === 'LIFE_ITEM') {
+        } else if (postData.category === "LIFE_ITEM") {
           setMainCategory("생활꿀템");
         }
-        
+
         // 서브카테고리 설정
         const subCategoryDisplay = reverseSubCategoryMap[postData.subCategory];
         setSubCategory(subCategoryDisplay || "");
-        
+
         // 기존 이미지 URL 설정 (안전하게 처리)
-        const validImageUrls = postData.imageUrls?.filter(url => 
-          url && url !== 'string' && url.startsWith('http')
-        ) || [];
+        const validImageUrls =
+          postData.imageUrls?.filter(
+            (url) => url && url !== "string" && url.startsWith("http")
+          ) || [];
         setImageUrls(validImageUrls);
-        
       } catch (err: any) {
         console.error("게시물 상세 조회 실패:", err);
         if (err.response?.status === 404) {
@@ -122,7 +136,7 @@ const AdminPostEditPage = () => {
   };
 
   const handleAddTagInput = () => setTagInputs([...tagInputs, ""]);
-  
+
   const handleRemoveTagInput = (index: number) => {
     const newTags = [...tagInputs];
     newTags.splice(index, 1);
@@ -135,18 +149,17 @@ const AdminPostEditPage = () => {
 
     try {
       setUploadingImages(true);
-      
+
       // 이미지 업로드
       const uploadedUrls = await uploadService.uploadImages(files);
-      
+
       // 새 이미지 URL들을 기존 URL에 추가 (클로저 문제 해결)
-      setImageUrls(prev => {
+      setImageUrls((prev) => {
         const newUrls = [...prev, ...uploadedUrls];
         // 새 이미지로 포커스
         setCurrentImageIndex(prev.length);
         return newUrls;
       });
-      
     } catch (error) {
       console.error("이미지 업로드 실패:", error);
       alert("이미지 업로드에 실패했습니다.");
@@ -160,7 +173,7 @@ const AdminPostEditPage = () => {
   };
 
   const handleRemoveImage = (index: number) => {
-    setImageUrls(prev => {
+    setImageUrls((prev) => {
       const newUrls = prev.filter((_, i) => i !== index);
       if (currentImageIndex >= newUrls.length) {
         setCurrentImageIndex(Math.max(0, newUrls.length - 1));
@@ -179,30 +192,30 @@ const AdminPostEditPage = () => {
 
     try {
       setSubmitting(true);
-      
+
       const content = [content1, content2].filter(Boolean).join("\n\n");
-      
+
       // 이미지 URL 필터링 - 'string' 값과 유효하지 않은 URL 제거
-      const validImageUrls = imageUrls.filter(url => 
-        url && url !== 'string' && url.startsWith('http')
+      const validImageUrls = imageUrls.filter(
+        (url) => url && url !== "string" && url.startsWith("http")
       );
-      
+
       const payload: AdminPostEditRequest = {
         title,
         content,
         category: mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
-        subCategory: subCategoryEnumMap[subCategory as keyof typeof subCategoryEnumMap],
+        subCategory:
+          subCategoryEnumMap[subCategory as keyof typeof subCategoryEnumMap],
         imageUrls: validImageUrls, // 필터링된 이미지 URL 배열
-        hashtags: tagInputs.filter(tag => tag && tag.trim()),
+        hashtags: tagInputs.filter((tag) => tag && tag.trim()),
       };
 
       console.log("수정할 데이터:", payload);
       console.log("필터링된 이미지 URL들:", validImageUrls);
-      
+
       await adminPostEdit(post.postId, payload);
       alert("게시물이 성공적으로 수정되었습니다.");
       navigate(`/admin/post/${post.postId}`);
-      
     } catch (err: any) {
       console.error("게시물 수정 실패:", err);
       alert("게시물 수정에 실패했습니다. 다시 시도해주세요.");
@@ -225,7 +238,9 @@ const AdminPostEditPage = () => {
     return (
       <AdminLayout>
         <div className="w-[1040px] px-10 py-8 flex justify-center items-center">
-          <div className="text-xl text-red-500">{error || "게시물을 찾을 수 없습니다."}</div>
+          <div className="text-xl text-red-500">
+            {error || "게시물을 찾을 수 없습니다."}
+          </div>
         </div>
       </AdminLayout>
     );
@@ -300,14 +315,18 @@ const AdminPostEditPage = () => {
         {/* 입력 폼 */}
         <div className="flex flex-col gap-4 font-[Pretendard] mt-18">
           <div className="flex w-[515px] h-[60px] bg-[#E6E6E6] rounded-4xl p-3">
-            <span className="flex w-20 font-semibold justify-center items-center">유형</span>
+            <span className="flex w-20 font-semibold justify-center items-center">
+              유형
+            </span>
             <select
               className="w-full"
               value={mainCategory}
               onChange={(e) => handleMainCategoryChange(e.target.value)}
             >
               {Object.keys(subCategoryMap).map((main) => (
-                <option key={main} value={main}>{main}</option>
+                <option key={main} value={main}>
+                  {main}
+                </option>
               ))}
             </select>
           </div>
@@ -320,7 +339,9 @@ const AdminPostEditPage = () => {
             >
               <option value="">서브 카테고리를 선택하세요</option>
               {subCategoryMap[mainCategory].map((sub) => (
-                <option key={sub} value={sub}>{sub}</option>
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
               ))}
             </select>
           )}
