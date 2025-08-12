@@ -18,15 +18,17 @@ const categories = [
 
 type CategoryType = typeof categories[number];
 
-// 정렬 변환
-const convertToAPIType = (uiType: "인기순" | "최신순"): CommunitySortType =>
-  uiType === "인기순" ? "BEST" : "LATEST";
+// UI ⇄ API 변환
+const uiToApi = (ui: "인기순" | "최신순"): CommunitySortType =>
+  ui === "인기순" ? "BEST" : "LATEST";
+const apiToUi = (api: CommunitySortType): "인기순" | "최신순" =>
+  api === "BEST" ? "인기순" : "최신순";
 
 const CommunityPage = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("전체");
-  const [sortType, setSortType] = useState<SortAPIType>("BEST");
+  const [sortType, setSortType] = useState<"인기순" | "최신순">("최신순");
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -37,10 +39,10 @@ const CommunityPage = () => {
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  // "인기글" 탭을 누르면 정렬을 BEST로 맞추되, 실제 요청은 popular 엔드포인트가 사용됨
+  // "인기글" 탭 선택 시 UI 정렬 강제
   useEffect(() => {
-    if (selectedCategory === "인기글" && sortType !== "BEST") {
-      setSortType("BEST");
+    if (selectedCategory === "인기글" && sortType !== "인기순") {
+      setSortType("인기순");
     }
   }, [selectedCategory, sortType]);
 
@@ -60,7 +62,7 @@ const CommunityPage = () => {
   const { data, isLoading, isError } = useGetCommunity({
     page: currentPage,
     size: itemsPerPage,
-    sort: sortType,
+    sort: uiToApi(sortType), // <- 실제 API에는 변환값 전달
     uiCategory: selectedCategory,
   });
 
@@ -91,7 +93,16 @@ const CommunityPage = () => {
 
       {/* 정렬 */}
       <div className="flex justify-end mb-7">
-        <SortDropdown defaultValue={sortType} onChange={setSortType} />
+        {/* defaultValue는 드롭다운이 기대하는 API 타입으로 전달 */}
+        <SortDropdown
+          defaultValue={uiToApi(sortType)}
+          onChange={(apiValue: CommunitySortType) => {
+            // onChange는 API 타입을 주므로 UI 타입으로 변환해서 setState
+            setSortType(apiToUi(apiValue));
+            // 정렬 바꾸면 페이지를 1로
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* 리스트 */}
@@ -198,7 +209,7 @@ const CommunityPage = () => {
         )}
       </div>
 
-      {/* 페이지네이션: 서버 totalPages 사용 */}
+      {/* 페이지네이션 */}
       <div className="mt-8">
         <Pagination
           currentPage={currentPage}
