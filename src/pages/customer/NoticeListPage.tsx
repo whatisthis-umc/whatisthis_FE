@@ -7,13 +7,6 @@ import Pagination from "../../components/customer/Pagination";
 import { getNoticeList, getNoticeDetail } from "../../api/noticeApi";
 import type { NoticeListItem } from "../../types/supportNotice";
 
-interface NoticeUI {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-}
-
 const NoticeListPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,27 +19,18 @@ const NoticeListPage = () => {
 
   // 서버 공지 목록 상태 + API 연결
   const [notices, setNotices] = useState<NoticeListItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const res = await getNoticeList(currentPage, itemsPerPage);
         if (res.isSuccess) {
           setNotices(res.result.notices);
           setTotalPages(res.result.totalPages);
-        } else {
-          setError(res.message || '공지사항을 불러오지 못했습니다.');
         }
       } catch (e) {
         console.error('공지 목록 조회 실패:', e);
-        setError('공지사항을 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
       }
     };
     fetchNotices();
@@ -74,7 +58,6 @@ const NoticeListPage = () => {
   };
 
   const toggleExpanded = async (id: number) => {
-    // 동일 항목을 다시 클릭하면 접기
     if (expandedId === id) {
       setExpandedId(null);
       return;
@@ -84,8 +67,6 @@ const NoticeListPage = () => {
       const res = await getNoticeDetail(id);
       if (res.isSuccess) {
         setExpandedId(id);
-      } else {
-        console.warn('공지 상세 조회 실패:', res.message);
       }
     } catch (e) {
       console.error('공지 상세 조회 오류:', e);
