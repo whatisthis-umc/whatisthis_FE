@@ -1,6 +1,4 @@
-import type { Report } from '../types/report';
-
-export const dummyReports: Report[] = [
+export const dummyReports: any[] = [
     {
         id: 1,
         title: '부적절한 게시글 신고',
@@ -85,6 +83,6 @@ export const dummyReports: Report[] = [
 
 export const reportStatuses = [
     { id: 'all', name: '전체' },
-    { id: 'unprocessed', name: '미처리' },
-    { id: 'processed', name: '처리완료' }
+    { id: 'UNPROCESSED', name: '미처리' },
+    { id: 'PROCESSED', name: '처리완료' }
 ]; 
