@@ -38,6 +38,11 @@ const Navbar = () => {
     location.pathname.startsWith("/admin") ||
     location.pathname === "/adminlogin"; //admin관리자 부분은 navbar 숨겨야해서
   const currentPath = location.pathname;
+  // 커뮤니티 활성 조건: /community* 또는 /post/:id (단수) /posts/:id (복수) 모두 허용
+  const isCommunityActivePath =
+    currentPath.startsWith("/community") ||
+    /^\/post\/[^/]+$/.test(currentPath) || // 단수 경로
+    /^\/posts\/[^/]+$/.test(currentPath); // 복수 경로(혹시 쓸 때 대비)
 
   const handleSearch = (input: string) => {
     navigate(`/search?keyword=${encodeURIComponent(input)}`);
@@ -55,7 +60,10 @@ const Navbar = () => {
   };
 
   const getButton = (path: string) => {
-    const isActive = currentPath.startsWith(path);
+    const isActive =
+      path === "/community"
+        ? isCommunityActivePath
+        : currentPath.startsWith(path);
     return `text-sm sm:text-lg md:text-xl w-[80px] sm:w-[100px] md:w-[116px] h-[36px] sm:h-[45px] md:h-[54px] rt-[24px] bt-[12px] lt-[24px] rounded-4xl cursor-pointer
     ${isActive ? "bg-black text-white" : "bg-white text-black"}`;
   };

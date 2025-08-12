@@ -1,5 +1,5 @@
-// src/api/uploadApi.ts
 import { axiosInstance } from "./axiosInstance";
+import type { PostRequest } from "../types/post";
 
 export interface UploadResponse {
   isSuccess: boolean;
@@ -76,3 +76,11 @@ export const uploadService = {
       });
   },
 }; 
+
+export const uploadImagesV2 = async (files: File[]): Promise<string[]> => {
+  if (!files?.length) return [];
+  const form = new FormData();
+  files.forEach((f) => form.append("files", f));
+  const res = await axiosInstance.post("/upload", form);
+  return (res.data?.result as string[]) ?? [];
+};

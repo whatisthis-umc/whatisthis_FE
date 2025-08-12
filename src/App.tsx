@@ -44,6 +44,7 @@ import FindAccountPages from "./pages/FindAccountPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommunityPostPage from "./pages/community/CommunityPostPage";
 import SearchPage from "./pages/SearchPage";
+import CommonProtectedRoute from "./routes/CommonProtectedRoute";
 
 function App() {
   return (
@@ -56,18 +57,13 @@ function App() {
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/search" element={<SearchPage />} />
-                <Route path="/my" element={<MyPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup/*" element={<SignupPage />} />
                 <Route path="/find/*" element={<FindAccountPages />} />
 
-                <Route path="/likes" element={<LikesPage />} />
-                <Route path="/scrap" element={<ScrapPage />} />
                 <Route path="/post" element={<PostDetailPage />} />
+                <Route path="/post/:id" element={<PostDetailPage />} />
                 <Route path="/community" element={<CommunityPage />} />
-                <Route path="/myinfo" element={<MyInfoEditPage />} />
-                <Route path="/post" element={<PostDetailPage />} />
-                <Route path="/communitypost" element={<CommunityPostPage />} />
 
                 <Route path="/tips" element={<TipsPage />} />
                 <Route path="/tips/list" element={<TipsDetailPage />} />
@@ -85,6 +81,17 @@ function App() {
                   element={<InquiryWritePage />}
                 />
 
+                <Route element={<CommonProtectedRoute />}>
+                  <Route path="/my" element={<MyPage />} />
+                  <Route path="/likes" element={<LikesPage />} />
+                  <Route path="/scrap" element={<ScrapPage />} />
+                  <Route path="/myinfo" element={<MyInfoEditPage />} />
+                  <Route
+                    path="/communitypost"
+                    element={<CommunityPostPage />}
+                  />
+                </Route>
+
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route
                   path="/admin/*"
@@ -101,15 +108,24 @@ function App() {
                     path="notice/edit/:id"
                     element={<AdminNoticeEditPage />}
                   />
-                  <Route path="notice/:id" element={<AdminNoticeDetailPage />} />
+                  <Route
+                    path="notice/:id"
+                    element={<AdminNoticeDetailPage />}
+                  />
                   <Route path="post" element={<AdminPostPage />} />
                   <Route path="post/new" element={<AdminNewPostPage />} />
                   <Route path="post/:id" element={<AdminPostDetailPage />} />
                   <Route path="post/edit/:id" element={<AdminPostEditPage />} />
                   <Route path="report" element={<AdminReportPage />} />
-                  <Route path="report/:id" element={<AdminReportDetailPage />} />
+                  <Route
+                    path="report/:id"
+                    element={<AdminReportDetailPage />}
+                  />
                   <Route path="inquiry" element={<AdminInquiryPage />} />
-                  <Route path="inquiry/:id" element={<AdminInquiryDetailPage />} />
+                  <Route
+                    path="inquiry/:id"
+                    element={<AdminInquiryDetailPage />}
+                  />
                   <Route path="qna" element={<AdminQnaPage />} />
                   <Route path="qna/new" element={<AdminNewQnaPage />} />
                   <Route path="qna/:id" element={<AdminQnaDetailPage />} />
