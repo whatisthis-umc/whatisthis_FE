@@ -16,17 +16,13 @@ const PostCard = React.memo(({ post, navigate }: { post: TipPost; navigate: any 
     onClick={() => navigate(`/tips/${post.postId}`)}
     className="cursor-pointer"
   >
-    <ItemCard
-      id={post.postId}
-      category={post.category}
+    <ItemCard 
       hashtag={post.hashtags}
       imageUrl={post.imageUrls}
       title={post.title}
       description={post.summary}
       views={post.views}
       scraps={post.scraps}
-      date={new Date(post.date)}
-      type="tips"
     />
   </div>
 ));

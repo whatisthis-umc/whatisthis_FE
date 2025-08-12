@@ -295,9 +295,13 @@ const ItemsPostDetailPage = () => {
               onClick={() => navigate(`/${relatedPost.type}/${relatedPost.id}`)}
               className="cursor-pointer"
             >
-              <ItemCard
-                {...relatedPost}
-                type={relatedPost.type as "items" | "tips"}
+              <ItemCard 
+                hashtag={relatedPost.hashtag}
+                imageUrl={relatedPost.imageUrl}
+                title={relatedPost.title}
+                description={relatedPost.description}
+                views={relatedPost.views}
+                scraps={relatedPost.scraps}
               />
             </div>
           ))}
