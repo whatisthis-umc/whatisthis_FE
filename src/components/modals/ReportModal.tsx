@@ -8,7 +8,7 @@ interface ReportModalProps {
   onClose: () => void;
   targetType?: "댓글" | "게시물";
   /** 부모에서 실제 신고 API 호출 */
-  onSubmit?: (data: { content: string; description: string }) => void;
+  onSubmit?: (data: { content: string; description: string | null }) => void;
 }
 
 const reasonsList = [
@@ -20,14 +20,14 @@ const reasonsList = [
   "기타(직접입력)",
 ] as const;
 
-// 서버 enum 매핑(필요시 값 조정)
+// 서버 enum 매핑 - 스웨거 문서 기반
 const reasonCodeMap: Record<(typeof reasonsList)[number], string> = {
   "욕설 및 비하 표현": "ABUSIVE_LANGUAGE",
-  "음란성/선정적 내용": "OBSCENE",
-  "광고/홍보성": "SPAM",
-  "도배 또는 중복": "DUPLICATE",
-  "잘못된 정보/허위 사실": "MISINFORMATION",
-  "기타(직접입력)": "OTHER",
+  "음란성/선정적 내용": "SEXUAL_CONTENT",
+  "광고/홍보성": "ADVERTISEMENT",
+  "도배 또는 중복": "DUPLICATE_CONTENT",
+  "잘못된 정보/허위 사실": "FALSE_INFORMATION",
+  "기타(직접입력)": "ETC_CONTENT",
 };
 
 const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalProps) => {
@@ -43,8 +43,16 @@ const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalPr
       alert("신고 사유를 선택해 주세요.");
       return;
     }
-    const content = reasonCodeMap[selected] ?? "OTHER";
-    const description = selected === "기타(직접입력)" ? customText.trim() : "";
+    
+    // "기타(직접입력)" 선택 시 추가 설명이 있는지 확인
+    if (selected === "기타(직접입력)" && !customText.trim()) {
+      alert("기타 사유를 입력해 주세요.");
+      return;
+    }
+    
+    const content = reasonCodeMap[selected] ?? "ETC_CONTENT";
+    // 스웨거 문서: ETC_CONTENT가 아닌 경우 description은 null
+    const description = selected === "기타(직접입력)" ? customText.trim() : null;
     onSubmit({ content, description });
   };
 

@@ -47,7 +47,7 @@ export async function reportPost(
       postId: Number(r.postId ?? postId),
       reportedAt: String(r.reportedAt ?? new Date().toISOString()),
     };
-  } catch (err) {
+  } catch (err: any) {
     throw toRichError(err, "서버 내부 오류가 발생했습니다");
   }
 }
