@@ -13,10 +13,12 @@ import { tipService } from "../../api/lifeTipsApi";
 import type { TipPostDetail, TipPost } from "../../api/types";
 import { useScrap } from "../../hooks/useInteraction";
 import useReportPost from "../../hooks/mutations/useReportPost";
+import { useAuth } from "../../hooks/useAuth";
 
 const TipsPostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [post, setPost] = useState<TipPostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +27,45 @@ const TipsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<TipPost[]>([]);
-  // 같은 세션에서 재신고 방지(로컬)
-  const [reportedPost, setReportedPost] = useState(false);
+  
+  // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
+  // localStorage에서 신고한 게시물 목록 가져오기
+  const getReportedPosts = () => {
+    try {
+      const reportedPostsStr = localStorage.getItem("reportedPosts");
+      return reportedPostsStr ? JSON.parse(reportedPostsStr) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // localStorage에 신고한 게시물 추가
+  const addReportedPost = (postId: number) => {
+    try {
+      const reportedPosts = getReportedPosts();
+      if (!reportedPosts.includes(postId)) {
+        reportedPosts.push(postId);
+        localStorage.setItem("reportedPosts", JSON.stringify(reportedPosts));
+      }
+    } catch (error) {
+      console.error("localStorage 저장 실패:", error);
+    }
+  };
+
   const relatedPosts = dummyPosts.slice(0, 5);
 
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
+  
+  // 같은 세션에서 재신고 방지(로컬)
+  const [reportedPost, setReportedPost] = useState(() => {
+    return getReportedPosts().includes(postId);
+  });
+
+  // postId가 변경될 때마다 신고 상태 업데이트
+  useEffect(() => {
+    setReportedPost(getReportedPosts().includes(postId));
+  }, [postId]);
   const scrap = useScrap(postId, { isActive: false, count: 0 });
   const reportPostM = useReportPost(postId);
 
@@ -151,6 +186,15 @@ const TipsPostDetailPage = () => {
 
   const handleSearch = (input: string) => {};
 
+  // 로그인 체크 함수
+  const checkLogin = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleReport = (data: { content: string; description: string | null }) => {
     if (!post) return;
     
@@ -165,6 +209,7 @@ const TipsPostDetailPage = () => {
         onSuccess: () => {
           alert("신고가 완료되었습니다.");
           setReportedPost(true);
+          addReportedPost(postId); // localStorage에 저장
           setShowReportModal(false);
         },
         onError: (e: any) => {
@@ -172,6 +217,7 @@ const TipsPostDetailPage = () => {
           if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
             alert("이미 신고된 게시물입니다.");
             setReportedPost(true);
+            addReportedPost(postId); // localStorage에 저장
           } else if (e?.status === 500) {
             alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
           } else {
@@ -283,7 +329,11 @@ const TipsPostDetailPage = () => {
                   ? "bg-[#0080FF] text-white"
                   : "bg-[#0080FF] text-white"
               } ${scrap.state.isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-              onClick={scrap.state.isLoading ? undefined : scrap.toggle}
+              onClick={() => {
+                if (checkLogin()) {
+                  scrap.toggle();
+                }
+              }}
             >
               <img
                 src={scrap.state.isActive ? whitefilledscrap : whitescrap}
@@ -298,7 +348,11 @@ const TipsPostDetailPage = () => {
             </button>
             <button
               className="w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-white text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
-              onClick={() => setShowReportModal(true)}
+              onClick={() => {
+                if (checkLogin()) {
+                  setShowReportModal(true);
+                }
+              }}
             >
               <img
                 src={reportIcon}

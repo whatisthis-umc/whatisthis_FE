@@ -13,10 +13,12 @@ import type { ItemPost, ItemPostDetail } from "../../api/types";
 import { itemDetailService } from "../../api/itemDetailApi";
 import { useScrap } from "../../hooks/useInteraction";
 import useReportPost from "../../hooks/mutations/useReportPost";
+import { useAuth } from "../../hooks/useAuth";
 
 const ItemsPostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [post, setPost] = useState<ItemPostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +51,19 @@ const ItemsPostDetailPage = () => {
     }
   };
 
-  const [reportedPost, setReportedPost] = useState(() => {
-    return getReportedPosts().includes(postId);
-  });
   const relatedPosts = dummyPosts.slice(0, 5);
 
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
+  
+  const [reportedPost, setReportedPost] = useState(() => {
+    return getReportedPosts().includes(postId);
+  });
+
+  // postId가 변경될 때마다 신고 상태 업데이트
+  useEffect(() => {
+    setReportedPost(getReportedPosts().includes(postId));
+  }, [postId]);
   const scrap = useScrap(postId, { isActive: false, count: 0 });
   const reportPostM = useReportPost(postId);
 
@@ -177,6 +185,15 @@ const ItemsPostDetailPage = () => {
 
   const handleSearch = (input: string) => {};
 
+  // 로그인 체크 함수
+  const checkLogin = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleReport = (data: { content: string; description: string | null }) => {
     if (!post) return;
     
@@ -191,17 +208,7 @@ const ItemsPostDetailPage = () => {
         onSuccess: () => {
           alert("신고가 완료되었습니다.");
           setReportedPost(true);
-          // localStorage에 신고한 게시물 ID 저장
-          try {
-            const reportedPostsStr = localStorage.getItem("reportedPosts");
-            const reportedPosts = reportedPostsStr ? JSON.parse(reportedPostsStr) : [];
-            if (!reportedPosts.includes(postId)) {
-              reportedPosts.push(postId);
-              localStorage.setItem("reportedPosts", JSON.stringify(reportedPosts));
-            }
-          } catch (error) {
-            console.error("localStorage 저장 실패:", error);
-          }
+          addReportedPost(postId); // localStorage에 저장
           setShowReportModal(false);
         },
         onError: (e: any) => {
@@ -209,6 +216,7 @@ const ItemsPostDetailPage = () => {
           if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
             alert("이미 신고된 게시물입니다.");
             setReportedPost(true);
+            addReportedPost(postId); // localStorage에 저장
           } else if (e?.status === 500) {
             alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
           } else {
@@ -320,7 +328,11 @@ const ItemsPostDetailPage = () => {
                   ? "bg-[#0080FF] text-white"
                   : "bg-[#0080FF] text-white"
               } ${scrap.state.isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-              onClick={scrap.state.isLoading ? undefined : scrap.toggle}
+              onClick={() => {
+                if (checkLogin()) {
+                  scrap.toggle();
+                }
+              }}
               disabled={scrap.state.isLoading}
             >
               <img
@@ -336,7 +348,11 @@ const ItemsPostDetailPage = () => {
             </button>
             <button
               className="w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-white text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
-              onClick={() => setShowReportModal(true)}
+              onClick={() => {
+                if (checkLogin()) {
+                  setShowReportModal(true);
+                }
+              }}
             >
               <img
                 src={reportIcon}

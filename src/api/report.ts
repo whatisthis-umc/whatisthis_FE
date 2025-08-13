@@ -3,7 +3,7 @@ import axios from "axios";
 
 export type ReportPayload = {
   content: string;       // 예: "ABUSIVE_LANGUAGE"
-  description?: string;  // 선택
+  description: string | null;  // 선택
 };
 
 export type ReportPostResponse = {
