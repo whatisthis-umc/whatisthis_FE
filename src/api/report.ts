@@ -3,7 +3,7 @@ import axios from "axios";
 
 export type ReportPayload = {
   content: string;       // 예: "ABUSIVE_LANGUAGE"
-  description?: string;  // 선택
+  description: string | null;  // 선택
 };
 
 export type ReportPostResponse = {
@@ -47,7 +47,7 @@ export async function reportPost(
       postId: Number(r.postId ?? postId),
       reportedAt: String(r.reportedAt ?? new Date().toISOString()),
     };
-  } catch (err) {
+  } catch (err: any) {
     throw toRichError(err, "서버 내부 오류가 발생했습니다");
   }
 }
