@@ -143,9 +143,6 @@ export default function AdminReportPage() {
         {/* 상단 제목 */}
         <div className="text-left mb-20">
           <h2 className="text-2xl font-bold">신고내역</h2>
-          {totalElements > 0 && (
-            <p className="text-gray-600 mt-2">총 {totalElements}건의 신고가 있습니다.</p>
-          )}
         </div>
 
         {/* 필터 + 검색 */}
@@ -238,21 +235,25 @@ export default function AdminReportPage() {
                 ) : (
                   displayReports.map((report) => (
                     <tr key={report.reportId} onClick={() => navigate(`/admin/report/${report.reportId}`)} className="cursor-pointer hover:bg-gray-50">
-                      <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">{REPORT_TYPE_LABELS[report.type]}</div></td>
+                      <td className="py-3">
+                        <div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">
+                          {REPORT_TYPE_LABELS[report.type]}
+                        </div>
+                      </td>
                       <td className="py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{report.content}</td>
                       <td className="py-3 text-[#666666]">{REPORT_CONTENT_LABELS[report.reportContent]}</td>
-                      <td className="py-3 text-center">{formatReportDate(report.reportedAt)}</td>
+                      <td className="py-3 text-left">{formatReportDate(report.reportedAt)}</td>
                       <td className="py-3">
                         {report.status === "UNPROCESSED" ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleStatusChange(report.reportId); }}
                             disabled={processing}
-                            className={`${processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] cursor-pointer"} text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none`}
+                            className={`${processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] hover:bg-[#0066CC] cursor-pointer"} text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none`}
                           >
                             {processing ? "처리중..." : "처리하기"}
                           </button>
                         ) : (
-                          <span className="bg-green-500 text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
+                          <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
                         )}
                       </td>
                     </tr>
