@@ -30,4 +30,6 @@ export { default as bArrowDown } from "./b_arrow_down.png";
 export { default as darkHeart } from "./darkHeart.png";
 export { default as darkBookmark } from "./darkBookmark.png";
 export {default as afterscrap} from "./afterscrap.png";
+export {default as blackscrap} from "./blackscrap.png";
+export {default as whitefilledscrap} from "./whitefilledscrap.png";
 

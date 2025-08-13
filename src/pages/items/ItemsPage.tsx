@@ -98,7 +98,7 @@ const ItemsPage = () => {
     return [...filteredPosts].sort((a, b) => b.postId - a.postId);
   }, [filteredPosts]);
 
-  // 초기 데이터 로딩 (첫 페이지만)
+  // 초기 데이터 로딩 (첫 2페이지만 로딩)
   useEffect(() => {
     let isMounted = true;
 
@@ -109,18 +109,36 @@ const ItemsPage = () => {
       setError(null);
 
       try {
-        // 첫 페이지만 로딩 (성능 최적화)
-        const result = await itemService.getAllPosts(0);
+        let allData: ItemPost[] = [];
         
+        // 첫 2페이지만 로딩 (성능 최적화)
+        for (let page = 0; page < 2; page++) {
+          const result = await itemService.getAllPosts(page);
+          
+          if (!isMounted) return;
+
+          if (result.posts.length === 0) {
+            break;
+          } else {
+            // Post 타입을 ItemPost로 캐스팅
+            const itemPosts = result.posts.map(post => ({
+              ...post,
+              type: "items" as const
+            })) as ItemPost[];
+            allData.push(...itemPosts);
+          }
+        }
+
         if (!isMounted) return;
 
         // 중복 제거 (Set 사용으로 성능 향상)
         const uniquePosts = Array.from(
-          new Map(result.posts.map(post => [post.postId, post])).values()
+          new Map(allData.map(post => [post.postId, post])).values()
         ) as ItemPost[];
 
         setAllPosts(uniquePosts);
-        setHasMore(result.posts.length > 0);
+        setHasMore(allData.length > 0); // 더 로딩할 수 있는지 확인
+        setCurrentPage(1); // 다음 로딩할 페이지
       } catch (e) {
         if (!isMounted) return;
         console.error("Error loading initial data:", e);
@@ -145,21 +163,26 @@ const ItemsPage = () => {
 
     setLoading(true);
     try {
-      const nextPage = currentPage + 1;
-      const result = await itemService.getAllPosts(nextPage);
+      const result = await itemService.getAllPosts(currentPage);
       
       if (result.posts.length === 0) {
         setHasMore(false);
         return;
       }
 
+      // Post 타입을 ItemPost로 캐스팅
+      const itemPosts = result.posts.map(post => ({
+        ...post,
+        type: "items" as const
+      })) as ItemPost[];
+
       // 기존 데이터와 새 데이터 합치기 (중복 제거)
-      const newPosts = result.posts.filter(
+      const newPosts = itemPosts.filter(
         newPost => !allPosts.some(existingPost => existingPost.postId === newPost.postId)
-      ) as ItemPost[];
+      );
 
       setAllPosts(prev => [...prev, ...newPosts]);
-      setCurrentPage(nextPage);
+      setCurrentPage(prev => prev + 1);
     } catch (e) {
       console.error("Error loading more data:", e);
     } finally {
