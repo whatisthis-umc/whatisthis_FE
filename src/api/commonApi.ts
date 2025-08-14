@@ -29,6 +29,8 @@ export const extractPostsFromResponse = (rawString: string) => {
   const summaryMatches = rawString.match(/"summary":"([^"]+)"/g);
   const thumnailUrlMatches = rawString.match(/"thumnailUrl":(null|"[^"]*")/g);
   const categoryMatches = rawString.match(/"category":"([^"]+)"/g);
+  const viewCountMatches = rawString.match(/"viewCount":(\d+)/g);
+  const scrapCountMatches = rawString.match(/"scrapCount":(\d+)/g);
   
   if (!postIdMatches || !titleMatches || !summaryMatches || !thumnailUrlMatches || !categoryMatches || !sectionNameMatch) {
     return null;
@@ -43,6 +45,10 @@ export const extractPostsFromResponse = (rawString: string) => {
     const thumnailUrlMatch = thumnailUrlMatches[i].match(/"thumnailUrl":(null|"[^"]*")/);
     const thumnailUrl = thumnailUrlMatch?.[1] === 'null' ? null : thumnailUrlMatch?.[1]?.replace(/"/g, '') || '';
     const category = categoryMatches[i].match(/"category":"([^"]+)"/)?.[1] || 'LIFE_TIP';
+    
+    // viewCount와 scrapCount 추출
+    const viewCount = viewCountMatches?.[i] ? parseInt(viewCountMatches[i].match(/"viewCount":(\d+)/)?.[1] || '0') : 0;
+    const scrapCount = scrapCountMatches?.[i] ? parseInt(scrapCountMatches[i].match(/"scrapCount":(\d+)/)?.[1] || '0') : 0;
     
     // 해시태그 추출
     const hashtags: any[] = [];
@@ -92,6 +98,8 @@ export const extractPostsFromResponse = (rawString: string) => {
       summary: summary,
       thumnailUrl: thumnailUrl,
       category: category,
+      viewCount: viewCount,
+      scrapCount: scrapCount,
       hashtags: hashtags.length > 0 ? hashtags : [{
         id: Math.floor(Math.random() * 1000),
         content: "기본태그",
@@ -158,8 +166,8 @@ export const transformPosts = (rawPosts: any[], postType: "tips" | "items" = "ti
       thumbnailUrl: raw.thumnailUrl || "https://via.placeholder.com/300x200?text=No+Image",
       imageUrls: raw.thumnailUrl && raw.thumnailUrl !== 'null' && raw.thumnailUrl.trim() !== '' ? [raw.thumnailUrl] : ["https://via.placeholder.com/300x200?text=No+Image"],
       date: postData?.createdAt || "",
-      views: postData?.viewCount || 0,
-      scraps: postData?.likeCount || 0,
+      views: raw.viewCount || postData?.viewCount || 0,
+      scraps: raw.scrapCount || postData?.likeCount || 0,
       hashtags: hashtags,
       category: postData?.category || "LIFE_TIP",
       subCategories: subCategories,
@@ -199,21 +207,21 @@ export const createPostService = (endpoint: string, categories: string[], postTy
                 const rawString = res.data as string;
                 data = parseApiResponse(rawString, categories);
               
-              if (data) {
-                const sectionData = extractPostsFromResponse(rawString);
-                if (sectionData) {
-                  data.result.sections = [sectionData];
+                if (data) {
+                  const sectionData = extractPostsFromResponse(rawString);
+                  if (sectionData) {
+                    data.result.sections = [sectionData];
+                  }
+                } else {
+                  data = res.data;
                 }
               } else {
                 data = res.data;
               }
-            } else {
-              data = res.data;
+            } catch (error) {
+              console.error("JSON parsing error:", error);
+              return Promise.reject("데이터 파싱 오류");
             }
-          } catch (error) {
-            console.error("JSON parsing error:", error);
-            return Promise.reject("데이터 파싱 오류");
-          }
           
           if (!data?.isSuccess) {
             return Promise.reject(data?.message || "Unknown error");

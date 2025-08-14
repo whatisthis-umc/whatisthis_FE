@@ -5,20 +5,23 @@ type OnServerSynced = (next: { liked: boolean; likeCount: number }) => void;
 
 export function useLikePost(postId: number, onSynced?: OnServerSynced) {
   const qc = useQueryClient();
+
   return useMutation<LikeResult, Error, void>({
     mutationFn: () => likePost(postId),
     onSuccess: (data) => {
       onSynced?.({ liked: true, likeCount: data.likeCount });
-      // 필요 시 관련 쿼리 무효화
+      // 관련 데이터 무효화
       qc.invalidateQueries({ queryKey: ["post", postId] });
       qc.invalidateQueries({ queryKey: ["posts"] });
       qc.invalidateQueries({ queryKey: ["myPosts"] });
+      qc.invalidateQueries({ queryKey: ["myLikes"] }); // ✅ 추가
     },
   });
 }
 
 export function useUnlikePost(postId: number, onSynced?: OnServerSynced) {
   const qc = useQueryClient();
+
   return useMutation<LikeResult, Error, void>({
     mutationFn: () => unlikePost(postId),
     onSuccess: (data) => {
@@ -26,6 +29,7 @@ export function useUnlikePost(postId: number, onSynced?: OnServerSynced) {
       qc.invalidateQueries({ queryKey: ["post", postId] });
       qc.invalidateQueries({ queryKey: ["posts"] });
       qc.invalidateQueries({ queryKey: ["myPosts"] });
+      qc.invalidateQueries({ queryKey: ["myLikes"] }); // ✅ 추가
     },
   });
 }

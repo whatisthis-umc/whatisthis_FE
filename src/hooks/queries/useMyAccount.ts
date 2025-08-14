@@ -7,5 +7,6 @@ export default function useMyAccount() {
     queryFn: getMyAccount,
     retry: false,
     refetchOnWindowFocus: false,
+    staleTime: 60_000,
   });
 }

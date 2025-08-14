@@ -42,9 +42,13 @@ const ScrapPage = () => {
       );
 
       // 스크랩된 게시물의 scrapId를 localStorage에 저장
-      const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
-      const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
-      
+      const scrappedPostIds = JSON.parse(
+        localStorage.getItem("scrappedPosts") || "[]"
+      );
+      const scrappedPostData = JSON.parse(
+        localStorage.getItem("scrappedPostData") || "{}"
+      );
+
       // 기존 데이터와 새로운 데이터를 병합
       uniqueScraps.forEach((scrapItem) => {
         if (!scrappedPostIds.includes(scrapItem.postId)) {
@@ -52,21 +56,26 @@ const ScrapPage = () => {
         }
         scrappedPostData[scrapItem.postId] = {
           scrapId: scrapItem.id,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
       });
-      
+
       localStorage.setItem("scrappedPosts", JSON.stringify(scrappedPostIds));
-      localStorage.setItem("scrappedPostData", JSON.stringify(scrappedPostData));
-      
+      localStorage.setItem(
+        "scrappedPostData",
+        JSON.stringify(scrappedPostData)
+      );
+
       console.log("업데이트된 localStorage:", {
         scrappedPosts: scrappedPostIds,
-        scrappedPostData: scrappedPostData
+        scrappedPostData: scrappedPostData,
       });
-      
+
       // 각 스크랩 아이템의 상세 정보 로그
       uniqueScraps.forEach((scrapItem) => {
-        console.log(`스크랩 아이템 - postId: ${scrapItem.postId}, scrapId: ${scrapItem.id}, title: ${scrapItem.title}`);
+        console.log(
+          `스크랩 아이템 - postId: ${scrapItem.postId}, scrapId: ${scrapItem.id}, title: ${scrapItem.title}`
+        );
       });
 
       setAllScraps(uniqueScraps);
@@ -96,7 +105,7 @@ const ScrapPage = () => {
   const handleToggleBookmark = async (scrapId: number) => {
     try {
       // 해당 스크랩 아이템 찾기
-      const scrapItem = allScraps.find(item => item.id === scrapId);
+      const scrapItem = allScraps.find((item) => item.id === scrapId);
       if (!scrapItem) {
         throw new Error("스크랩 아이템을 찾을 수 없습니다.");
       }
@@ -118,19 +127,30 @@ const ScrapPage = () => {
       }
 
       // localStorage에서도 제거
-      const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
-      const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
-      
-      const updatedIds = scrappedPostIds.filter((id: number) => id !== scrapItem.postId);
-      delete scrappedPostData[scrapItem.postId];
-      
-      localStorage.setItem("scrappedPosts", JSON.stringify(updatedIds));
-      localStorage.setItem("scrappedPostData", JSON.stringify(scrappedPostData));
+      const scrappedPostIds = JSON.parse(
+        localStorage.getItem("scrappedPosts") || "[]"
+      );
+      const scrappedPostData = JSON.parse(
+        localStorage.getItem("scrappedPostData") || "{}"
+      );
 
-      console.log(`스크랩 해제 - postId: ${scrapItem.postId}, scrapId: ${scrapId}`);
+      const updatedIds = scrappedPostIds.filter(
+        (id: number) => id !== scrapItem.postId
+      );
+      delete scrappedPostData[scrapItem.postId];
+
+      localStorage.setItem("scrappedPosts", JSON.stringify(updatedIds));
+      localStorage.setItem(
+        "scrappedPostData",
+        JSON.stringify(scrappedPostData)
+      );
+
+      console.log(
+        `스크랩 해제 - postId: ${scrapItem.postId}, scrapId: ${scrapId}`
+      );
       console.log(`업데이트된 localStorage:`, {
         scrappedPosts: updatedIds,
-        scrappedPostData: scrappedPostData
+        scrappedPostData: scrappedPostData,
       });
 
       alert("스크랩이 해제되었습니다.");
@@ -143,17 +163,19 @@ const ScrapPage = () => {
   const handleItemClick = (item: ScrapItem) => {
     // 스웨거 API에서 제공하는 postId 사용
     const postId = item.postId;
-    
+
     // category 정보를 기반으로 타입 결정
     let type = "tips"; // 기본값
-    
+
     if (item.category === "LIFE_ITEM") {
       type = "items";
     } else if (item.category === "LIFE_TIP") {
       type = "tips";
     }
-    
-    console.log(`스크랩 아이템 클릭 - postId: ${postId}, type: ${type}, category: ${item.category}`);
+
+    console.log(
+      `스크랩 아이템 클릭 - postId: ${postId}, type: ${type}, category: ${item.category}`
+    );
     navigate(`/${type}/${postId}`);
   };
 

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { TERMS_TEXT } from '../../data/termsText';
 import { PRIVACY_TEXT } from '../../data/privacyText';
 import { checkCircle, checkedCircle } from '../../assets';
@@ -37,6 +38,10 @@ function FormattedLegal({ raw }: { raw: string }) {
     />
   );
 }
+=======
+import checkCircle from '/src/assets/check_circle.svg';
+import checkedCircle from '/src/assets/checked_circle.svg';
+>>>>>>> dev
 
 export default function AgreementPage() {
   const navigate = useNavigate();
@@ -117,7 +122,11 @@ export default function AgreementPage() {
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
+<<<<<<< HEAD
                 className="w-[24px] h-[24px] rounded-full  bg-white flex justify-center items-center cursor-pointer"
+=======
+                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
+>>>>>>> dev
                 onClick={() => {
                   const newTerms = !termsChecked;
                   setTermsChecked(newTerms);
@@ -127,8 +136,12 @@ export default function AgreementPage() {
                 <img 
                 src={termsChecked ? checkedCircle : checkCircle} 
                 alt="check" 
+<<<<<<< HEAD
                 width={27} 
                 height={27} 
+=======
+                width={27} height={27} 
+>>>>>>> dev
                 />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
@@ -147,7 +160,11 @@ export default function AgreementPage() {
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
+<<<<<<< HEAD
                 className="w-[24px] h-[24px] rounded-full  bg-white flex justify-center items-center cursor-pointer"
+=======
+                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
+>>>>>>> dev
                 onClick={() => {
                   const newPrivacy = !privacyChecked;
                   setPrivacyChecked(newPrivacy);
@@ -155,10 +172,16 @@ export default function AgreementPage() {
                 }}
               >
                 <img 
+<<<<<<< HEAD
                 src={privacyChecked ? checkedCircle : checkCircle}
                 alt="check" 
                 width={27} 
                 height={27} 
+=======
+                src={privacyChecked ? checkedCircle : checkCircle} 
+                alt="check" 
+                width={27} height={27} 
+>>>>>>> dev
                 />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
@@ -172,6 +195,7 @@ export default function AgreementPage() {
             className="flex items-center gap-[8px] cursor-pointer"
             onClick={() => handleAllChange(!allChecked)}
           >
+<<<<<<< HEAD
             <div className="w-[20px] h-[20px] rounded-full bg-white flex items-center justify-center">
               <img
     src={allChecked ? checkedCircle : checkCircle}
@@ -179,6 +203,14 @@ export default function AgreementPage() {
     width={20}
     height={20}
   />
+=======
+            <div className="mt-[-5px] w-[20px] h-[20px] rounded-full bg-white flex items-center justify-center">
+              <img 
+              src={allChecked ? checkedCircle : checkCircle} 
+              alt="check" 
+              width={21} height={21} 
+              />
+>>>>>>> dev
             </div>
             <span className="text-[#333333] text-[16px] font-medium">모든 항목에 동의합니다.</span>
           </div>

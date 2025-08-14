@@ -1,11 +1,39 @@
+///src/pages/AdminPages/AdminQna/AdminNewQnaPage.tsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import AdminLayout from '../../../layouts/AdminLayout/AdminLayout';
+import { createQna } from '../../../api/adminQna';
 
 export default function AdminNewQnaPage() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [answer, setAnswer] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSave = async () => {
+    const t = title.trim();
+    const c = answer.trim();
+    if (!t) return alert('제목을 입력해주세요.');
+    if (!c) return alert('답변 내용을 입력해주세요.');
+
+    try {
+      setSubmitting(true);
+      await createQna({ title: t, content: c });
+      alert('Q&A가 등록되었습니다.');
+      navigate('/admin/qna');
+    } catch (err: any) {
+      // 서버 메시지 있으면 보여주기
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Q&A 등록 중 문제가 발생했습니다.';
+      alert(msg);
+      console.error('createQna error:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
   return (
     <AdminLayout>
@@ -40,20 +68,20 @@ export default function AdminNewQnaPage() {
         {/* 버튼 */}
         <div className="flex justify-end gap-[16px]">
           <button
+            type="button"  
             onClick={() => navigate('/admin/qna')}
+            disabled={submitting}
             className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white  font-semibold text-[16px]"
           >
             취소
           </button>
           <button
-            onClick={() => {
-              // 실제 저장 로직은 추후 구현
-              console.log('새 QnA 저장:', title, answer);
-              navigate('/admin/qna');
-            }}
+            type="button"  
+            onClick={handleSave}
+            disabled={submitting}
             className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white font-semibold text-[16px]"
           >
-            저장
+            {submitting ? '저장중...' : '저장'}
           </button>
         </div>
       </div>

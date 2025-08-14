@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { eye, like, commentIcon } from "../../assets";
 import useMyPosts from "../../hooks/queries/useMyPosts";
 import useMyInquiries from "../../hooks/queries/useMyInquiries";
 import useDeleteMyPost from "../../hooks/mutations/useDeleteMyPost";
 import useDeleteMyInquiry from "../../hooks/mutations/useDeleteMyInquiry";
+import useMyAccount from "../../hooks/queries/useMyAccount";
 import Pagination from "../../components/customer/Pagination";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
 import type {
@@ -32,18 +33,16 @@ const MyPage = () => {
   const [inqPage, setInqPage] = useState(1);
   const pageSize = 6;
 
-  // 데이터
-  const {
-    data: postData,
-    isLoading: loadingPosts,
-    isError: errorPosts,
-  } = useMyPosts(postPage, pageSize);
+  // ✅ 계정(프로필) — 목록과 독립
+  const { data: account } = useMyAccount();
 
-  const {
-    data: inqData,
-    isLoading: loadingInq,
-    isError: errorInq,
-  } = useMyInquiries(inqPage, pageSize);
+  // 데이터
+  const { data: postData } = useMyPosts(postPage, pageSize);
+  const { data: inqData } = useMyInquiries(inqPage, pageSize);
+
+  // 항상 배열로 안전화 (빈 데이터/로딩/에러 모두 대비)
+  const posts: MyPostItem[] = Array.isArray(postData?.posts) ? postData!.posts : [];
+  const inquiries: MyInquiryItem[] = Array.isArray(inqData?.inquiries) ? inqData!.inquiries : [];
 
   // 삭제 뮤테이션
   const deletePostMut = useDeleteMyPost(postPage, pageSize);
@@ -58,13 +57,12 @@ const MyPage = () => {
     try {
       if (deleteTarget.kind === "post") {
         await deletePostMut.mutateAsync(deleteTarget.id);
-        // 현재 페이지가 비면 한 페이지 앞으로
-        if (postData && postData.posts.length === 1 && postPage > 1) {
+        if ((postData?.posts?.length ?? 0) === 1 && postPage > 1) {
           setPostPage((p) => p - 1);
         }
       } else {
         await deleteInqMut.mutateAsync(deleteTarget.id);
-        if (inqData && inqData.inquiries.length === 1 && inqPage > 1) {
+        if ((inqData?.inquiries?.length ?? 0) === 1 && inqPage > 1) {
           setInqPage((p) => p - 1);
         }
       }
@@ -76,32 +74,13 @@ const MyPage = () => {
     }
   };
 
-  // 프로필(현재 탭 기준 우선)
-  const profile = useMemo(() => {
-    if (tab === "나의 작성내역" && postData) {
-      return {
-        nickname: postData.nickname,
-        email: postData.email,
-        profileImageUrl: postData.profileImageUrl,
-      };
-    }
-    if (tab === "나의 문의내역" && inqData) {
-      return {
-        nickname: inqData.nickname,
-        email: inqData.email,
-        profileImageUrl: inqData.profileImageUrl,
-      };
-    }
-    return { nickname: "", email: "", profileImageUrl: null as string | null };
-  }, [tab, postData, inqData]);
-
   // 다음 페이지 존재 여부(총 개수 없음 → size 기준)
-  const hasNextPosts = !!postData && postData.posts.length === pageSize;
-  const hasNextInq = !!inqData && inqData.inquiries.length === pageSize;
+  const hasNextPosts = posts.length === pageSize;
+  const hasNextInq = inquiries.length === pageSize;
 
   // 숫자 페이징용 임시 totalPages (총 개수 API 나오면 교체)
-  const postTotalPages = postPage + (hasNextPosts ? 1 : 0);
-  const inqTotalPages = inqPage + (hasNextInq ? 1 : 0);
+  const postTotalPages = Math.max(1, postPage + (hasNextPosts ? 1 : 0));
+  const inqTotalPages = Math.max(1, inqPage + (hasNextInq ? 1 : 0));
 
   // 탭 전환 시 페이지 초기화
   useEffect(() => {
@@ -120,9 +99,6 @@ const MyPage = () => {
     });
   };
 
-  const isLoading = tab === "나의 작성내역" ? loadingPosts : loadingInq;
-  const isError = tab === "나의 작성내역" ? errorPosts : errorInq;
-
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
       {/* 상단 제목 */}
@@ -130,12 +106,12 @@ const MyPage = () => {
         마이페이지
       </h1>
 
-      {/* 프로필 */}
+      {/* ✅ 프로필 — 글/문의 유무와 무관하게 항상 표시 */}
       <div className="flex items-center gap-4 mb-10">
         <div className="w-[80px] h-[80px] rounded-full bg-[#D9D9D9] overflow-hidden">
-          {profile.profileImageUrl && (
+          {account?.profileImage && (
             <img
-              src={profile.profileImageUrl}
+              src={account.profileImage}
               alt="profile"
               className="w-full h-full object-cover"
             />
@@ -144,10 +120,10 @@ const MyPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full justify-between">
           <div>
             <p className="text-[18px] sm:text-[20px] font-bold">
-              {profile.nickname || "닉네임"}
+              {account?.nickname || "닉네임"}
             </p>
             <p className="text-[14px] text-[#999]">
-              {profile.email || "이메일"}
+              {account?.email || "이메일"}
             </p>
           </div>
           <button
@@ -176,21 +152,15 @@ const MyPage = () => {
       </div>
 
       {/* 컨텐츠 */}
-      {isLoading ? (
-        <div className="py-20 text-center text-[#999]">로딩 중…</div>
-      ) : isError ? (
-        <div className="py-20 text-center text-[#f00]">
-          데이터를 불러오지 못했습니다.
-        </div>
-      ) : tab === "나의 작성내역" ? (
+      {tab === "나의 작성내역" ? (
         // ===== 작성내역 =====
         <div className="flex flex-col gap-6">
-          {postData && postData.posts.length === 0 ? (
+          {posts.length === 0 ? (
             <div className="text-center text-[#999] text-[14px] mt-10">
-              작성한 게시글이 없습니다.
+              게시물이 없습니다.
             </div>
           ) : (
-            postData?.posts.map((item: MyPostItem) => (
+            posts.map((item) => (
               <div
                 key={item.postId}
                 className="relative border border-[#CCCCCC] rounded-[32px] p-6 pr-8 hover:shadow-md transition-all duration-150 cursor-pointer"
@@ -257,19 +227,19 @@ const MyPage = () => {
           {/* 숫자형 페이지네이션 (작성내역) */}
           <Pagination
             currentPage={postPage}
-            totalPages={Math.max(1, postTotalPages)}
+            totalPages={postTotalPages}
             onPageChange={(p) => setPostPage(p)}
           />
         </div>
       ) : (
         // ===== 나의 문의내역 (아코디언) =====
         <div className="flex flex-col gap-6">
-          {inqData && inqData.inquiries.length === 0 ? (
+          {inquiries.length === 0 ? (
             <div className="text-center text-[#999] text-[14px] mt-10">
-              문의내역이 없습니다.
+              게시물이 없습니다.
             </div>
           ) : (
-            inqData?.inquiries.map((q: MyInquiryItem) => {
+            inquiries.map((q) => {
               const open = expanded.has(q.inquiryId);
               return (
                 <div key={q.inquiryId} className="flex flex-col gap-3">
@@ -330,14 +300,14 @@ const MyPage = () => {
                         </div>
                       </div>
 
-                      {/* A 블록 */}
+                      {/* A 블록 (샘플) */}
                       <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
                         <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
                           답변
                         </div>
                         <div className="text-[15px] text-[#333] whitespace-pre-wrap">
                           {statusLabel(q.status) === "답변완료"
-                            ? "답변이 등록되었습니다. (필요 시 상세 API로 실제 답변 본문을 붙여주세요)"
+                            ? "답변이 등록되었습니다. (상세 API에서 본문 붙이기)"
                             : "아직 답변이 등록되지 않았습니다."}
                         </div>
                         <div className="text-[12px] text-[#999] mt-3">
@@ -354,13 +324,13 @@ const MyPage = () => {
           {/* 숫자형 페이지네이션 (문의내역) */}
           <Pagination
             currentPage={inqPage}
-            totalPages={Math.max(1, inqTotalPages)}
+            totalPages={inqTotalPages}
             onPageChange={(p) => setInqPage(p)}
           />
         </div>
       )}
 
-      {/* 삭제 확인 모달 (게시글/댓글/문의 공용) */}
+      {/* 삭제 확인 모달 (게시글/문의 공용) */}
       <ConfirmDeleteModal
         open={isDeleteOpen}
         targetType={
