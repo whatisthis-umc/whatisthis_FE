@@ -20,6 +20,7 @@ import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
+import { getAdminPosts } from "../../../api/adminPosts";
 
 interface AdminPost {
   postId: number;
@@ -95,40 +96,26 @@ export default function AdminPostPage() {
 
         if (selectedCategory === "tip2" || selectedCategory === "all") {
           const tipPromises = tipCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              params: {
-                category: category,
-                page: 0,
-                size: 20,
-              },
-            })
+            getAdminPosts({ category, page: 0, size: 20 })
           );
 
           const tipResponses = await Promise.all(tipPromises);
           tipResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
 
         if (selectedCategory === "tip1" || selectedCategory === "all") {
           const itemPromises = itemCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              params: {
-                category: category,
-                page: 0,
-                size: 20,
-              },
-            })
+            getAdminPosts({ category, page: 0, size: 20 })
           );
 
           const itemResponses = await Promise.all(itemPromises);
           itemResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
