@@ -236,7 +236,17 @@ export default function AdminInquiryDetailPage() {
         <div className="mb-6">
           <div className="flex flex-col items-start gap-6 w-[1149px] p-6 rounded-[32px] border border-[#E6E6E6]">
             <div className="flex items-center gap-3">
-              <img src={lock} alt="lock" className="w-5 h-5 opacity-70" />
+              {inquiry.isPrivate && (
+                <img 
+                  src={lock} 
+                  alt="lock" 
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    aspectRatio: '1/1'
+                  }}
+                />
+              )}
               <span className="text-[#333333] font-[Pretendard] text-[20px] font-[700] leading-[30px] tracking-[-0.4px]">{inquiry.title}</span>
             </div>
           </div>
@@ -299,9 +309,9 @@ export default function AdminInquiryDetailPage() {
           </div>
         </div>
 
-        {/* 등록 버튼 - 박스 아래 80px, 우측 정렬 */}
-        {(!answer || showAnswerForm) && (
-          <div className="mt-20 w-full flex justify-end">
+        {/* 등록/목록 버튼 - 박스 아래 80px, 우측 정렬 */}
+        <div className="mt-20 w-full flex justify-end gap-4">
+          {(!answer || showAnswerForm) && (
             <button
               onClick={handleAnswerSubmit}
               className="flex w-[160px] px-4 py-3 justify-center items-center rounded-[32px] bg-[#0080FF] text-white"
@@ -309,23 +319,15 @@ export default function AdminInquiryDetailPage() {
             >
               {loading ? "처리중..." : (answer ? "수정" : "등록")}
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => navigate('/admin/inquiry')}
+            className="flex w-[160px] px-4 py-3 justify-center items-center rounded-[32px] bg-[#0080FF] text-white"
+          >
+            목록
+          </button>
+        </div>
 
-        {/* 답변이 이미 있는 경우 수정 버튼 */}
-        {answer && !showAnswerForm && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => {
-                setAnswerText(answer);
-                setShowAnswerForm(true);
-              }}
-              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md transition-colors"
-            >
-              답변 수정
-            </button>
-          </div>
-        )}
 
         {/* 확인 모달 */}
         <ConfirmModal
