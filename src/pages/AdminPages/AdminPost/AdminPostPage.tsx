@@ -21,6 +21,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
 import axios from "axios";
+import { getAdminPosts } from "../../../api/adminPost";
 
 interface AdminPost {
   postId: number;
@@ -100,39 +101,14 @@ export default function AdminPostPage() {
             ? 'http://52.78.98.150:8080' 
             : '/api';
           
-          const tipPromises = tipCategories.map((category) => {
-            // 로컬 vs 배포 환경 구분
-            const isDev = window.location.hostname === 'localhost';
-            const url = isDev 
-              ? "http://52.78.98.150:8080/admin/posts/"
-              : "/api/admin/posts/";
-            
-            return isDev 
-              ? axios.get(url, {
-                  headers: { 
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                  },
-                  params: {
-                    category: category,
-                    page: 0,
-                    size: 20,
-                  },
-                })
-              : axiosInstance.get("/admin/posts/", {
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                  params: {
-                    category: category,
-                    page: 0,
-                    size: 20,
-                  },
-                });
-          });
+          const tipPromises = tipCategories.map((category) => 
+            getAdminPosts({ category, page: 0, size: 20 })
+          );
 
           const tipResponses = await Promise.all(tipPromises);
           tipResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
@@ -143,39 +119,14 @@ export default function AdminPostPage() {
             ? 'http://52.78.98.150:8080' 
             : '/api';
             
-          const itemPromises = itemCategories.map((category) => {
-            // 로컬 vs 배포 환경 구분
-            const isDev = window.location.hostname === 'localhost';
-            const url = isDev 
-              ? "http://52.78.98.150:8080/admin/posts/"
-              : "/api/admin/posts/";
-            
-            return isDev 
-              ? axios.get(url, {
-                  headers: { 
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                  },
-                  params: {
-                    category: category,
-                    page: 0,
-                    size: 20,
-                  },
-                })
-              : axiosInstance.get("/admin/posts/", {
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                  params: {
-                    category: category,
-                    page: 0,
-                    size: 20,
-                  },
-                });
-          });
+          const itemPromises = itemCategories.map((category) => 
+            getAdminPosts({ category, page: 0, size: 20 })
+          );
 
           const itemResponses = await Promise.all(itemPromises);
           itemResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
