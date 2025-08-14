@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "http://52.78.98.150:8080/:path*" },
+    { "source": "/posts/:path*", "destination": "http://52.78.98.150:8080/posts/:path*" },
     { "source": "/admin/post/:path*", "destination": "http://52.78.98.150:8080/admin/posts/:path*" },
     { "source": "/admin/notice/:path*", "destination": "http://52.78.98.150:8080/admin/notice/:path*" },
     { "source": "/admin/report/:path*", "destination": "http://52.78.98.150:8080/admin/report/:path*" },
