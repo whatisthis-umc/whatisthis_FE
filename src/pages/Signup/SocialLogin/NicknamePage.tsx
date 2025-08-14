@@ -1,11 +1,48 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function SocialNickNamePage() {
   const navigate = useNavigate();
+  const { state } = useLocation() as {
+    state?: { email?: string; provider?: string; providerId?: string };
+  };
   const [nickname, setNickname] = useState('');
 
+    // 콜백에서 넘겨받은 값
+  const email = state?.email ?? '';
+  const provider = state?.provider ?? '';
+  const providerId = state?.providerId ?? '';
+  const API = import.meta.env.VITE_API_BASE_URL;
 
+   const handleSignupSocial = async () => {
+    try {
+      const res = await fetch(`${API}/members/signup/social`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email,
+          nickname,
+          provider,
+          providerId,
+          serviceAgreed: true,
+          privacyAgreed: true,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.isSuccess) {
+        navigate('/signup/complete', { state: { nickname } });
+      } else {
+        alert(data.message || '가입에 실패했습니다.');
+      }
+    } catch {
+      alert('네트워크 오류가 발생했습니다.');
+    }
+  };
+
+  
 
   return (
     
@@ -128,7 +165,8 @@ export default function SocialNickNamePage() {
         /* 모바일 전용 */
         max-md:w-[223px] max-md:h-[37px] max-md:text-[14px] max-md:font-[500] max-md:rounded-[32px]
       "
-      onClick={() => navigate('/signup/complete', { state: { nickname } })}
+      onClick={handleSignupSocial}
+      disabled={!nickname.trim()}
     >
       다음
     </button>

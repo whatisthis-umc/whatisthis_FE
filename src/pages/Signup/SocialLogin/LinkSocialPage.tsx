@@ -10,23 +10,40 @@ export default function LinkSocialPage() {
   const email = state?.email ?? '';
   const provider = state?.provider ?? '';
   const providerId = state?.providerId ?? '';
-  const API = import.meta.env.VITE_API_URL ;
+  const API = import.meta.env.VITE_API_BASE_URL ;
+
+   // 잘못된 접근 가드
+  if (!email || !provider || !providerId) {
+    navigate('/login', { replace: true, state: { error: '잘못된 접근입니다.' } });
+    return null;
+  }
 
   const handleLink = async () => {
-    try {
-      // 백엔드에서 /members/link-social 만들어지면 주석 해제
-      // const res = await fetch(`${API}/members/link-social`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   credentials: 'include', // 쿠키 사용할 경우
-      //   body: JSON.stringify({ provider, providerId }),
-      // });
-      // if (!res.ok) throw new Error('link failed');
+  try {
+    if (!API) throw new Error('API URL not set');
 
-      // 연동 성공 시 원하는 페이지로 이동
-      navigate('/community', { replace: true });
-    } catch (e) {
-      alert('연동에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    const res = await fetch(`${API}/members/link-social`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' ,Accept: 'application/json' },
+      credentials: 'include', // 쿠키 사용 시 필수
+      body: JSON.stringify({
+        email,        // useLocation()에서 받은 값
+        provider,     // 'kakao' | 'naver' | 'google'
+        providerId,   // 소셜 고유 id
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.isSuccess === false) {
+        throw new Error(data?.message || '연동에 실패했습니다.');
+      }
+
+      // (선택) me 호출로 세션 확인
+      // await fetch(`${API}/members/me`, { credentials: 'include' });
+
+      navigate('/community', { replace: true }); // ★ 오타 수정
+    } catch (e: any) {
+      alert(e?.message || '네트워크 오류가 발생했습니다.');
     }
   };
 
