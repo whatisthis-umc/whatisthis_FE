@@ -1,23 +1,81 @@
+//src/pages/AdminPages/AdminNotice/AdminNoticeEditPage.tsx
+
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../layouts/AdminLayout/AdminLayout';
 import { dummyAdminNotice } from '../../../data/dummyAdminNotice';
+import { getNotice, Notice, updateNotice } from '../../../api/adminNotice';
 
 export default function AdminNoticeEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const notice = dummyAdminNotice.find(n => n.id === Number(id));
+  const noticeId = useMemo(() => Number(id), [id]);
 
-  const [title, setTitle] = useState(notice?.title || '');
-  const [content, setContent] = useState(notice?.content || '');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+   // 기존 데이터 불러오기
+  useEffect(() => {
+    if (!Number.isFinite(noticeId)) {
+      setErr("잘못된 접근입니다.");
+      setLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        const n: Notice = await getNotice(noticeId);
+        setTitle(n.title);
+        setContent(n.content);
+      } catch (e) {
+        console.error(e);
+        setErr("공지사항을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [noticeId]);
 
-  if (!notice) {
-    return <div className="p-10 text-xl">존재하지 않는 공지사항입니다.</div>;
-  }
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = title.trim();
+    const c = content.trim();
+    if (!t) return alert("제목을 입력하세요.");
+    if (!c) return alert("내용을 입력하세요.");
+
+    try {
+      setSaving(true);
+      const res = await updateNotice(noticeId, { title: t, content: c });
+      if (res?.isSuccess) {
+        alert("수정되었습니다.");
+        navigate(`/admin/notice/${noticeId}`);
+      } else {
+        alert(res?.message ?? "수정에 실패했습니다.");
+      }
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.message ??
+        "서버 오류로 수정에 실패했습니다.";
+      alert(msg);
+      console.error("updateNotice error:", err?.response ?? err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <AdminLayout><div className="p-10 text-xl">불러오는 중…</div></AdminLayout>;
+  if (err) return <AdminLayout><div className="p-10 text-xl">{err}</div></AdminLayout>;
+
 
   return (
     <AdminLayout>
-      <div className="absolute top-[160px] left-[377px] w-[1023px] flex flex-col gap-[40px] font-[Pretendard]">
+      <form
+        onSubmit={onSubmit}
+        className="absolute top-[160px] left-[377px] w-[1023px] flex flex-col gap-[40px] font-[Pretendard]"
+      >
         {/* 상단 제목 */}
         <h2 className="text-[32px] font-bold text-[#333333] leading-[150%] tracking-[-0.02em]">
           공지사항 내용
@@ -27,7 +85,7 @@ export default function AdminNoticeEditPage() {
         <div className="w-full border border-[#E6E6E6] rounded-[32px] p-[24px] flex flex-col gap-[24px] bg-white">
           <div className="flex items-center gap-[16px]">
             <div className="w-[59px] h-[38px] flex items-center justify-center rounded-[32px] border border-[#999999] text-[#999999] text-[14px] font-medium">
-              {notice.category}
+            필독
             </div>
             <input
               value={title}
@@ -54,20 +112,19 @@ export default function AdminNoticeEditPage() {
           <button
             onClick={() => navigate(-1)}
             className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white text-[16px] font-semibold"
+            disabled={saving}
           >
             취소
           </button>
           <button
-            onClick={() => {
-              console.log('공지 수정됨:', title, content);
-              navigate(`/admin/notice/${notice.id}`);
-            }}
-            className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white text-[16px] font-semibold"
+            type="submit"
+            className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white text-[16px] font-semibold disabled:opacity-50"
+            disabled={saving}
           >
-            저장
+            {saving ? "저장 중…" : "저장"}
           </button>
         </div>
-      </div>
+      </form>
     </AdminLayout>
   );
 }
