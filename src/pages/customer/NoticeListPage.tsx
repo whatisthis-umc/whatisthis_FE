@@ -92,6 +92,32 @@ const NoticeListPage = () => {
             <div className="flex items-start justify-between w-full">
               <div className="flex-1">
                 <div className="flex flex-col gap-3 md:gap-6">
+                  {/* 필독 블록 */}
+                  <div
+                    style={{
+                      display: "flex",
+                      padding: "4px 12px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: "32px",
+                      border: "1px solid var(--WIT-Gray200, #999)",
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "var(--WIT-Gray600, #333)",
+                        fontFamily: "Pretendard",
+                        fontSize: "20px",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        lineHeight: "150%",
+                        letterSpacing: "-0.4px",
+                      }}
+                    >
+                      필독
+                    </span>
+                  </div>
                   <h3
                     className="transition-colors text-left"
                     style={{
