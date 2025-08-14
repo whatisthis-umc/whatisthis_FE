@@ -1,7 +1,47 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+
+import { TERMS_TEXT } from '../../data/termsText';
+import { PRIVACY_TEXT } from '../../data/privacyText';
+
+
+// --- 마크다운 라이트 렌더러: **굵게** + 문단/줄바꿈만 처리 ---
+function mdLiteToHtml(md: string) {
+  // 1) HTML 이스케이프
+  const escaped = md
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+
+  // 2) **bold** 표현
+  const withBold = escaped.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-[#111]">$1</strong>');
+
+  // 3) 문단 분리(빈 줄 기준), 문단 내부 줄바꿈은 <br/>
+  const paragraphs = withBold
+    .split(/\n{2,}/)
+    .map(p => `<p class="my-0">${p.replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+
+  return paragraphs;
+}
+
+function FormattedLegal({ raw }: { raw: string }) {
+  return (
+    <div
+      className="
+        p-[16px] md:p-6 text-[14px] md:text-[15px]
+        leading-[180%] tracking-[-0.01em] text-[#333]
+        whitespace-pre-wrap break-keep
+        space-y-4
+      "
+      dangerouslySetInnerHTML={{ __html: mdLiteToHtml(raw) }}
+    />
+  );
+}
+
 import checkCircle from '/src/assets/check_circle.svg';
 import checkedCircle from '/src/assets/checked_circle.svg';
+
 
 export default function AgreementPage() {
   const navigate = useNavigate();
@@ -76,13 +116,15 @@ export default function AgreementPage() {
             <p className="text-[16px] md:text-[20px] font-bold leading-[150%] text-[#000000] mb-[10px]">서비스 이용 약관 동의</p>
             <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-[0] md:style-custom">
               <div className="w-full h-full overflow-y-scroll pr-[8px] custom-scroll">
-                <div className="p-[16px]">여기에 서비스 이용 약관 내용이 들어갑니다.</div>
+                <FormattedLegal raw={TERMS_TEXT} />
               </div>
             </div>
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
-                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
+
+                className="w-[24px] h-[24px] rounded-full  bg-white flex justify-center items-center cursor-pointer"
+
                 onClick={() => {
                   const newTerms = !termsChecked;
                   setTermsChecked(newTerms);
@@ -92,7 +134,10 @@ export default function AgreementPage() {
                 <img 
                 src={termsChecked ? checkedCircle : checkCircle} 
                 alt="check" 
-                width={27} height={27} 
+
+                width={27} 
+                height={27} 
+
                 />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
@@ -105,21 +150,15 @@ export default function AgreementPage() {
             <p className="text-[16px] md:text-[20px] font-bold leading-[150%] text-[#000000] mb-[10px]">개인정보 접근 동의</p>
             <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-[0] md:style-custom">
               <div className="w-full h-full overflow-y-scroll pr-[8px] custom-scroll">
-                <div className="p-6">
-                  {Array(50)
-                    .fill(`이용약관 더미 텍스트입니다. 이 영역에 긴 텍스트가 들어가야 스크롤이 생깁니다.`)
-                    .map((line, idx) => (
-                      <p key={idx} className="mb-2">
-                        {line}
-                      </p>
-                    ))}
-                </div>
+                <FormattedLegal raw={PRIVACY_TEXT} />
               </div>
             </div>
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
-                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
+
+                className="w-[24px] h-[24px] rounded-full  bg-white flex justify-center items-center cursor-pointer"
+
                 onClick={() => {
                   const newPrivacy = !privacyChecked;
                   setPrivacyChecked(newPrivacy);
@@ -127,9 +166,12 @@ export default function AgreementPage() {
                 }}
               >
                 <img 
-                src={privacyChecked ? checkedCircle : checkCircle} 
+
+                src={privacyChecked ? checkedCircle : checkCircle}
                 alt="check" 
-                width={27} height={27} 
+                width={27} 
+                height={27} 
+
                 />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
@@ -143,12 +185,14 @@ export default function AgreementPage() {
             className="flex items-center gap-[8px] cursor-pointer"
             onClick={() => handleAllChange(!allChecked)}
           >
+
             <div className="mt-[-5px] w-[20px] h-[20px] rounded-full bg-white flex items-center justify-center">
               <img 
               src={allChecked ? checkedCircle : checkCircle} 
               alt="check" 
               width={21} height={21} 
               />
+
             </div>
             <span className="text-[#333333] text-[16px] font-medium">모든 항목에 동의합니다.</span>
           </div>
