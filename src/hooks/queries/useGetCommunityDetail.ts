@@ -1,18 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCommunityPostDetail } from "../../api/community";
-import type { CommunitySortType } from "../../types/community";
+import {
+  getCommunityDetail,
+  type GetCommunityDetailParams,
+} from "../../api/community";
 
-interface Params {
+type UseGetCommunityDetailArgs = Omit<GetCommunityDetailParams, "postId"> & {
   postId: number;
-  page: number;
-  size: number;
-  sort: CommunitySortType | "AI";
-}
+};
 
-export default function useGetCommunityDetail({ postId, page, size, sort }: Params) {
+export default function useGetCommunityDetail({
+  postId,
+  page,
+  size,
+  sort,
+}: UseGetCommunityDetailArgs) {
   return useQuery({
-    queryKey: ["community-detail", postId, page, size, sort],
-    queryFn: () => getCommunityPostDetail(postId, page, size, sort),
-    enabled: !!postId,
+    queryKey: ["communityDetail", postId, page, size, sort],
+    queryFn: () => getCommunityDetail({ postId, page, size, sort }),
+    // 필요 시 staleTime/GC 조절 가능
   });
 }

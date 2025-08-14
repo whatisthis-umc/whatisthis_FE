@@ -1,8 +1,9 @@
-import { axiosInstance } from "../api/axiosInstance";
+import { axiosInstance } from "./axiosInstance";
 
 export interface CreateCommentReq {
   content: string;
-  parentCommentId?: number; // 최상위면 undefined
+  /** 최상위: null, 대댓글: 부모 댓글 id */
+  parentCommentId: number | null;
 }
 
 export interface CommentRes {
@@ -10,29 +11,36 @@ export interface CommentRes {
   content: string;
   nickname: string;
   likeCount: number;
-  parentCommentId: number;
+  parentCommentId: number | null;
   createdAt: string;
 }
 
-// 최상위: POST /posts/{postId}/comments
-// 대댓글: POST /posts/{postId}/comments/{parentId}
+/** 댓글/대댓글 작성 (최상위: null, 대댓글: 숫자) */
 export async function createComment(
   postId: number,
   body: CreateCommentReq
 ): Promise<CommentRes> {
-  const parentId = body.parentCommentId ?? 0;
+  const res = await axiosInstance.post(
+    `/posts/${encodeURIComponent(postId)}/comments`,
+    {
+      content: body.content,
+      parentCommentId:
+        body.parentCommentId === null ? null : Number(body.parentCommentId),
+    },
+    { validateStatus: () => true as any, __retry: true as any }
+  );
 
-  const path =
-    parentId > 0
-      ? `/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(parentId)}`
-      : `/posts/${encodeURIComponent(postId)}/comments`;
+  const ct = String(res.headers?.["content-type"] || "");
+  if (res.status === 302 || ct.includes("text/html") || res.status === 401) {
+    const err: any = new Error("로그인이 필요합니다.");
+    err.response = { status: 401 };
+    throw err;
+  }
+  if (res.status === 403) {
+    const err: any = new Error("권한이 없습니다.");
+    err.response = { status: 403 };
+    throw err;
+  }
 
-  // 일부 서버는 대댓글에도 body에 parentCommentId를 요구하기도 해서 조건부로 포함
-  const payload =
-    parentId > 0
-      ? { content: body.content, parentCommentId: parentId }
-      : { content: body.content };
-
-  const res = await axiosInstance.post(path, payload);
-  return res.data.result as CommentRes;
+  return (res.data?.result ?? res.data?.data ?? res.data) as CommentRes;
 }
