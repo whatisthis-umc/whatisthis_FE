@@ -1,89 +1,97 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { itemService } from "../../api/lifeItemsApi";
-import { getAiRecommendedItems } from "../../api/lifeItemsApi";
-import type { ItemPost } from "../../api/types";
-import CategoryBar from "../../components/CategoryBar";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Searchbar from "../../components/Searchbar";
-import { itemCategories } from "../../data/categoryList";
+import { more } from "../../assets";
 import ItemCard from "../../components/ItemCard";
+import CategoryBar from "../../components/CategoryBar";
+import { itemCategories } from "../../data/categoryList";
+import type { ItemPost } from "../../api/types";
+import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
+import { itemService, getAiRecommendedItems } from "../../api/lifeItemsApi";
 
+// 게시물 카드 렌더링 컴포넌트
+const PostCard = React.memo(
+  ({ post, navigate }: { post: ItemPost; navigate: any }) => (
+    <div
+      key={post.postId}
+      onClick={() => navigate(`/items/${post.postId}`)}
+      className="cursor-pointer"
+    >
+      <ItemCard
+        hashtag={post.hashtags}
+        imageUrl={post.imageUrls}
+        title={post.title}
+        description={post.summary}
+        views={post.views}
+        scraps={post.scraps}
+      />
+    </div>
+  )
+);
+
+// 공통 구역 컴포넌트
+const SectionHeader = React.memo(
+  ({ title, onMoreClick }: { title: string; onMoreClick: () => void }) => (
+    <div className="flex justify-between h-12">
+      <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
+        {title}
+      </span>
+      <button
+        onClick={onMoreClick}
+        className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+      >
+        <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
+        <img
+          src={more}
+          alt="더보기"
+          className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
+        />
+      </button>
+    </div>
+  )
+);
 
 const ItemsPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [aiRecommendedPosts, setAiRecommendedPosts] = useState<ItemPost[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("전체");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("최신순");
-  const [aiRecommendedPosts, setAiRecommendedPosts] = useState<ItemPost[]>([]);
-  const [aiLoading, setAiLoading] = useState(true);
 
-  // URL 파라미터에서 카테고리와 검색어 가져오기
-  useEffect(() => {
-    const category = searchParams.get("category");
-    const search = searchParams.get("search");
-    const sort = searchParams.get("sort");
-
-    if (category) {
-      setSelectedCategory(category);
-    }
-    if (search) {
-      setSearchQuery(search);
-    }
-    if (sort) {
-      setSortBy(sort === "popular" ? "인기순" : "최신순");
-    }
-  }, [searchParams]);
-
-  // 카테고리별 필터링
-  const filteredPosts = useMemo(() => {
-    if (selectedCategory === "전체") {
-      return allPosts;
-    }
-
-    const categoryMap: { [key: string]: string } = {
-      "자취 필수템": "SELF_LIFE_ITEM",
-      "주방템": "KITCHEN_ITEM",
-      "청소템": "CLEAN_ITEM",
-      "살림도구템": "HOUSEHOLD_ITEM",
-      "브랜드 꿀템": "BRAND_ITEM",
-    };
-
-    const serverCategory = categoryMap[selectedCategory];
-    return allPosts.filter((post) => post.category === serverCategory);
-  }, [allPosts, selectedCategory]);
-
-  // 검색어 필터링
-  const searchedPosts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return filteredPosts;
-    }
-
-    const query = searchQuery.toLowerCase();
-    return filteredPosts.filter(
-      (post) =>
-        post.title.toLowerCase().includes(query) ||
-        post.summary.toLowerCase().includes(query) ||
-        post.hashtags.some((tag) => tag.toLowerCase().includes(query))
+  // 카테고리 매핑 (메모이제이션)
+  const getServerCategory = useCallback((uiCategory: string): string => {
+    if (uiCategory === "전체") return "";
+    return (
+      subCategoryEnumMap[uiCategory as keyof typeof subCategoryEnumMap] || ""
     );
-  }, [filteredPosts, searchQuery]);
+  }, []);
 
-  // 정렬
-  const sortedPosts = useMemo(() => {
-    if (sortBy === "인기순") {
-      return [...searchedPosts].sort((a, b) => {
-        const aScore = (a.views || 0) + (a.scraps || 0) * 2;
-        const bScore = (b.views || 0) + (b.scraps || 0) * 2;
-        return bScore - aScore;
-      });
-    }
-    return [...searchedPosts].sort((a, b) => b.postId - a.postId);
-  }, [searchedPosts, sortBy]);
+  // 카테고리 필터링된 포스트 (메모이제이션)
+  const filteredPosts = useMemo(() => {
+    if (selectedCategory === "전체") return allPosts;
+
+    const serverCategory = getServerCategory(selectedCategory);
+    return allPosts.filter((post) => {
+      return (
+        post.subCategories?.some((cat: string) =>
+          cat.toLowerCase().includes(serverCategory.toLowerCase())
+        ) || false
+      );
+    });
+  }, [allPosts, selectedCategory, getServerCategory]);
+
+  // 인기순 정렬된 포스트 (메모이제이션)
+  const popularPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      const popularityA = (a.views || 0) + (a.scraps || 0);
+      const popularityB = (b.views || 0) + (b.scraps || 0);
+      return popularityB - popularityA;
+    });
+  }, [filteredPosts]);
 
   // 최신순 정렬된 포스트 (메모이제이션)
   const recentPosts = useMemo(() => {
@@ -206,151 +214,90 @@ const ItemsPage = () => {
     }
   }, [loading, hasMore, currentPage, allPosts]);
 
-  const handleSearch = (input: string) => {
-    setSearchQuery(input);
-    const params = new URLSearchParams(searchParams);
-    if (input.trim()) {
-      params.set("search", input);
-    } else {
-      params.delete("search");
-    }
-    navigate(`/items/list?${params.toString()}`);
-  };
+  // 더보기 버튼 핸들러
+  const handleMoreClick = useCallback(() => {
+    loadMoreData();
+  }, [loadMoreData]);
 
-  const handleCategorySelect = (category: string) => {
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
-    const params = new URLSearchParams();
-    if (category !== "전체") {
-      params.set("category", category);
-    }
-    if (searchQuery.trim()) {
-      params.set("search", searchQuery);
-    }
-    if (sortBy !== "최신순") {
-      params.set("sort", sortBy === "인기순" ? "popular" : "latest");
-    }
-    navigate(`/items/list?${params.toString()}`);
-  };
+  }, []);
 
-  const handleSortChange = (sort: string) => {
-    setSortBy(sort);
-    const params = new URLSearchParams(searchParams);
-    if (sort === "인기순") {
-      params.set("sort", "popular");
-    } else {
-      params.set("sort", "latest");
-    }
-    navigate(`/items/list?${params.toString()}`);
-  };
+  // AI 추천 게시물 (실제 API 데이터 사용)
+  const recommendedPosts = aiRecommendedPosts;
 
-  if (error) {
+  const handleSearch = (input: string) => {};
+
+  if (loading) {
     return (
-      <div className="px-8 py-12 text-center text-red-500 text-xl">
-        {error}
+      <div className="px-8 py-12 text-center text-gray-500 text-xl">
+        로딩 중...
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="px-8 py-12 text-center text-red-500 text-xl">{error}</div>
+    );
+  }
+
   return (
-    <div className="px-8">
-      <div className="flex justify-between items-center mt-4">
+    <div>
+      <div className="flex justify-between items-center px-4 mt-4">
         <CategoryBar
           categories={["전체", ...itemCategories]}
           selected={selectedCategory}
-          onSelect={handleCategorySelect}
+          onSelect={handleCategoryChange}
         />
         <div className="hidden md:block">
           <Searchbar onSearch={handleSearch} />
         </div>
       </div>
 
-      {/*AI 추천 게시물*/}
-      <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
-        <div className="flex justify-between h-12">
-          <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
-            AI 추천 게시물
-          </span>
+      <div className="w-full h-[400px] md:h-[475px] mt-15 md:mt-36 mb-120 md:mb-300">
+        <SectionHeader
+          title="인기 게시물"
+          onMoreClick={() => navigate("/items/list?sort=popular")}
+        />
+        {/*게시글 목록*/}
+        <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+          {popularPosts.map((post) => (
+            <PostCard key={post.postId} post={post} navigate={navigate} />
+          ))}
         </div>
-        {aiLoading ? (
-          <div className="w-full h-70 md:h-110 flex items-center justify-center">
-            <p className="text-gray-500">AI 추천 게시물을 불러오는 중...</p>
+        {/*AI 추천 게시물*/}
+        <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
+          <div className="flex justify-between h-12">
+            <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
+              AI 추천 게시물
+            </span>
           </div>
-        ) : aiRecommendedPosts.length > 0 ? (
-          <div className="flex gap-5 md:gap-10 overflow-x-auto hide-scrollbar">
-            {aiRecommendedPosts.map((post) => (
-              <div
-                key={post.postId}
-                onClick={() => navigate(`/items/${post.postId}`)}
-                className="cursor-pointer"
-              >
-                <ItemCard
-                  hashtag={post.hashtags[0] || ""}
-                  imageUrl={post.imageUrls[0] || ""}
-                  title={post.title}
-                  description={post.summary}
-                  views={post.views || 0}
-                  scraps={post.scraps || 0}
-                />
-              </div>
-            ))}
+          {aiLoading ? (
+            <div className="w-full h-70 md:h-110 flex items-center justify-center">
+              <p className="text-gray-500">AI 추천 게시물을 불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+              {recommendedPosts.map((post) => (
+                <PostCard key={post.postId} post={post} navigate={navigate} />
+              ))}
+            </div>
+          )}
+          {/*최신 게시물*/}
+          <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
+            <SectionHeader
+              title="최신 게시물"
+              onMoreClick={() => navigate("/items/list?sort=latest")}
+            />
+            <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+              {recentPosts.map((post) => (
+                <PostCard key={post.postId} post={post} navigate={navigate} />
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="w-full h-70 md:h-110 flex items-center justify-center">
-            <p className="text-gray-500">AI 추천 게시물이 없습니다.</p>
-          </div>
-        )}
-      </div>
-
-             {/*전체 게시물*/}
-       <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
-         <div className="flex justify-between h-12">
-           <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
-             전체 게시물
-           </span>
-           <button
-             onClick={() => navigate("/items/list")}
-             className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
-           >
-             <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
-             <img
-               src="/src/assets/right.png"
-               alt="더보기"
-               className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
-             />
-           </button>
-         </div>
-        {loading && allPosts.length === 0 ? (
-          <div className="w-full h-70 md:h-110 flex items-center justify-center">
-            <p className="text-gray-500">게시물을 불러오는 중...</p>
-          </div>
-        ) : sortedPosts.length > 0 ? (
-          <div className="flex gap-5 md:gap-10 overflow-x-auto hide-scrollbar">
-            {sortedPosts.slice(0, 5).map((post) => (
-              <div
-                key={post.postId}
-                onClick={() => navigate(`/items/${post.postId}`)}
-                className="cursor-pointer"
-              >
-                <ItemCard
-                  hashtag={post.hashtags[0] || ""}
-                  imageUrl={post.imageUrls[0] || ""}
-                  title={post.title}
-                  description={post.summary}
-                  views={post.views || 0}
-                  scraps={post.scraps || 0}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="w-full h-70 md:h-110 flex items-center justify-center">
-            <p className="text-gray-500">
-              {searchQuery.trim()
-                ? "검색 결과가 없습니다."
-                : "게시물이 없습니다."}
-            </p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
