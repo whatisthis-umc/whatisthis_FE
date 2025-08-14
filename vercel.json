@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "app.js": {
-      "includeFiles": "dist/**"
-    }
-  },
   "rewrites": [
     { "source": "/api/posts", "destination": "http://52.78.98.150:8080/posts" },
     { "source": "/api/posts/(.*)", "destination": "http://52.78.98.150:8080/posts/$1" },
