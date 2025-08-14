@@ -20,7 +20,6 @@ import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
-import axios from "axios";
 
 interface AdminPost {
   postId: number;
@@ -95,12 +94,14 @@ export default function AdminPostPage() {
         let allPosts: any[] = [];
 
         if (selectedCategory === "tip2" || selectedCategory === "all") {
+          // 배포환경에서는 상대경로, 개발환경에서는 절대경로 사용
+          const baseUrl = window.location.hostname === 'localhost' 
+            ? 'http://52.78.98.150:8080' 
+            : '/api';
+          
           const tipPromises = tipCategories.map((category) =>
-            axios.get("http://52.78.98.150:8080/admin/posts/", {
-              headers: { 
-                Accept: "application/json",
-                Authorization: `Bearer ${accessToken}` 
-              },
+            axiosInstance.get(`${baseUrl}/admin/posts/`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
               params: {
                 category: category,
                 page: 0,
@@ -118,12 +119,14 @@ export default function AdminPostPage() {
         }
 
         if (selectedCategory === "tip1" || selectedCategory === "all") {
+          // 배포환경에서는 상대경로, 개발환경에서는 절대경로 사용
+          const baseUrl = window.location.hostname === 'localhost' 
+            ? 'http://52.78.98.150:8080' 
+            : '/api';
+            
           const itemPromises = itemCategories.map((category) =>
-            axios.get("http://52.78.98.150:8080/admin/posts/", {
-              headers: { 
-                Accept: "application/json",
-                Authorization: `Bearer ${accessToken}` 
-              },
+            axiosInstance.get(`${baseUrl}/admin/posts/`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
               params: {
                 category: category,
                 page: 0,
