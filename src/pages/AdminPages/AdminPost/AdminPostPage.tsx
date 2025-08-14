@@ -17,9 +17,9 @@ import { adminPostCategories } from "../../../data/categoryList";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
+//페이지네이션 코드 통일
+import Pagination from "../../../components/customer/Pagination";
 
 interface AdminPost {
   postId: number;
@@ -311,7 +311,6 @@ export default function AdminPostPage() {
         <Box className="text-left mb-20">
           <h2 className="text-2xl font-bold">게시글 관리</h2>
         </Box>
-
         {/* 필터 + 검색 */}
         <Box
           className="mb-6"
@@ -361,7 +360,6 @@ export default function AdminPostPage() {
                 </MenuItem>
               ))}
             </Select>
-
             <img
               src={arrowDown}
               alt="arrow"
@@ -370,7 +368,6 @@ export default function AdminPostPage() {
               style={{ opacity: 0.8 }}
             />
           </Box>
-
           {/* 검색창 */}
           <Box
             component="form"
@@ -411,10 +408,6 @@ export default function AdminPostPage() {
                   fontSize: "16px",
                   lineHeight: "150%",
                   letterSpacing: "-1%",
-                  "& input::placeholder": {
-                    color: "#333333 !important",
-                    opacity: 1,
-                  },
                 },
               }}
             />
@@ -423,7 +416,6 @@ export default function AdminPostPage() {
             </IconButton>
           </Box>
         </Box>
-
         {/* 게시글 테이블 */}
         <Table
           sx={{
@@ -595,7 +587,6 @@ export default function AdminPostPage() {
             )}
           </TableBody>
         </Table>
-
         {/* 등록 버튼 + 페이지네이션 */}
         <Box
           sx={{
@@ -632,38 +623,10 @@ export default function AdminPostPage() {
             </Button>
           </Box>
         </Box>
-
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            <ChevronLeftIcon sx={{ color: "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setCurrentPage(num)}
-                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                  num === currentPage
-                    ? "bg-[#0080FF] text-white"
-                    : "text-[#999999] hover:text-black"
-                }`}
-                style={{ fontFamily: "Pretendard" }}
-              >
-                {num}
-              </button>
-            )
-          )}
-
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
-            <ChevronRightIcon sx={{ color: "#999999" }} />
-          </button>
+        {/* 페이지네이션 (공용 컴포넌트) */}
+        {/* 페이지네이션 코드 통일 */}
+        <Box className="mt-20">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </Box>
       </Box>
     </AdminLayout>
