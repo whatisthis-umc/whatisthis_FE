@@ -66,13 +66,8 @@ const PostDetailPage = () => {
   const [reportedPost, setReportedPost] = useState(false);
   const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
 
-<<<<<<< Updated upstream
-  // 댓글 정렬/페이지
-  const [sortType, setSortType] = useState<"인기순" | "최신순">("인기순");
-=======
   // 댓글 정렬/페이지 (UI 타입)
   const [sortType, setSortType] = useState<UISort>("인기순");
->>>>>>> Stashed changes
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -82,13 +77,8 @@ const PostDetailPage = () => {
   const [openReplyBoxes, setOpenReplyBoxes] = useState<Set<number>>(new Set()); // 열려있는 대댓글 입력창
   const [replyInputs, setReplyInputs] = useState<Record<number, string>>({}); // 각 댓글별 대댓글 입력값
 
-<<<<<<< Updated upstream
-  // ----- 서버 데이터 -----
-  const apiSort = sortType === "인기순" ? "BEST" : "LATEST";
-=======
   // ----- 서버 데이터: 커뮤니티 상세는 /posts/communities/{postId} -----
   const apiSort: CommunitySortType = uiToApi(sortType);
->>>>>>> Stashed changes
   const { data, isLoading, isError } = useGetCommunityDetail({
     postId,
     page: currentPage,
@@ -248,21 +238,6 @@ const PostDetailPage = () => {
     const content = newComment.trim();
     if (!content || isSubmittingTop) return;
 
-<<<<<<< Updated upstream
-    createTopCommentM.mutate(
-      { content },
-      {
-        onSuccess: async () => {
-          setNewComment("");
-          await queryClient.invalidateQueries({
-            queryKey: ["communityDetail", postId, currentPage, apiSort],
-          });
-        },
-        onError: (err) => {
-          console.error("댓글 작성 실패:", err);
-          alert("댓글 작성에 실패했습니다.");
-        },
-=======
     try {
       setIsSubmittingTop(true);
       await createCommentM.mutateAsync({ content, parentCommentId: null });
@@ -270,7 +245,6 @@ const PostDetailPage = () => {
       if (sortType !== "최신순") {
         setSortType("최신순");
         setCurrentPage(1);
->>>>>>> Stashed changes
       }
       setNewComment("");
       await invalidateAll();
@@ -294,85 +268,11 @@ const PostDetailPage = () => {
     const content = (replyInputs[parentId] ?? "").trim();
     if (!content) return;
 
-<<<<<<< Updated upstream
-    try {
-      await createCommentApi(postId, { content, parentCommentId: parentId });
-      setReplyInputs((m) => ({ ...m, [parentId]: "" }));
-      await queryClient.invalidateQueries({
-        queryKey: ["communityDetail", postId, currentPage, apiSort],
-      });
-    } catch (e: any) {
-      console.error("대댓글 작성 실패:", e);
-      alert(e?.message ?? "대댓글 작성에 실패했습니다.");
-    }
-  };
-
-  // 신고 모달 제출
-  const handleReportSubmit = (form: { content: string; description: string }) => {
-    if (selectedTarget === "게시물") {
-      if (reportedPost) {
-        alert("이미 이 게시물을 신고하셨습니다.");
-        return;
-      }
-      reportPostM.mutate(
-        { content: form.content, description: form.description },
-        {
-          onSuccess: () => {
-            alert("신고가 완료되었습니다.");
-            setReportedPost(true);
-            setShowReportModal(false);
-          },
-          onError: (e: any) => {
-            console.error("게시물 신고 실패:", e);
-            if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
-              alert("이미 신고된 게시물입니다.");
-            } else if (e?.status === 500) {
-              alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            } else {
-              alert(e?.message ?? "신고 처리에 실패했습니다.");
-            }
-          },
-        }
-      );
-    } else {
-      if (!selectedCommentId) {
-        alert("댓글 정보가 없습니다.");
-        return;
-      }
-      if (reportedComments.has(selectedCommentId)) {
-        alert("이미 이 댓글을 신고하셨습니다.");
-        return;
-      }
-      reportCommentM.mutate(
-        {
-          commentId: selectedCommentId,
-          payload: { content: form.content, description: form.description },
-        },
-        {
-          onSuccess: () => {
-            alert("신고가 완료되었습니다.");
-            setReportedComments((prev) => new Set(prev).add(selectedCommentId));
-            setShowReportModal(false);
-          },
-          onError: (e: any) => {
-            console.error("댓글 신고 실패:", e);
-            if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
-              alert("이미 신고된 댓글입니다.");
-            } else if (e?.status === 500) {
-              alert("이미 신고한 댓글이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            } else {
-              alert(e?.message ?? "신고 처리에 실패했습니다.");
-            }
-          },
-        }
-      );
-=======
     await createCommentM.mutateAsync({ content, parentCommentId: Number(parentId) });
 
     if (sortType !== "최신순") {
       setSortType("최신순");
       setCurrentPage(1);
->>>>>>> Stashed changes
     }
     setReplyInputs((m) => ({ ...m, [parentId]: "" }));
     await invalidateAll();
@@ -459,9 +359,6 @@ const PostDetailPage = () => {
             댓글 {detail.comments ?? detail.commentCount ?? detail.result?.commentCount ?? 0}
           </div>
           <div className="justify-self-end">
-<<<<<<< Updated upstream
-            <SortDropdown defaultValue={sortType} onChange={(v: any) => setSortType(v)} />
-=======
             <SortDropdown
               defaultValue={uiToApi(sortType)}
               onChange={(apiVal: CommunitySortType) => {
@@ -469,7 +366,6 @@ const PostDetailPage = () => {
                 setCurrentPage(1);
               }}
             />
->>>>>>> Stashed changes
           </div>
         </div>
 
