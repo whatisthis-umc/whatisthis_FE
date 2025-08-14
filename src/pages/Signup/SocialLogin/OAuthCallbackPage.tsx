@@ -15,9 +15,9 @@ function toBool(v: string | null): boolean | null {
 export default function OAuthCallbackPage() {
   const { search } = useLocation();
   const navigate = useNavigate();
-  const qp = useMemo(() => new URLSearchParams(search), [search]);
 
-  // 쿼리
+  // Query 파싱
+  const qp = useMemo(() => new URLSearchParams(search), [search]);
   const isNew        = toBool(qp.get('isNew'));            // true | false | null
   const conflict     = toBool(qp.get('conflict'));         // true | null
   const error        = qp.get('error');                    // 'conflict-provider' | null
@@ -54,8 +54,7 @@ export default function OAuthCallbackPage() {
 
     // 4) 신규 유저 → 약관 동의 + 닉네임 설정 플로우 시작
     if (isNew === true) {
-      // 너가 쓰는 회원가입 단계 라우트로 맞춰줘. (예: /signup/agreement)
-      navigate('/signup', {
+      navigate('/signup/*', {
         replace: true,
         state: { email, provider, providerId, from: 'social' },
       });
@@ -71,9 +70,15 @@ export default function OAuthCallbackPage() {
     // 안전장치
     navigate('/login', { replace: true });
   }, [
-    isNew, conflict, error,
-    email, provider, providerId,
-    accessToken, refreshToken, navigate
+    isNew,
+    conflict,
+    error,
+    email,
+    provider,
+    providerId,
+    accessToken,
+    refreshToken,
+    navigate,
   ]);
 
   return (

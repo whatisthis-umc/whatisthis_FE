@@ -151,7 +151,7 @@ export default function FindPasswordResetPage() {
           disabled={!canSubmit}
           onClick={handleSubmit}
           className={`
-            mt-[25px] w-[256px] h-[37px] text-[14px] md:mt-[70px] md:w-[344px] md:h-[54px] rounded-full md:text-[20px] font-medium leading-[150%] tracking-[-0.02em]
+            mt-[10px] w-[256px] h-[37px] text-[14px] md:mt-[70px] md:w-[344px] md:h-[54px] rounded-full md:text-[20px] font-medium leading-[150%] tracking-[-0.02em]
             ${canSubmit ?  "bg-[#0080FF] text-white" : "bg-[#E6E6E6] text-[#999999]"}
             transition-colors duration-200
           `} >
