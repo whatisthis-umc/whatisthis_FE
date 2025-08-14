@@ -27,7 +27,7 @@ const TipsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<TipPost[]>([]);
-  
+
   // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
   // localStorage에서 신고한 게시물 목록 가져오기
   const getReportedPosts = () => {
@@ -56,7 +56,7 @@ const TipsPostDetailPage = () => {
 
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
-  
+
   // 같은 세션에서 재신고 방지(로컬)
   const [reportedPost, setReportedPost] = useState(() => {
     return getReportedPosts().includes(postId);
@@ -66,7 +66,8 @@ const TipsPostDetailPage = () => {
   useEffect(() => {
     setReportedPost(getReportedPosts().includes(postId));
   }, [postId]);
-  const scrap = useScrap(postId, { isActive: false, count: 0 });
+  const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
+
   const reportPostM = useReportPost(postId);
 
   console.log(
@@ -195,16 +196,20 @@ const TipsPostDetailPage = () => {
     return true;
   };
 
-  const handleReport = (data: { content: string; description: string | null }) => {
+  const handleReport = (data: {
+    content: string;
+    description: string | null;
+  }) => {
     if (!post) return;
-    
+
     if (reportedPost) {
       alert("이미 이 게시물을 신고하셨습니다.");
       return;
     }
-    
+
     reportPostM.mutate(
       { content: data.content, description: data.description },
+
       {
         onSuccess: () => {
           alert("신고가 완료되었습니다.");
@@ -219,7 +224,9 @@ const TipsPostDetailPage = () => {
             setReportedPost(true);
             addReportedPost(postId); // localStorage에 저장
           } else if (e?.status === 500) {
-            alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            alert(
+              "이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            );
           } else {
             alert(e?.message ?? "신고 처리에 실패했습니다.");
           }
