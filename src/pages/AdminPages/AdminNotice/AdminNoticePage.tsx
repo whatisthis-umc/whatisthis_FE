@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
 import { deleteNotice, getNotices ,type Notice } from "../../../api/adminNotice";
 import DeleteSuccessModal from "../../../components/common/adminDeleteSuccessModal";
-//페이지네이션 코드 통일 <<
+//페이지네이션 코드 통일
 import Pagination from "../../../components/customer/Pagination";
 
 export default function AdminNoticePage() {
@@ -410,7 +410,7 @@ export default function AdminNoticePage() {
         </Box>
 
         {/* 페이지네이션 (공용 컴포넌트) */}
-        {/* 페이지네이션 코드 통일 << */}
+        {/* 페이지네이션 코드 통일 */}
         <Box className="mt-20">
           <Pagination currentPage={uiPage} totalPages={totalPages} onPageChange={setUiPage} />
         </Box>
