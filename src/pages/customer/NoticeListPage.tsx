@@ -6,6 +6,7 @@ import Pagination from "../../components/customer/Pagination";
 
 import { getNoticeList, getNoticeDetail } from "../../api/noticeApi";
 import type { NoticeListItem } from "../../types/supportNotice";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 
 const NoticeListPage = () => {
   const navigate = useNavigate();
@@ -121,7 +122,7 @@ const NoticeListPage = () => {
                     </span>
                     <span
                       style={{
-                        color: "var(--WIT-Gray600, #333)",
+                        color: "var(--WIT-Gray200, #999)",
                         fontFamily: "Pretendard",
                         fontSize: "14px",
                         fontStyle: "normal",
@@ -130,7 +131,7 @@ const NoticeListPage = () => {
                         letterSpacing: "-0.14px",
                       }}
                     >
-                      {new Date(notice.createdAt).toLocaleDateString()}
+                      {formatTimeAgo(notice.createdAt)}
                     </span>
                   </div>
                 </div>
