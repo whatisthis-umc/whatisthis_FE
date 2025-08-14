@@ -1,9 +1,7 @@
-import ItemCard from "../components/ItemCard";
 import Searchbar from "../components/Searchbar";
 import { banner, more } from "../assets";
 import { useNavigate, useLocation } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
-import { useState, useEffect } from "react";
 
 import useGetCommunity from "../hooks/queries/useGetCommunity";
 
