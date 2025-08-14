@@ -1,15 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createComment } from "../../api/comments";
-import type { CreateCommentReq } from "../../api/comments";
+import { createComment, type CreateCommentReq } from "../../api/comments";
 
+/** 댓글/대댓글 공용 훅 */
 export default function useCreateComment(postId: number) {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (body: CreateCommentReq) => createComment(postId, body),
-    onSuccess: () => {
-      // 상세 쿼리 무효화 (키 구조가 다르더라도 communityDetail 전체를 갱신)
-      qc.invalidateQueries({ queryKey: ["communityDetail"] });
+    retry: false,
+    onSuccess: async () => {
+      // 상세 쿼리만 싹 갱신
+      await qc.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail",
+        refetchType: "active",
+      });
     },
   });
 }
