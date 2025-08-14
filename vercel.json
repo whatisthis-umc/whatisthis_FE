@@ -1,17 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/admin/posts", "destination": "http://52.78.98.150:8080/admin/posts" },
-    { "source": "/api/admin/posts/:path*", "destination": "http://52.78.98.150:8080/admin/posts/:path*" },
-    { "source": "/api/posts", "destination": "http://52.78.98.150:8080/posts" },
-    { "source": "/api/posts/:path*", "destination": "http://52.78.98.150:8080/posts/:path*" },
-    { "source": "/api/:path*", "destination": "http://52.78.98.150:8080/:path*" },
-    { "source": "/posts", "destination": "http://52.78.98.150:8080/posts" },
-    { "source": "/posts/:path*", "destination": "http://52.78.98.150:8080/posts/:path*" },
-    { "source": "/admin/post/:path*", "destination": "http://52.78.98.150:8080/admin/posts/:path*" },
-    { "source": "/admin/notice/:path*", "destination": "http://52.78.98.150:8080/admin/notice/:path*" },
-    { "source": "/admin/report/:path*", "destination": "http://52.78.98.150:8080/admin/report/:path*" },
-    { "source": "/admin/inquiry/:path*", "destination": "http://52.78.98.150:8080/admin/inquiry/:path*" },
-    { "source": "/admin/qna/:path*", "destination": "http://52.78.98.150:8080/admin/qna/:path*" },
+    { "source": "/api/(.*)", "destination": "http://52.78.98.150:8080/api/$1" },
+    { "source": "/posts/(.*)", "destination": "http://52.78.98.150:8080/posts/$1" },
+    { "source": "/admin/(.*)", "destination": "http://52.78.98.150:8080/admin/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
