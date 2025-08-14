@@ -1,15 +1,43 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../layouts/AdminLayout/AdminLayout';
 import { dummyQna } from '../../../data/dummyQna';
+import { useEffect, useMemo, useState } from 'react';
+import { getQna, Qna } from '../../../api/adminQna';
 
 export default function AdminQnaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const qna = dummyQna.find(q => q.id === Number(id));
+  const qnaId = useMemo(() => Number(id), [id]);
 
-  if (!qna) {
-    return <div className="p-10 text-xl">존재하지 않는 Q&A입니다.</div>;
-  }
+  const [data, setData] = useState<Qna | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+    useEffect(() => {
+    if (!Number.isFinite(qnaId)) {
+      setErr("잘못된 접근입니다.");
+      return;
+    }
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await getQna(qnaId);
+        setData(res);
+      } catch (e) {
+        console.error(e);
+        setErr("Q&A를 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [qnaId]);
+
+
+  const fmtDate = (iso?: string) => (iso ? iso.slice(0, 10) : "");
+
+  if (loading) return <div className="p-10 text-xl">불러오는 중…</div>;
+  if (err) return <div className="p-10 text-xl">{err}</div>;
+  if (!data) return <div className="p-10 text-xl">존재하지 않는 Q&amp;A입니다.</div>;
 
   return (
     <AdminLayout>
@@ -21,7 +49,7 @@ export default function AdminQnaDetailPage() {
         <div className="flex items-start gap-[12px] bg-[#E6E6E6] rounded-[20px] px-[24px] py-[20px]">
           <div className="w-[32px] h-[32px] rounded-full bg-[#D9D9D9] text-[#4D4D4D] flex items-center justify-center font-bold text-[16px]">Q</div>
           <div className="text-[16px] font-semibold text-[#333333] leading-[150%] tracking-[-0.02em]">
-            {qna.title}
+            {data.title}
           </div>
         </div>
 
@@ -29,14 +57,14 @@ export default function AdminQnaDetailPage() {
         <div className="flex items-start gap-[12px] bg-white border border-[#E6E6E6] rounded-[20px] px-[24px] py-[20px]">
           <div className="w-[32px] h-[32px] rounded-full bg-[#F4F4F4] text-[#4D4D4D] flex items-center justify-center font-bold text-[16px]">A</div>
           <div className="text-[16px] font-normal text-[#333333] leading-[150%] tracking-[-0.02em] whitespace-pre-line">
-            {qna.answer}
+            {data.content}
           </div>
         </div>
 
         {/* 수정 버튼 */}
         <div className="flex justify-end">
           <button
-            onClick={() => navigate(`/admin/qna/edit/${qna.id}`)}
+            onClick={() => navigate(`/admin/qna/edit/${data.id}`)}
             className="w-[94px] h-[40px] rounded-full bg-[#3182F6] text-white text-[16px] font-semibold"
           >
             수정

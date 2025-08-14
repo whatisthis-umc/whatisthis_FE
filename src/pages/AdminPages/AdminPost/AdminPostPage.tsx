@@ -39,6 +39,7 @@ export default function AdminPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침

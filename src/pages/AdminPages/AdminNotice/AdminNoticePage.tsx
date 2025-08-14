@@ -1,4 +1,6 @@
-import { useState } from "react";
+////src/pages/AdminPages/AdminNotice/AdminNoticePage.tsx
+
+import { useEffect, useState } from "react";
 import {
   Box,
   Select,
@@ -20,43 +22,86 @@ import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { dummyAdminNotice } from "../../../data/dummyAdminNotice";
+import { deleteNotice, getNotices ,type Notice } from "../../../api/adminNotice";
+import DeleteSuccessModal from "../../../components/common/adminDeleteSuccessModal";
 
 export default function AdminNoticePage() {
-  const [selectedCategory /*, setSelectedCategory */] = useState("all");
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 5;
 
-  // 필터링
-  const filteredPosts = dummyAdminNotice.filter((post) => {
-    const categoryMatch =
-      selectedCategory === "all" || post.category === selectedCategory;
-    const searchMatch = post.title.toLowerCase().includes(search.toLowerCase());
-    return categoryMatch && searchMatch;
-  });
+   // UI 상태
+  const [search, setSearch] = useState("");      // (백엔드 검색 파라미터 없으니, 일단 클라이언트 필터링용 보관)
+  const [uiPage, setUiPage] = useState(1);       // 사용자에게 보이는 페이지(1-base)
+  const pageSize = 5;                             // 스웨거 기본 5
 
-  // 페이지네이션
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const paginatedPosts = filteredPosts.slice(
-    (currentPage - 1) * postsPerPage,
-    currentPage * postsPerPage,
+   // 데이터 상태
+  const [rows, setRows] = useState<Notice[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isFirst, setIsFirst] = useState(true);
+  const [isLast, setIsLast] = useState(false);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loading, setLoading] = useState(false)
+
+    const navigate = useNavigate();
+
+
+    // 목록 로더
+  const load = async (uiPage1Base: number) => {
+    setLoading(true);
+    try {
+      const apiPage = Math.max(0, uiPage1Base - 1); // API는 0-base
+      const data = await getNotices({ page: apiPage, size: pageSize });
+      setRows(data.notices);
+      setTotalPages(data.totalPages);
+      setIsFirst(data.first);
+      setIsLast(data.last);
+      setTotalElements(data.totalElements);
+    } catch (e) {
+      console.error(e);
+      alert("공지사항 목록을 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+   useEffect(() => { load(uiPage); }, [uiPage]);
+
+
+
+   // 검색은 서버 파라미터 명세가 없어서 일단 클라이언트에서 제목만 필터
+  const visibleRows = rows.filter((r) =>
+    r.title.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1); // 검색 시 첫 페이지로
-  };
-  //삭제
-  const handleDelete = (id: number/* id: number */) => {
-    const confirmed = window.confirm("정말 삭제하시겠습니까?");
-    if (confirmed) {
-      alert("삭제 처리되었습니다.");
-    }
-    // 실제 삭제 로직은 생략 (예: API 호출)
+    // 서버 검색 파라미터가 생기면 여기서 load(1)과 함께 전달
+    setUiPage(1);
   };
 
-  const navigate = useNavigate();
+  const [successOpen, setSuccessOpen] = useState(false);
+
+  const handleDelete = async (id: number) => {
+  if (!window.confirm("삭제하시겠습니까?")) return;
+  try {
+    await deleteNotice(id);
+
+    // 마지막 한 개를 지운 경우, 마지막 페이지라면 한 페이지 앞으로
+    if (rows.length === 1 && uiPage > 1 && isLast) {
+      setUiPage((p) => p - 1);
+    } else {
+      await load(uiPage); 
+      setSuccessOpen(true);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("삭제에 실패했습니다.");
+  }
+};
+
+  const fmtDate = (iso: string) => iso.slice(0, 10);
+
+ 
+
   return (
     <AdminLayout>
       <Box className="px-10 py-6">
@@ -164,8 +209,7 @@ export default function AdminNoticePage() {
         <Table
           sx={{
             borderCollapse: "separate", // ← 이거 있어야 일부 보더 제거 가능
-            "& th": {
-              borderBottom: "none", // 헤더 셀 밑줄 제거
+            "& th": {borderBottom: "none", // 헤더 셀 밑줄 제거
             },
           }}
         >
@@ -225,8 +269,9 @@ export default function AdminNoticePage() {
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody
 
+
+          <TableBody
             sx={{
               fontFamily: "Pretendard",
               fontWeight: 500,
@@ -236,36 +281,49 @@ export default function AdminNoticePage() {
               color: "#333333",
               textAlign: "left",
             }}
-          >
+            >
 
-            {paginatedPosts.map((post) => (
-              <TableRow
-                key={post.id}
-                onClick={() => navigate(`/admin/notice/${post.id}`)} // ← 이동
-                style={{ cursor: "pointer" }}
-              >
-                <TableCell
-                sx={{ borderBottom: "1px solid #333333"}}>
-                  <Box
-
-                    sx={{
-                      display: "inline-block",
-                      padding: "4px 12px",
-                      border: "1px solid #999999",
-                      borderRadius: "32px",
-                      fontFamily: "Pretendard",
-                      fontWeight: 500,
-                      fontSize: "20px",
-                      lineHeight: "150%",
-                      letterSpacing: "-2%",
-                      color: "#333333",
-                    }}
-                  >
-
-                    {adminPostCategories.find((cat) => cat.id === post.category)
-                      ?.name ?? post.category}
-                  </Box>
+                 {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} sx={{ py: 6, textAlign: "center" }}>
+                  불러오는 중…
                 </TableCell>
+              </TableRow>
+            ) : visibleRows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} sx={{ py: 6, textAlign: "center" }}>
+                  데이터가 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              visibleRows.map((post) => (
+                <TableRow
+                  key={post.id}
+                  onClick={() => navigate(`/admin/notice/${post.id}`)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <TableCell sx={{ borderBottom: "1px solid #333333" }}>
+                    {/* 서버에 type 없음 → 임시 '필독' 표시 */}
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        px: "12px",
+                        py: "4px",
+                        border: "1px solid #999999",
+                        borderRadius: "32px",
+                        fontFamily: "Pretendard",
+                        fontWeight: 500,
+                        fontSize: "20px",
+                        lineHeight: "150%",
+                        letterSpacing: "-2%",
+                        color: "#333333",
+                      }}
+                    >
+                      필독
+                    </Box>
+                  </TableCell>
+        
+               
                 <TableCell
 
                 sx={{
@@ -288,7 +346,7 @@ export default function AdminNoticePage() {
     color: "#333333",
     textAlign: "left",
      borderBottom: "1px solid #333333"
-  }}>{post.date}</TableCell>
+  }}>{fmtDate(post.createdAt)}</TableCell>
                 <TableCell
                 sx={{ borderBottom: "1px solid #333333"}}>
                   <button
@@ -314,7 +372,8 @@ export default function AdminNoticePage() {
                   </button>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+          )}
           </TableBody>
         </Table>
 
@@ -349,20 +408,20 @@ export default function AdminNoticePage() {
             등록
           </Button>
         </Box>
+
+
         <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
+          <button onClick={() => !isFirst && setUiPage((p) => Math.max(1, p - 1))}>
             <ChevronLeftIcon sx={{ color: "#999999" }} />
           </button>
 
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
             (num) => (
               <button
                 key={num}
-                onClick={() => setCurrentPage(num)}
+                onClick={() => setUiPage(num)}
                 className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                  num === currentPage
+                  num === uiPage
                     ? "bg-[#0080FF] text-white"
                     : "text-[#999999] hover:text-black"
                 }`}
@@ -372,14 +431,16 @@ export default function AdminNoticePage() {
               </button>
             ),
           )}
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
+          <button onClick={() => !isLast && setUiPage((p) => Math.min(totalPages, p + 1))}>
             <ChevronRightIcon sx={{ color: "#999999" }} />
           </button>
         </Box>
+        <DeleteSuccessModal
+  open={successOpen}
+  message="삭제 처리되었습니다."
+  confirmText="확인"
+  onClose={() => setSuccessOpen(false)}
+/>
       </Box>
     </AdminLayout>
   );
