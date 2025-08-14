@@ -9,6 +9,7 @@ import InquiryWritePage from "./pages/customer/InquiryWritePage"; // 1:1 문의 
 import QnaPage from "./pages/customer/QnaPage"; // Q&A
 import PostDetailPage from "./pages/PostDetailPage";
 import CommunityPage from "./pages/community/CommunityPage";
+import CommunityEditPage from "./pages/community/CommunityEditPage";
 import MyInfoEditPage from "./pages/my/MyInfoEditPage";
 import ItemsPage from "./pages/items/ItemsPage";
 import ItemsDetailPage from "./pages/items/ItemsDetailPage";
@@ -50,7 +51,6 @@ import LinkSocialPage from "./pages/Signup/SocialLogin/LinkSocialPage";
 import SearchPage from "./pages/SearchPage";
 import CommonProtectedRoute from "./routes/CommonProtectedRoute";
 
-
 function App() {
   return (
     <BrowserRouter>
@@ -69,7 +69,7 @@ function App() {
                 <Route path="/find/*" element={<FindAccountPages />} />
 
                 <Route path="/post" element={<PostDetailPage />} />
-                <Route path="/post/:id" element={<PostDetailPage />} />
+                <Route path="/post/:postId" element={<PostDetailPage />} />
                 <Route path="/community" element={<CommunityPage />} />
 
                 <Route path="/tips" element={<TipsPage />} />
@@ -96,6 +96,10 @@ function App() {
                   <Route
                     path="/communitypost"
                     element={<CommunityPostPage />}
+                  />
+                  <Route
+                    path="/post/:postId/edit"
+                    element={<CommunityEditPage />}
                   />
                 </Route>
 
