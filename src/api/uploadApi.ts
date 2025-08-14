@@ -1,5 +1,4 @@
 import { axiosInstance } from "./axiosInstance";
-import type { PostRequest } from "../types/post";
 
 export interface UploadResponse {
   isSuccess: boolean;

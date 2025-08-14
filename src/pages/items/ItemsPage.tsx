@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Searchbar from "../../components/Searchbar";
 import { more } from "../../assets";
@@ -7,141 +7,161 @@ import CategoryBar from "../../components/CategoryBar";
 import { itemCategories } from "../../data/categoryList";
 import type { ItemPost } from "../../api/types";
 import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
-import { itemService } from "../../api/lifeItemsApi";
+import { itemService, getAiRecommendedItems } from "../../api/lifeItemsApi";
 
 // 게시물 카드 렌더링 컴포넌트
-const PostCard = ({ post, navigate }: { post: ItemPost; navigate: any }) => (
-  <div
-    key={post.postId}
-    onClick={() => navigate(`/items/${post.postId}`)}
-    className="cursor-pointer"
-  >
-    <ItemCard
-      id={post.postId}
-      category={post.category}
-      hashtag={post.hashtags}
-      imageUrl={post.imageUrls}
-      title={post.title}
-      description={post.summary}
-      views={post.views}
-      scraps={post.scraps}
-      date={new Date(post.date)}
-      type="items"
-    />
-  </div>
+const PostCard = React.memo(
+  ({ post, navigate }: { post: ItemPost; navigate: any }) => (
+    <div
+      key={post.postId}
+      onClick={() => navigate(`/items/${post.postId}`)}
+      className="cursor-pointer"
+    >
+      <ItemCard
+        hashtag={post.hashtags}
+        imageUrl={post.imageUrls}
+        title={post.title}
+        description={post.summary}
+        views={post.views}
+        scraps={post.scraps}
+      />
+    </div>
+  )
 );
 
 // 공통 구역 컴포넌트
-const SectionHeader = ({
-  title,
-  onMoreClick,
-}: {
-  title: string;
-  onMoreClick: () => void;
-}) => (
-  <div className="flex justify-between h-12">
-    <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
-      {title}
-    </span>
-    <button
-      onClick={onMoreClick}
-      className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
-    >
-      <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
-      <img
-        src={more}
-        alt="더보기"
-        className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
-      />
-    </button>
-  </div>
+const SectionHeader = React.memo(
+  ({ title, onMoreClick }: { title: string; onMoreClick: () => void }) => (
+    <div className="flex justify-between h-12">
+      <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
+        {title}
+      </span>
+      <button
+        onClick={onMoreClick}
+        className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+      >
+        <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
+        <img
+          src={more}
+          alt="더보기"
+          className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
+        />
+      </button>
+    </div>
+  )
 );
 
 const ItemsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
-  const [popularPosts, setPopularPosts] = useState<ItemPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<ItemPost[]>([]);
+  const [aiRecommendedPosts, setAiRecommendedPosts] = useState<ItemPost[]>([]);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // 데이터 로딩
+  // 카테고리 매핑 (메모이제이션)
+  const getServerCategory = useCallback((uiCategory: string): string => {
+    if (uiCategory === "전체") return "";
+    return (
+      subCategoryEnumMap[uiCategory as keyof typeof subCategoryEnumMap] || ""
+    );
+  }, []);
+
+  // 카테고리 필터링된 포스트 (메모이제이션)
+  const filteredPosts = useMemo(() => {
+    if (selectedCategory === "전체") return allPosts;
+
+    const serverCategory = getServerCategory(selectedCategory);
+    return allPosts.filter((post) => {
+      return (
+        post.subCategories?.some((cat: string) =>
+          cat.toLowerCase().includes(serverCategory.toLowerCase())
+        ) || false
+      );
+    });
+  }, [allPosts, selectedCategory, getServerCategory]);
+
+  // 인기순 정렬된 포스트 (메모이제이션)
+  const popularPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      const popularityA = (a.views || 0) + (a.scraps || 0);
+      const popularityB = (b.views || 0) + (b.scraps || 0);
+      return popularityB - popularityA;
+    });
+  }, [filteredPosts]);
+
+  // 최신순 정렬된 포스트 (메모이제이션)
+  const recentPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => b.postId - a.postId);
+  }, [filteredPosts]);
+
+  // 초기 데이터 로딩 (첫 페이지만)
+  // AI 추천 게시물 로딩
   useEffect(() => {
     let isMounted = true;
 
-    const loadData = async () => {
+    const loadAiRecommendedPosts = async () => {
+      if (!isMounted) return;
+
+      setAiLoading(true);
+      try {
+        console.log("AI 추천 아이템 로딩 시작...");
+        const result = await getAiRecommendedItems(0, 6);
+
+        if (!isMounted) return;
+
+        console.log("AI 추천 아이템 로딩 성공:", result);
+        setAiRecommendedPosts(result.posts);
+      } catch (e) {
+        if (!isMounted) return;
+        console.error("Error loading AI recommended items:", e);
+        // 에러가 발생해도 UI가 깨지지 않도록 빈 배열로 설정
+        setAiRecommendedPosts([]);
+      } finally {
+        if (isMounted) {
+          setAiLoading(false);
+        }
+      }
+    };
+
+    loadAiRecommendedPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 초기 데이터 로딩 (첫 페이지만 로딩)
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadInitialData = async () => {
       if (!isMounted) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const allData: any[] = [];
-        let page = 0; // 서버와 동일하게 0부터 시작
-        let hasMoreData = true;
-
-        while (hasMoreData && isMounted) {
-          console.log(`Loading items page: ${page}`);
-          const result = await itemService.getAllPosts(page);
-          console.log(`Received items data:`, result);
-
-          if (result.posts.length === 0) {
-            hasMoreData = false;
-          } else {
-            allData.push(...result.posts);
-            page++;
-          }
-        }
+        // 첫 페이지만 로딩 (성능 최적화)
+        const result = await itemService.getAllPosts(0);
 
         if (!isMounted) return;
 
-        // 전체 데이터에서 중복 제거
-        const uniqueData = allData.reduce((acc: any[], current: any) => {
-          const exists = acc.find(
-            (item: any) => item.postId === current.postId
-          );
-          if (!exists) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
+        // 중복 제거 (Set 사용으로 성능 향상)
+        const uniquePosts = Array.from(
+          new Map(result.posts.map((post) => [post.postId, post])).values()
+        ) as ItemPost[];
 
-        setAllPosts(uniqueData);
-
-        // 카테고리 필터링
-        const filteredPosts =
-          selectedCategory === "전체"
-            ? uniqueData
-            : uniqueData.filter((post) => {
-                const serverCategory = getServerCategory(selectedCategory);
-                console.log(
-                  `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
-                );
-                console.log(`Post subCategories:`, post.subCategories);
-
-                // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
-                const matches =
-                  Array.isArray(post.subCategories) &&
-                  post.subCategories.includes(serverCategory);
-                console.log(`Matches: ${matches}`);
-                return matches;
-              });
-
-        // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
-        const popular = [...filteredPosts].sort((a, b) => {
-          const popularityA = (a.views || 0) + (a.scraps || 0);
-          const popularityB = (b.views || 0) + (b.scraps || 0);
-          return popularityB - popularityA;
-        });
-        setPopularPosts(popular);
-
-        // 최신순 정렬 - 카테고리 필터링 적용
-        const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
-        setRecentPosts(recent);
+        setAllPosts(uniquePosts);
+        setHasMore(result.posts.length > 0); // 더 로딩할 수 있는지 확인
+        setCurrentPage(1); // 다음 로딩할 페이지
       } catch (e) {
         if (!isMounted) return;
-        console.error("Error loading data:", e);
+        console.error("Error loading initial data:", e);
+        setError("데이터를 불러오는 중 오류가 발생했습니다.");
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -149,84 +169,63 @@ const ItemsPage = () => {
       }
     };
 
-    loadData();
+    loadInitialData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 카테고리 변경 시 인기순/최신순 업데이트
-  useEffect(() => {
-    if (allPosts.length === 0) return;
+  // 추가 데이터 로딩 (무한 스크롤 또는 더보기 버튼용)
+  const loadMoreData = useCallback(async () => {
+    if (loading || !hasMore) return;
 
-    // 카테고리 필터링
-    const filteredPosts =
-      selectedCategory === "전체"
-        ? allPosts
-        : allPosts.filter((post) => {
-            const serverCategory = getServerCategory(selectedCategory);
-            console.log(
-              `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
-            );
-            console.log(`Post subCategories:`, post.subCategories);
+    setLoading(true);
+    try {
+      const nextPage = currentPage + 1;
+      const result = await itemService.getAllPosts(nextPage);
 
-            // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
-            const matches =
-              Array.isArray(post.subCategories) &&
-              post.subCategories.includes(serverCategory);
-            console.log(`Matches: ${matches}`);
-            return matches;
-          });
+      if (result.posts.length === 0) {
+        setHasMore(false);
+        return;
+      }
 
-    // 인기순 정렬 (조회수 + 스크랩 수) - 카테고리 필터링 적용
-    const popular = [...filteredPosts].sort((a, b) => {
-      const popularityA = (a.views || 0) + (a.scraps || 0);
-      const popularityB = (b.views || 0) + (b.scraps || 0);
-      return popularityB - popularityA;
-    });
-    setPopularPosts(popular);
+      // Post 타입을 ItemPost로 캐스팅
+      const itemPosts = result.posts.map(post => ({
+        ...post,
+        type: "items" as const
+      })) as ItemPost[];
 
-    // 최신순 정렬 - 카테고리 필터링 적용
-    const recent = [...filteredPosts].sort((a, b) => b.postId - a.postId);
-    setRecentPosts(recent);
-  }, [selectedCategory, allPosts]);
+      // 기존 데이터와 새 데이터 합치기 (중복 제거)
+      const newPosts = result.posts.filter(
+        (newPost) =>
+          !allPosts.some(
+            (existingPost) => existingPost.postId === newPost.postId
+          )
+      ) as ItemPost[];
 
-  // 카테고리 매핑
-  const getServerCategory = (uiCategory: string): string => {
-    if (uiCategory === "전체") return "";
-    return (
-      subCategoryEnumMap[uiCategory as keyof typeof subCategoryEnumMap] || ""
-    );
-  };
+      setAllPosts((prev) => [...prev, ...newPosts]);
+      setCurrentPage(nextPage);
+    } catch (e) {
+      console.error("Error loading more data:", e);
+      setError("추가 데이터를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, hasMore, currentPage, allPosts]);
 
-  // 카테고리 필터링
-  const filteredPosts =
-    selectedCategory === "전체"
-      ? allPosts
-      : allPosts.filter((post) => {
-          const serverCategory = getServerCategory(selectedCategory);
-          console.log(
-            `Filtering for category: ${selectedCategory}, serverCategory: ${serverCategory}`
-          );
-          console.log(`Post subCategories:`, post.subCategories);
+  // 더보기 버튼 핸들러
+  const handleMoreClick = useCallback(() => {
+    loadMoreData();
+  }, [loadMoreData]);
 
-          // subCategories가 배열인지 확인하고 해당 카테고리가 포함되어 있는지 확인
-          const matches =
-            Array.isArray(post.subCategories) &&
-            post.subCategories.includes(serverCategory);
-          console.log(`Matches: ${matches}`);
-          return matches;
-        });
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = useCallback((category: string) => {
+    setSelectedCategory(category);
+  }, []);
 
-
-
-  // AI 추천순 (일단랜덤)
-  function getRandomPosts(posts: ItemPost[], count: number) {
-    const shuffled = [...posts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  }
-  const recommendedPosts = getRandomPosts(filteredPosts, 4);
+  // AI 추천 게시물 (실제 API 데이터 사용)
+  const recommendedPosts = aiRecommendedPosts;
 
   const handleSearch = (input: string) => {};
 
@@ -250,7 +249,7 @@ const ItemsPage = () => {
         <CategoryBar
           categories={["전체", ...itemCategories]}
           selected={selectedCategory}
-          onSelect={setSelectedCategory}
+          onSelect={handleCategoryChange}
         />
         <div className="hidden md:block">
           <Searchbar onSearch={handleSearch} />
@@ -275,11 +274,17 @@ const ItemsPage = () => {
               AI 추천 게시물
             </span>
           </div>
-          <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
-            {recommendedPosts.map((post) => (
-              <PostCard key={post.postId} post={post} navigate={navigate} />
-            ))}
-          </div>
+          {aiLoading ? (
+            <div className="w-full h-70 md:h-110 flex items-center justify-center">
+              <p className="text-gray-500">AI 추천 게시물을 불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+              {recommendedPosts.map((post) => (
+                <PostCard key={post.postId} post={post} navigate={navigate} />
+              ))}
+            </div>
+          )}
           {/*최신 게시물*/}
           <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
             <SectionHeader

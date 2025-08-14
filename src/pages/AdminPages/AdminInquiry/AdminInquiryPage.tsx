@@ -111,12 +111,8 @@ export default function AdminInquiryPage() {
   return (
     <AdminLayout>
       <div className="px-10 py-6">
-        {/* 상단 제목 + 작성 버튼 */}
-        <div className="text-left mb-20 flex items-center justify-between">
+        <div className="text-left mb-20">
           <h2 className="text-2xl font-bold">문의내역</h2>
-          <button onClick={handleWriteClick} className="bg-[#0080FF] text-white px-4 py-2 rounded-[32px] hover:bg-[#0070e6]">
-            문의글 작성
-          </button>
         </div>
 
         {/* 필터 + 검색 */}
@@ -175,13 +171,18 @@ export default function AdminInquiryPage() {
                 <tr><td colSpan={4} className="text-center py-8">문의 내역이 없습니다.</td></tr>
               ) : (
                 displayInquiries.map((inquiry: InquiryListItem) => (
-                  <tr key={inquiry.id} onClick={() => navigate(`/admin/inquiries/${inquiry.id}`)} className="cursor-pointer hover:bg-gray-50">
+                  <tr key={inquiry.id} onClick={() => navigate(`/admin/inquiry/${inquiry.id}`)} className="cursor-pointer hover:bg-gray-50">
                     <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px]">문의</div></td>
                     <td className="py-3">{inquiry.title}</td>
-                    <td className="py-3 text-center">{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</td>
+                    <td className="py-3 text-left">{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</td>
                     <td className="py-3">
                       {inquiry.status === "UNPROCESSED" ? (
-                        <button onClick={(e) => { e.stopPropagation(); handleStatusChange(inquiry.id); }} className="bg-[#E6E6E6] text-[#333333] text-sm font-medium py-1 px-3 rounded-[32px] border-none cursor-pointer">미답변</button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleStatusChange(inquiry.id); }}
+                          className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none cursor-pointer hover:bg-[#0066CC]"
+                        >
+                          처리하기
+                        </button>
                       ) : (
                         <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">답변완료</span>
                       )}

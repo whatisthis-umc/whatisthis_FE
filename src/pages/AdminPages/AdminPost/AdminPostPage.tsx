@@ -38,8 +38,8 @@ export default function AdminPostPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침
@@ -172,7 +172,6 @@ export default function AdminPostPage() {
 
         setPosts(adminPosts);
         setTotalPages(Math.ceil(adminPosts.length / postsPerPage));
-        setTotalElements(adminPosts.length);
       } catch (err: any) {
         console.error("게시물 조회 실패:", err);
         if (err.response?.status === 403) {

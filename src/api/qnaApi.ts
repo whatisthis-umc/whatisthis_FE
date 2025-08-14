@@ -17,7 +17,7 @@ export const getQnaList = async (
 
   const response = await axiosInstance.get(`/support/qnas`, {
     params,
-  });
+  } as unknown as any);
 
   console.log("📤 최종 요청 URL:", response?.config?.baseURL + (response?.config?.url || ''));
 
@@ -28,7 +28,7 @@ export const getQnaList = async (
 export const getQnaDetail = async (qnaId: number): Promise<QnaDetailResponse> => {
   console.log("✅ QnA 상세 조회 URL:", `${API_URL}/support/qnas/${qnaId}`);
 
-  const response = await axiosInstance.get(`/support/qnas/${qnaId}`);
+  const response = await axiosInstance.get(`/support/qnas/${qnaId}`, {} as unknown as any);
 
   console.log("🔥 QnA 상세 API 응답 데이터", response.data);
   return response.data;

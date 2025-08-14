@@ -1,6 +1,14 @@
-import type { ItemCardProps } from "../types/post";
 import { eye } from "../assets";
 import { scrap } from "../assets";
+
+interface ItemCardProps {
+  hashtag: string | string[];
+  imageUrl: string | string[];
+  title: string;
+  description: string;
+  views: number;
+  scraps: number;
+}
 
 const ItemCard = ({
   hashtag,

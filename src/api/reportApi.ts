@@ -2,7 +2,6 @@ import { axiosInstance } from "./axiosInstance";
 import type { 
   ReportListResponse, 
   ReportDetailResponse, 
-  ReportListItem,
   ReportDeleteResponse,
   ProcessReportRequest,
   ProcessReportResponse

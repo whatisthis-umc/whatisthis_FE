@@ -135,7 +135,7 @@ export default function AdminInquiryDetailPage() {
   const handleModalClose = () => {
     setModalOpen(false);
     setModalMessage("");
-    navigate('/admin/inquiries');
+    navigate('/admin/inquiry');
   };
 
   return (
