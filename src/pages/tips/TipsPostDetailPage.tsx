@@ -4,12 +4,7 @@ import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { tipCategories } from "../../data/categoryList";
-import {
-  whitescrap,
-  afterscrap,
-  reportIcon,
-  whitefilledscrap,
-} from "../../assets";
+import { whitescrap, reportIcon, whitefilledscrap } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
@@ -72,6 +67,7 @@ const TipsPostDetailPage = () => {
     setReportedPost(getReportedPosts().includes(postId));
   }, [postId]);
   const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
+
   const reportPostM = useReportPost(postId);
 
   console.log(
@@ -212,7 +208,8 @@ const TipsPostDetailPage = () => {
     }
 
     reportPostM.mutate(
-      { content: data.content, description: data.description || undefined },
+      { content: data.content, description: data.description },
+
       {
         onSuccess: () => {
           alert("신고가 완료되었습니다.");

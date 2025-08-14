@@ -29,6 +29,25 @@ export default function AdminReportPage() {
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
 
+  // 로컬 캐시: 처리 완료 후에도 유형/내용/사유를 유지하기 위한 간단한 저장소
+  type ReportCacheEntry = Pick<ReportListItem, 'type' | 'content' | 'reportContent'>;
+  const REPORT_CACHE_KEY = 'admin_report_meta_cache';
+  const loadReportCache = (): Record<number, ReportCacheEntry> => {
+    try {
+      const raw = localStorage.getItem(REPORT_CACHE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveReportCache = (cache: Record<number, ReportCacheEntry>) => {
+    try {
+      localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // noop
+    }
+  };
+
   // 관리자 인증 상태 확인
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
@@ -47,6 +66,60 @@ export default function AdminReportPage() {
     return 'ALL';
   }, []);
 
+  const isMeaningful = (v: any) => {
+    if (v === null || v === undefined) return false;
+    if (typeof v === 'string') {
+      const s = v.trim().toLowerCase();
+      return s !== '' && s !== 'null' && s !== 'undefined';
+    }
+    return true;
+  };
+
+  // 상세 API를 통해 비어 있는 신고 내용(content)을 보강하는 함수
+  const backfillMissingContent = useCallback(async (list: ReportListItem[]) => {
+    const targets = list.filter((item) => !isMeaningful(item.content));
+    if (targets.length === 0) return;
+
+    try {
+      const results = await Promise.all(
+        targets.map(async (t) => {
+          try {
+            const detail = await reportApi.getReportDetail(t.reportId);
+            if (detail?.isSuccess && detail.result) {
+              const { postTitle, commentContent, description } = detail.result as any;
+              const recovered: string | undefined = postTitle || commentContent || description;
+              if (isMeaningful(recovered)) {
+                return { reportId: t.reportId, content: recovered as string };
+              }
+            }
+          } catch {
+            // ignore per-item errors
+          }
+          return null;
+        })
+      );
+
+      const updates = results.filter((r): r is { reportId: number; content: string } => !!r);
+      if (updates.length === 0) return;
+
+      // 상태 업데이트
+      setReports((prev) => prev.map((r) => {
+        const u = updates.find((x) => x.reportId === r.reportId);
+        return u ? { ...r, content: u.content } : r;
+      }));
+
+      // 캐시 반영
+      const cache = loadReportCache();
+      updates.forEach((u) => {
+        const base = cache[u.reportId] || ({} as any);
+        cache[u.reportId] = { type: base.type, reportContent: base.reportContent, content: u.content } as any;
+      });
+      saveReportCache(cache);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
@@ -59,9 +132,33 @@ export default function AdminReportPage() {
       );
 
       if (response.isSuccess && response.result) {
-        setReports(response.result.reportList);
+        const cache = loadReportCache();
+        const mergedList = response.result.reportList.map((r) => {
+          const c = cache[r.reportId];
+          const mergedContent = isMeaningful(r.content) ? r.content : (c?.content ?? r.content);
+          const mergedType = isMeaningful(r.type) ? r.type : (c?.type ?? r.type);
+          const mergedReason = isMeaningful(r.reportContent) ? r.reportContent : (c?.reportContent ?? r.reportContent);
+          return { ...r, content: mergedContent, type: mergedType, reportContent: mergedReason } as ReportListItem;
+        });
+
+        // 병합 결과 중 유효한 값은 캐시에 반영하여 다음 조회에서도 사용
+        const nextCache = { ...cache } as Record<number, ReportCacheEntry>;
+        mergedList.forEach((m) => {
+          const existing = nextCache[m.reportId] || {} as ReportCacheEntry;
+          nextCache[m.reportId] = {
+            type: isMeaningful(m.type) ? m.type : existing.type,
+            content: isMeaningful(m.content) ? m.content : existing.content,
+            reportContent: isMeaningful(m.reportContent) ? m.reportContent : existing.reportContent,
+          } as ReportCacheEntry;
+        });
+        saveReportCache(nextCache);
+
+        setReports(mergedList);
         setTotalPages(response.result.totalPage);
         setTotalElements(response.result.totalElements);
+
+        // 비어 있는 신고내용은 상세 API로 보강
+        backfillMissingContent(mergedList);
       } else {
         setError(response.message || '신고 목록을 불러오는데 실패했습니다.');
         setReports([]);
@@ -77,7 +174,7 @@ export default function AdminReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, selectedStatus, debouncedSearch, getApiStatus]);
+  }, [currentPage, selectedStatus, debouncedSearch, getApiStatus, backfillMissingContent]);
 
   // 초기 로드 및 필터/검색 변경시 재조회
   useEffect(() => {
@@ -92,6 +189,15 @@ export default function AdminReportPage() {
   const handleStatusChange = useCallback(async (reportId: number) => {
     try {
       setProcessing(true);
+
+      // 처리 전 현재 항목의 메타를 캐시에 저장해 둔다 (서버가 마스킹하더라도 유지 표시)
+      const current = reports.find((r) => r.reportId === reportId);
+      if (current) {
+        const cache = loadReportCache();
+        cache[reportId] = { type: current.type, content: current.content, reportContent: current.reportContent };
+        saveReportCache(cache);
+      }
+
       const response = await reportApi.processReport(reportId, 'delete');
 
       if (response && response.isSuccess) {
@@ -104,7 +210,7 @@ export default function AdminReportPage() {
         setModalMessage(response?.message || '처리 중 오류가 발생했습니다.');
       }
       setModalOpen(true);
-      fetchReports();
+      // 목록 재조회는 즉시 하지 않고, 낙관적 업데이트로 유지합니다.
     } catch (error) {
       console.error('신고 처리 실패:', error);
       const axiosError = error as any;
@@ -120,7 +226,7 @@ export default function AdminReportPage() {
     } finally {
       setProcessing(false);
     }
-  }, [fetchReports]);
+  }, [reports]);
 
   const displayReports = useMemo(() => reports, [reports]);
 
@@ -143,9 +249,6 @@ export default function AdminReportPage() {
         {/* 상단 제목 */}
         <div className="text-left mb-20">
           <h2 className="text-2xl font-bold">신고내역</h2>
-          {totalElements > 0 && (
-            <p className="text-gray-600 mt-2">총 {totalElements}건의 신고가 있습니다.</p>
-          )}
         </div>
 
         {/* 필터 + 검색 */}
@@ -238,21 +341,25 @@ export default function AdminReportPage() {
                 ) : (
                   displayReports.map((report) => (
                     <tr key={report.reportId} onClick={() => navigate(`/admin/report/${report.reportId}`)} className="cursor-pointer hover:bg-gray-50">
-                      <td className="py-3"><div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">{REPORT_TYPE_LABELS[report.type]}</div></td>
+                      <td className="py-3">
+                        <div className="inline-block py-1 px-3 border border-[#999999] rounded-[32px] text-base">
+                          {REPORT_TYPE_LABELS[report.type]}
+                        </div>
+                      </td>
                       <td className="py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{report.content}</td>
                       <td className="py-3 text-[#666666]">{REPORT_CONTENT_LABELS[report.reportContent]}</td>
-                      <td className="py-3 text-center">{formatReportDate(report.reportedAt)}</td>
+                      <td className="py-3 text-left">{formatReportDate(report.reportedAt)}</td>
                       <td className="py-3">
                         {report.status === "UNPROCESSED" ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleStatusChange(report.reportId); }}
                             disabled={processing}
-                            className={`${processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] cursor-pointer"} text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none`}
+                            className={`${processing ? "bg-gray-300 cursor-not-allowed" : "bg-[#0080FF] hover:bg-[#0066CC] cursor-pointer"} text-white text-sm font-medium py-1 px-3 rounded-[32px] border-none`}
                           >
                             {processing ? "처리중..." : "처리하기"}
                           </button>
                         ) : (
-                          <span className="bg-green-500 text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
+                          <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
                         )}
                       </td>
                     </tr>

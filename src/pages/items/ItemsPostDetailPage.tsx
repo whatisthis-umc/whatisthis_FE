@@ -4,7 +4,7 @@ import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { itemCategories } from "../../data/categoryList";
-import { whitescrap, afterscrap, reportIcon, whitefilledscrap } from "../../assets";
+import { whitescrap, reportIcon, whitefilledscrap } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
@@ -197,19 +197,16 @@ const ItemsPostDetailPage = () => {
     return true;
   };
 
-  const handleReport = (data: {
-    content: string;
-    description: string | null;
-  }) => {
+  const handleReport = (data: { content: string; description: string | null }) => {
     if (!post) return;
-
+    
     if (reportedPost) {
       alert("이미 이 게시물을 신고하셨습니다.");
       return;
     }
-
+    
     reportPostM.mutate(
-      { content: data.content, description: data.description || undefined },
+      { content: data.content, description: data.description },
       {
         onSuccess: () => {
           alert("신고가 완료되었습니다.");
@@ -224,9 +221,7 @@ const ItemsPostDetailPage = () => {
             setReportedPost(true);
             addReportedPost(postId); // localStorage에 저장
           } else if (e?.status === 500) {
-            alert(
-              "이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
-            );
+            alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
           } else {
             alert(e?.message ?? "신고 처리에 실패했습니다.");
           }
@@ -341,6 +336,7 @@ const ItemsPostDetailPage = () => {
                   scrap.toggle();
                 }
               }}
+              disabled={scrap.state.isLoading}
             >
               <img
                 src={scrap.state.isActive ? whitefilledscrap : whitescrap}

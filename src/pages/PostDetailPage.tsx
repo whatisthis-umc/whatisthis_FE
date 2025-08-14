@@ -49,9 +49,66 @@ const PostDetailPage = () => {
   const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">("게시물");
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
 
+  // 신고한 게시물/댓글 ID를 localStorage에 저장하여 재방문 시에도 방지
+  // localStorage에서 신고한 게시물 목록 가져오기
+  const getReportedPosts = () => {
+    try {
+      const reportedPostsStr = localStorage.getItem("reportedPosts");
+      return reportedPostsStr ? JSON.parse(reportedPostsStr) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // localStorage에서 신고한 댓글 목록 가져오기
+  const getReportedComments = () => {
+    try {
+      const reportedCommentsStr = localStorage.getItem("reportedComments");
+      return reportedCommentsStr ? JSON.parse(reportedCommentsStr) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // localStorage에 신고한 게시물 추가
+  const addReportedPost = (postId: number) => {
+    try {
+      const reportedPosts = getReportedPosts();
+      if (!reportedPosts.includes(postId)) {
+        reportedPosts.push(postId);
+        localStorage.setItem("reportedPosts", JSON.stringify(reportedPosts));
+      }
+    } catch (error) {
+      console.error("localStorage 저장 실패:", error);
+    }
+  };
+
+  // localStorage에 신고한 댓글 추가
+  const addReportedComment = (commentId: number) => {
+    try {
+      const reportedComments = getReportedComments();
+      if (!reportedComments.includes(commentId)) {
+        reportedComments.push(commentId);
+        localStorage.setItem("reportedComments", JSON.stringify(reportedComments));
+      }
+    } catch (error) {
+      console.error("localStorage 저장 실패:", error);
+    }
+  };
+
   // 같은 세션에서 재신고 방지(로컬)
-  const [reportedPost, setReportedPost] = useState(false);
-  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
+  const [reportedPost, setReportedPost] = useState(() => {
+    return getReportedPosts().includes(postId);
+  });
+  const [reportedComments, setReportedComments] = useState<Set<number>>(() => {
+    const reportedCommentIds = getReportedComments();
+    return new Set(reportedCommentIds);
+  });
+
+  // postId가 변경될 때마다 신고 상태 업데이트
+  useEffect(() => {
+    setReportedPost(getReportedPosts().includes(postId));
+  }, [postId]);
 
   // 댓글 정렬/페이지
   const [sortType, setSortType] = useState<SortAPIType>("BEST");
@@ -227,7 +284,7 @@ const PostDetailPage = () => {
   };
 
   // 신고 모달 제출
-  const handleReportSubmit = (form: { content: string; description: string }) => {
+  const handleReportSubmit = (form: { content: string; description: string | null }) => {
     if (selectedTarget === "게시물") {
       if (reportedPost) {
         alert("이미 이 게시물을 신고하셨습니다.");
@@ -239,12 +296,15 @@ const PostDetailPage = () => {
           onSuccess: () => {
             alert("신고가 완료되었습니다.");
             setReportedPost(true);
+            addReportedPost(postId); // localStorage에 저장
             setShowReportModal(false);
           },
           onError: (e: any) => {
             console.error("게시물 신고 실패:", e);
             if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
               alert("이미 신고된 게시물입니다.");
+              setReportedPost(true);
+              addReportedPost(postId); // localStorage에 저장
             } else if (e?.status === 500) {
               alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } else {
@@ -271,12 +331,15 @@ const PostDetailPage = () => {
           onSuccess: () => {
             alert("신고가 완료되었습니다.");
             setReportedComments((prev) => new Set(prev).add(selectedCommentId));
+            addReportedComment(selectedCommentId); // localStorage에 저장
             setShowReportModal(false);
           },
           onError: (e: any) => {
             console.error("댓글 신고 실패:", e);
             if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
               alert("이미 신고된 댓글입니다.");
+              setReportedComments((prev) => new Set(prev).add(selectedCommentId));
+              addReportedComment(selectedCommentId); // localStorage에 저장
             } else if (e?.status === 500) {
               alert("이미 신고한 댓글이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } else {

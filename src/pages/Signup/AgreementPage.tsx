@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import checkIcon from '/src/assets/_check .png';
+import checkCircle from '/src/assets/check_circle.svg';
+import checkedCircle from '/src/assets/checked_circle.svg';
 
 export default function AgreementPage() {
   const navigate = useNavigate();
@@ -81,14 +82,18 @@ export default function AgreementPage() {
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
-                className="w-[24px] h-[24px] rounded-full bg-[#E6E6E6] flex justify-center items-center cursor-pointer"
+                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
                 onClick={() => {
                   const newTerms = !termsChecked;
                   setTermsChecked(newTerms);
                   setAllChecked(newTerms && privacyChecked);
                 }}
               >
-                {termsChecked && <img src={checkIcon} alt="check" width={27} height={27} />}
+                <img 
+                src={termsChecked ? checkedCircle : checkCircle} 
+                alt="check" 
+                width={27} height={27} 
+                />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
             </div>
@@ -114,14 +119,18 @@ export default function AgreementPage() {
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
-                className="w-[24px] h-[24px] rounded-full bg-[#E6E6E6] flex justify-center items-center cursor-pointer"
+                className="w-[24px] h-[24px] rounded-full bg-white  flex justify-center items-center cursor-pointer"
                 onClick={() => {
                   const newPrivacy = !privacyChecked;
                   setPrivacyChecked(newPrivacy);
                   setAllChecked(termsChecked && newPrivacy);
                 }}
               >
-                {privacyChecked && <img src={checkIcon} alt="check" width={27} height={27} />}
+                <img 
+                src={privacyChecked ? checkedCircle : checkCircle} 
+                alt="check" 
+                width={27} height={27} 
+                />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
             </div>
@@ -134,8 +143,12 @@ export default function AgreementPage() {
             className="flex items-center gap-[8px] cursor-pointer"
             onClick={() => handleAllChange(!allChecked)}
           >
-            <div className="w-[16px] h-[16px] rounded-full bg-[#E6E6E6] flex items-center justify-center">
-              {allChecked && <img src={checkIcon} alt="check" width={21} height={21} />}
+            <div className="mt-[-5px] w-[20px] h-[20px] rounded-full bg-white flex items-center justify-center">
+              <img 
+              src={allChecked ? checkedCircle : checkCircle} 
+              alt="check" 
+              width={21} height={21} 
+              />
             </div>
             <span className="text-[#333333] text-[16px] font-medium">모든 항목에 동의합니다.</span>
           </div>

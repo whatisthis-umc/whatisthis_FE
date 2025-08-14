@@ -55,11 +55,11 @@ const ReportModal = ({
       alert("기타 사유를 입력해 주세요.");
       return;
     }
-
     const content = reasonCodeMap[selected] ?? "ETC_CONTENT";
     // 스웨거 문서: ETC_CONTENT가 아닌 경우 description은 null
     const description =
       selected === "기타(직접입력)" ? customText.trim() : null;
+
     onSubmit({ content, description });
   };
 
