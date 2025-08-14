@@ -7,57 +7,57 @@ import CategoryBar from "../../components/CategoryBar";
 import { itemCategories } from "../../data/categoryList";
 import type { ItemPost } from "../../api/types";
 import { subCategoryEnumMap } from "../../constants/subCategoryEnumMap";
-import { itemService } from "../../api/lifeItemsApi";
+import { itemService, getAiRecommendedItems } from "../../api/lifeItemsApi";
 
 // 게시물 카드 렌더링 컴포넌트
-const PostCard = React.memo(({ post, navigate }: { post: ItemPost; navigate: any }) => (
-  <div
-    key={post.postId}
-    onClick={() => navigate(`/items/${post.postId}`)}
-    className="cursor-pointer"
-  >
-    <ItemCard 
-      hashtag={post.hashtags}
-      imageUrl={post.imageUrls}
-      title={post.title}
-      description={post.summary}
-      views={post.views}
-      scraps={post.scraps}
-    />
-  </div>
-));
+const PostCard = React.memo(
+  ({ post, navigate }: { post: ItemPost; navigate: any }) => (
+    <div
+      key={post.postId}
+      onClick={() => navigate(`/items/${post.postId}`)}
+      className="cursor-pointer"
+    >
+      <ItemCard
+        hashtag={post.hashtags}
+        imageUrl={post.imageUrls}
+        title={post.title}
+        description={post.summary}
+        views={post.views}
+        scraps={post.scraps}
+      />
+    </div>
+  )
+);
 
 // 공통 구역 컴포넌트
-const SectionHeader = React.memo(({
-  title,
-  onMoreClick,
-}: {
-  title: string;
-  onMoreClick: () => void;
-}) => (
-  <div className="flex justify-between h-12">
-    <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
-      {title}
-    </span>
-    <button
-      onClick={onMoreClick}
-      className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
-    >
-      <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
-      <img
-        src={more}
-        alt="더보기"
-        className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
-      />
-    </button>
-  </div>
-));
+const SectionHeader = React.memo(
+  ({ title, onMoreClick }: { title: string; onMoreClick: () => void }) => (
+    <div className="flex justify-between h-12">
+      <span className="font-[700] text-[24px] md:text-[32px] ml-2 md:ml-0">
+        {title}
+      </span>
+      <button
+        onClick={onMoreClick}
+        className="w-[68px] h-[26px] md:w-[86px] md:h-[32px] text-[#333333] rounded-4xl flex items-center justify-between border-2 border-[#999999] cursor-pointer"
+      >
+        <span className="ml-2 text-[14px] md:text-[16px]">더보기</span>
+        <img
+          src={more}
+          alt="더보기"
+          className="w-[7px] h-[7px] md:w-[7.4px] md:h-[12px] mr-2"
+        />
+      </button>
+    </div>
+  )
+);
 
 const ItemsPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
+  const [aiRecommendedPosts, setAiRecommendedPosts] = useState<ItemPost[]>([]);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -73,7 +73,7 @@ const ItemsPage = () => {
   // 카테고리 필터링된 포스트 (메모이제이션)
   const filteredPosts = useMemo(() => {
     if (selectedCategory === "전체") return allPosts;
-    
+
     const serverCategory = getServerCategory(selectedCategory);
     return allPosts.filter((post) => {
       return (
@@ -98,7 +98,43 @@ const ItemsPage = () => {
     return [...filteredPosts].sort((a, b) => b.postId - a.postId);
   }, [filteredPosts]);
 
-  // 초기 데이터 로딩 (첫 2페이지만 로딩)
+  // 초기 데이터 로딩 (첫 페이지만)
+  // AI 추천 게시물 로딩
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAiRecommendedPosts = async () => {
+      if (!isMounted) return;
+
+      setAiLoading(true);
+      try {
+        console.log("AI 추천 아이템 로딩 시작...");
+        const result = await getAiRecommendedItems(0, 6);
+
+        if (!isMounted) return;
+
+        console.log("AI 추천 아이템 로딩 성공:", result);
+        setAiRecommendedPosts(result.posts);
+      } catch (e) {
+        if (!isMounted) return;
+        console.error("Error loading AI recommended items:", e);
+        // 에러가 발생해도 UI가 깨지지 않도록 빈 배열로 설정
+        setAiRecommendedPosts([]);
+      } finally {
+        if (isMounted) {
+          setAiLoading(false);
+        }
+      }
+    };
+
+    loadAiRecommendedPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 초기 데이터 로딩 (첫 페이지만 로딩)
   useEffect(() => {
     let isMounted = true;
 
@@ -109,35 +145,18 @@ const ItemsPage = () => {
       setError(null);
 
       try {
-        let allData: ItemPost[] = [];
-        
-        // 첫 2페이지만 로딩 (성능 최적화)
-        for (let page = 0; page < 2; page++) {
-          const result = await itemService.getAllPosts(page);
-          
-          if (!isMounted) return;
-
-          if (result.posts.length === 0) {
-            break;
-          } else {
-            // Post 타입을 ItemPost로 캐스팅
-            const itemPosts = result.posts.map(post => ({
-              ...post,
-              type: "items" as const
-            })) as ItemPost[];
-            allData.push(...itemPosts);
-          }
-        }
+        // 첫 페이지만 로딩 (성능 최적화)
+        const result = await itemService.getAllPosts(0);
 
         if (!isMounted) return;
 
         // 중복 제거 (Set 사용으로 성능 향상)
         const uniquePosts = Array.from(
-          new Map(allData.map(post => [post.postId, post])).values()
+          new Map(result.posts.map((post) => [post.postId, post])).values()
         ) as ItemPost[];
 
         setAllPosts(uniquePosts);
-        setHasMore(allData.length > 0); // 더 로딩할 수 있는지 확인
+        setHasMore(result.posts.length > 0); // 더 로딩할 수 있는지 확인
         setCurrentPage(1); // 다음 로딩할 페이지
       } catch (e) {
         if (!isMounted) return;
@@ -163,8 +182,9 @@ const ItemsPage = () => {
 
     setLoading(true);
     try {
-      const result = await itemService.getAllPosts(currentPage);
-      
+      const nextPage = currentPage + 1;
+      const result = await itemService.getAllPosts(nextPage);
+
       if (result.posts.length === 0) {
         setHasMore(false);
         return;
@@ -177,14 +197,18 @@ const ItemsPage = () => {
       })) as ItemPost[];
 
       // 기존 데이터와 새 데이터 합치기 (중복 제거)
-      const newPosts = itemPosts.filter(
-        newPost => !allPosts.some(existingPost => existingPost.postId === newPost.postId)
-      );
+      const newPosts = result.posts.filter(
+        (newPost) =>
+          !allPosts.some(
+            (existingPost) => existingPost.postId === newPost.postId
+          )
+      ) as ItemPost[];
 
-      setAllPosts(prev => [...prev, ...newPosts]);
-      setCurrentPage(prev => prev + 1);
+      setAllPosts((prev) => [...prev, ...newPosts]);
+      setCurrentPage(nextPage);
     } catch (e) {
       console.error("Error loading more data:", e);
+      setError("추가 데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -200,12 +224,8 @@ const ItemsPage = () => {
     setSelectedCategory(category);
   }, []);
 
-  // AI 추천순 (일단랜덤)
-  function getRandomPosts(posts: ItemPost[], count: number) {
-    const shuffled = [...posts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  }
-  const recommendedPosts = getRandomPosts(filteredPosts, 4);
+  // AI 추천 게시물 (실제 API 데이터 사용)
+  const recommendedPosts = aiRecommendedPosts;
 
   const handleSearch = (input: string) => {};
 
@@ -254,11 +274,17 @@ const ItemsPage = () => {
               AI 추천 게시물
             </span>
           </div>
-          <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
-            {recommendedPosts.map((post) => (
-              <PostCard key={post.postId} post={post} navigate={navigate} />
-            ))}
-          </div>
+          {aiLoading ? (
+            <div className="w-full h-70 md:h-110 flex items-center justify-center">
+              <p className="text-gray-500">AI 추천 게시물을 불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="w-full h-70 md:h-110 flex felx-row gap-6 md:gap-20 overflow-hidden">
+              {recommendedPosts.map((post) => (
+                <PostCard key={post.postId} post={post} navigate={navigate} />
+              ))}
+            </div>
+          )}
           {/*최신 게시물*/}
           <div className="w-full h-[700px] md:h-[475px] mt-5 md:mt-36 mb-300">
             <SectionHeader

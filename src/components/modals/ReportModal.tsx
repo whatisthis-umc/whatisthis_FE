@@ -30,8 +30,14 @@ const reasonCodeMap: Record<(typeof reasonsList)[number], string> = {
   "기타(직접입력)": "ETC_CONTENT",
 };
 
-const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalProps) => {
-  const [selected, setSelected] = useState<(typeof reasonsList)[number] | "">("");
+const ReportModal = ({
+  onClose,
+  targetType = "댓글",
+  onSubmit,
+}: ReportModalProps) => {
+  const [selected, setSelected] = useState<(typeof reasonsList)[number] | "">(
+    ""
+  );
   const [customText, setCustomText] = useState("");
 
   const handleSubmit = () => {
@@ -43,16 +49,17 @@ const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalPr
       alert("신고 사유를 선택해 주세요.");
       return;
     }
-    
+
     // "기타(직접입력)" 선택 시 추가 설명이 있는지 확인
     if (selected === "기타(직접입력)" && !customText.trim()) {
       alert("기타 사유를 입력해 주세요.");
       return;
     }
-    
     const content = reasonCodeMap[selected] ?? "ETC_CONTENT";
     // 스웨거 문서: ETC_CONTENT가 아닌 경우 description은 null
-    const description = selected === "기타(직접입력)" ? customText.trim() : null;
+    const description =
+      selected === "기타(직접입력)" ? customText.trim() : null;
+
     onSubmit({ content, description });
   };
 
@@ -94,7 +101,9 @@ const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalPr
                       onFocus={() => setSelected("기타(직접입력)")}
                       className="w-[70%] border-b text-[16px] leading-[24px] py-1 pl-1 outline-none"
                       style={{ borderColor: "#999999" }}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "#999999")}
+                      onBlur={(e) =>
+                        (e.currentTarget.style.borderColor = "#999999")
+                      }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -148,4 +157,4 @@ const ReportModal = ({ onClose, targetType = "댓글", onSubmit }: ReportModalPr
   );
 };
 
-export default ReportModal; 
+export default ReportModal;

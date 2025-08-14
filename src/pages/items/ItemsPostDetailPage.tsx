@@ -27,6 +27,7 @@ const ItemsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
+  
   // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
   // localStorage에서 신고한 게시물 목록 가져오기
   const getReportedPosts = () => {
@@ -56,6 +57,7 @@ const ItemsPostDetailPage = () => {
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
   
+  // 같은 세션에서 재신고 방지(로컬)
   const [reportedPost, setReportedPost] = useState(() => {
     return getReportedPosts().includes(postId);
   });
@@ -64,7 +66,8 @@ const ItemsPostDetailPage = () => {
   useEffect(() => {
     setReportedPost(getReportedPosts().includes(postId));
   }, [postId]);
-  const scrap = useScrap(postId, { isActive: false, count: 0 });
+  
+  const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
   const reportPostM = useReportPost(postId);
 
   console.log(
@@ -250,7 +253,7 @@ const ItemsPostDetailPage = () => {
         <div className="hidden md:block md:relative md:w-[1100px] md:h-[600px] md:overflow-hidden">
           <img
             src={images[currentImageIndex]}
-            alt="꿀팁"
+            alt="꿀템"
             className="w-full h-full object-cover rounded-4xl"
           />
           {images.length > 1 && (
@@ -282,7 +285,7 @@ const ItemsPostDetailPage = () => {
             <div className="w-3xs h-3xs md:hidden relative flex justify-center">
               <img
                 src={images[currentImageIndex]}
-                alt="꿀팁"
+                alt="꿀템"
                 className="w-full h-full object-cover rounded-4xl"
               />
               {images.length > 1 && (

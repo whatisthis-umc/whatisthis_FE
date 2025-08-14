@@ -4,9 +4,11 @@ import { left, right, more } from "../assets";
 import { useNavigate, useLocation } from "react-router-dom";
 import CommunityCard from "../components/CommunityCard";
 import { useState, useEffect } from "react";
-import { dummyPosts2 } from "../data/dummyPosts2";
+
 import { tipService } from "../api/lifeTipsApi";
 import { itemService } from "../api/lifeItemsApi";
+import useGetCommunity from "../hooks/queries/useGetCommunity";
+import { dummyPosts2 } from "../data/dummyPosts2";
 import type { TipPost } from "../api/types";
 import type { ItemPost } from "../api/types";
 
@@ -21,6 +23,14 @@ const MainPage = () => {
   const [itemPosts, setItemPosts] = useState<ItemPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 커뮤니티 데이터 가져오기 (인기순)
+  const { data: communityData, isLoading: communityLoading } = useGetCommunity({
+    page: 1,
+    size: 4,
+    sort: "BEST",
+    uiCategory: "인기글"
+  });
 
   const postsPerPage = 4;
 
@@ -54,6 +64,8 @@ const MainPage = () => {
           (a, b) => b.postId - a.postId
         );
         setItemPosts(sortedItemPosts);
+
+
       } catch (e) {
         console.error("데이터 로딩 실패:", e);
         setError("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -299,9 +311,35 @@ const MainPage = () => {
               </button>
             </div>
             <div className="w-full mt-[-40px] md:mt-0 h-110 flex flex-row gap-5 md:gap-20 overflow-x-hidden">
-              {dummyPosts2.map((post, index) => (
-                <CommunityCard key={index} {...post} best={true} />
-              ))}
+              {communityLoading ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <p className="text-gray-500">인기 커뮤니티 게시글을 불러오는 중...</p>
+                </div>
+              ) : communityData?.posts && communityData.posts.length > 0 ? (
+                communityData.posts.map((post) => (
+                  <div
+                    key={post.id}
+                    onClick={() => navigate(`/community/${post.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <CommunityCard 
+                      hashtag={post.hashtags[0] || "커뮤니티"}
+                      nickname={post.nickname}
+                      date={new Date(post.createdAt)}
+                      title={post.title}
+                      description={post.content}
+                      views={post.views}
+                      likes={post.likes}
+                      comments={post.comments}
+                      best={post.isBest} 
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <p className="text-gray-500">인기 커뮤니티 게시글이 없습니다.</p>
+                </div>
+              )}
             </div>
           </div>
         </>
