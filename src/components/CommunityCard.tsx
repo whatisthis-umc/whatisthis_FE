@@ -41,7 +41,7 @@ const CommunityCard = ({
           </div>
         )}
         {/*해시태그*/}
-        <div className="w-fit px-0 md:px-2 md:w-[85px] h-[16px] md:h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[10px] md:text-[16px] text-[#666666]">
+        <div className="w-fit px-2 md:px-3 md:w-fit h-[16px] md:h-[29px] items-center flex rounded-4xl mt-1 ml-2 bg-[#CCFF00] text-[10px] md:text-[16px] text-[#999999]">
           #{hashtag}
         </div>
       </div>
