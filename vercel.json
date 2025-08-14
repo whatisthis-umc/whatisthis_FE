@@ -1,10 +1,22 @@
 {
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/posts", "destination": "http://52.78.98.150:8080/posts" },
     { "source": "/api/posts/:path*", "destination": "http://52.78.98.150:8080/posts/:path*" },
     { "source": "/api/admin/posts", "destination": "http://52.78.98.150:8080/admin/posts" },
     { "source": "/api/admin/posts/:path*", "destination": "http://52.78.98.150:8080/admin/posts/:path*" },
     { "source": "/api/:path*", "destination": "http://52.78.98.150:8080/:path*" },
+    { "source": "/posts", "destination": "http://52.78.98.150:8080/posts" },
     { "source": "/posts/:path*", "destination": "http://52.78.98.150:8080/posts/:path*" },
     { "source": "/admin/posts/:path*", "destination": "http://52.78.98.150:8080/admin/posts/:path*" },
     { "source": "/admin/notice/:path*", "destination": "http://52.78.98.150:8080/admin/notice/:path*" },
