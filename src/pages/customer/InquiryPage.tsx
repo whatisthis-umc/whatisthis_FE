@@ -194,7 +194,7 @@ const InquiryPage = () => {
                           }
                         : {
                             padding: "4px 12px",
-                            background: "var(--WIT-Blue, #0080FF)",
+                            background: "black",
                             color: "white",
                           }
                     }
