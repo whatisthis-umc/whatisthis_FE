@@ -20,8 +20,6 @@ import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
-import axios from "axios";
-import { getAdminPosts } from "../../../api/adminPost";
 
 interface AdminPost {
   postId: number;
@@ -41,7 +39,7 @@ export default function AdminPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침
@@ -96,37 +94,41 @@ export default function AdminPostPage() {
         let allPosts: any[] = [];
 
         if (selectedCategory === "tip2" || selectedCategory === "all") {
-          // 배포환경에서는 상대경로, 개발환경에서는 절대경로 사용
-          const baseUrl = window.location.hostname === 'localhost' 
-            ? 'http://52.78.98.150:8080' 
-            : '/api';
-          
-          const tipPromises = tipCategories.map((category) => 
-            getAdminPosts({ category, page: 0, size: 20 })
+          const tipPromises = tipCategories.map((category) =>
+            axiosInstance.get("/admin/posts/", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: {
+                category: category,
+                page: 0,
+                size: 20,
+              },
+            })
           );
 
           const tipResponses = await Promise.all(tipPromises);
           tipResponses.forEach((response) => {
-            if (response.isSuccess) {
-              allPosts.push(...response.result.posts);
+            if (response.data.isSuccess) {
+              allPosts.push(...response.data.result.posts);
             }
           });
         }
 
         if (selectedCategory === "tip1" || selectedCategory === "all") {
-          // 배포환경에서는 상대경로, 개발환경에서는 절대경로 사용
-          const baseUrl = window.location.hostname === 'localhost' 
-            ? 'http://52.78.98.150:8080' 
-            : '/api';
-            
-          const itemPromises = itemCategories.map((category) => 
-            getAdminPosts({ category, page: 0, size: 20 })
+          const itemPromises = itemCategories.map((category) =>
+            axiosInstance.get("/admin/posts/", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              params: {
+                category: category,
+                page: 0,
+                size: 20,
+              },
+            })
           );
 
           const itemResponses = await Promise.all(itemPromises);
           itemResponses.forEach((response) => {
-            if (response.isSuccess) {
-              allPosts.push(...response.result.posts);
+            if (response.data.isSuccess) {
+              allPosts.push(...response.data.result.posts);
             }
           });
         }
@@ -208,7 +210,7 @@ export default function AdminPostPage() {
                 .toLowerCase()
                 .includes(search.toLowerCase());
             }
-            
+
             return categoryMatch && searchMatch;
           })
           //최신순
@@ -388,7 +390,7 @@ export default function AdminPostPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleSearchSubmit(e);
                 }

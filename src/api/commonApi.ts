@@ -1,5 +1,4 @@
 import { axiosInstance } from "./axiosInstance";
-import axios from "axios";
 import type { Post} from "./types";
 
 // 공통 API 응답 파싱 함수
@@ -194,25 +193,14 @@ export const createPostService = (endpoint: string, categories: string[], postTy
     getAllPosts: (page: number): Promise<{ posts: Post[]; totalPages: number }> => {
       const accessToken = localStorage.getItem("accessToken");
       
-      // /admin/posts/ 요청만 직접 백엔드로, 나머지는 기존 방식 사용
-      const isAdminPostsOnly = endpoint.includes('/admin/posts');
-      
-      const request = isAdminPostsOnly
-        ? axios.get(`http://52.78.98.150:8080${endpoint}`, {
-            params: { page },
-            headers: {
-              Accept: "application/json",
-              ...(accessToken && { Authorization: `Bearer ${accessToken}` })
-            }
-          })
-        : axiosInstance.get(endpoint, {
-            params: { page },
-            headers: {
-              ...(accessToken && { Authorization: `Bearer ${accessToken}` })
-            }
-          });
-      
-      return request.then((res) => {
+      return axiosInstance
+        .get(endpoint, {
+          params: { page },
+          headers: {
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` })
+          }
+        })
+          .then((res) => {
             let data;
             try {
               if (typeof res.data === 'string') {
