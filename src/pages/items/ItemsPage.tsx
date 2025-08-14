@@ -287,7 +287,7 @@ const ItemsPage = () => {
                   hashtag={post.hashtags[0] || ""}
                   imageUrl={post.imageUrls[0] || ""}
                   title={post.title}
-                  description={post.content}
+                  description={post.summary}
                   views={post.views || 0}
                   scraps={post.scraps || 0}
                 />
@@ -335,7 +335,7 @@ const ItemsPage = () => {
                   hashtag={post.hashtags[0] || ""}
                   imageUrl={post.imageUrls[0] || ""}
                   title={post.title}
-                  description={post.content}
+                  description={post.summary}
                   views={post.views || 0}
                   scraps={post.scraps || 0}
                 />
