@@ -57,11 +57,11 @@ export const adminNewPost = async (data: AdminPostRequest) => {
     }
 
     console.log("=== API 요청 시도 ===");
-    console.log("요청 URL:", "/admin/posts/");
+    console.log("요청 URL:", "/admin/posts/list");
     console.log("요청 메서드:", "POST");
     console.log("FormData 항목 수:", Array.from(formData.entries()).length);
 
-    const response = await axiosInstance.post("/admin/posts/", formData, {
+    const response = await axiosInstance.post("/admin/posts/list", formData, {
       headers: {
         "Content-Type": undefined, // Let Axios handle multipart boundary
       },
@@ -105,7 +105,7 @@ export const adminNewPost = async (data: AdminPostRequest) => {
     if (error.response?.status === 500) {
       console.error("=== 500 Internal Server Error 분석 ===");
       console.error("서버 내부 오류입니다. 백엔드 개발자에게 다음 정보를 전달하세요:");
-      console.error("1. 요청 URL:", "/admin/posts/");
+      console.error("1. 요청 URL:", "/admin/posts/list");
       console.error("2. 요청 메서드:", "POST");
       console.error("3. 요청 데이터:", {
         title: data.title,
