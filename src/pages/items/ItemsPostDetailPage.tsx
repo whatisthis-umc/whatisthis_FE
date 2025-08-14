@@ -4,7 +4,7 @@ import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { itemCategories } from "../../data/categoryList";
-import { whitescrap, afterscrap, reportIcon } from "../../assets";
+import { whitescrap, afterscrap, reportIcon, whitefilledscrap } from "../../assets";
 import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
@@ -12,10 +12,13 @@ import { tipService } from "../../api/lifeTipsApi";
 import type { ItemPost, ItemPostDetail } from "../../api/types";
 import { itemDetailService } from "../../api/itemDetailApi";
 import { useScrap } from "../../hooks/useInteraction";
+import useReportPost from "../../hooks/mutations/useReportPost";
+import { useAuth } from "../../hooks/useAuth";
 
 const ItemsPostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [post, setPost] = useState<ItemPostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +27,53 @@ const ItemsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
+  
+  // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
+  // localStorage에서 신고한 게시물 목록 가져오기
+  const getReportedPosts = () => {
+    try {
+      const reportedPostsStr = localStorage.getItem("reportedPosts");
+      return reportedPostsStr ? JSON.parse(reportedPostsStr) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // localStorage에 신고한 게시물 추가
+  const addReportedPost = (postId: number) => {
+    try {
+      const reportedPosts = getReportedPosts();
+      if (!reportedPosts.includes(postId)) {
+        reportedPosts.push(postId);
+        localStorage.setItem("reportedPosts", JSON.stringify(reportedPosts));
+      }
+    } catch (error) {
+      console.error("localStorage 저장 실패:", error);
+    }
+  };
+
   const relatedPosts = dummyPosts.slice(0, 5);
 
-  // 스크랩 Hook (postId가 있을 때만 초기화)
-  const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
+  // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
+  const postId = id ? parseInt(id) : 0;
+  
+  // 같은 세션에서 재신고 방지(로컬)
+  const [reportedPost, setReportedPost] = useState(() => {
+    return getReportedPosts().includes(postId);
+  });
 
-  console.log(`ItemsPostDetailPage - postId: ${id}, scrap state:`, scrap.state);
+  // postId가 변경될 때마다 신고 상태 업데이트
+  useEffect(() => {
+    setReportedPost(getReportedPosts().includes(postId));
+  }, [postId]);
+  
+  const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
+  const reportPostM = useReportPost(postId);
+
+  console.log(
+    `ItemsPostDetailPage - postId: ${postId}, scrap state:`,
+    scrap.state
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -144,6 +188,53 @@ const ItemsPostDetailPage = () => {
 
   const handleSearch = (input: string) => {};
 
+  // 로그인 체크 함수
+  const checkLogin = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleReport = (data: {
+    content: string;
+    description: string | null;
+  }) => {
+    if (!post) return;
+
+    if (reportedPost) {
+      alert("이미 이 게시물을 신고하셨습니다.");
+      return;
+    }
+
+    reportPostM.mutate(
+      { content: data.content, description: data.description || undefined },
+      {
+        onSuccess: () => {
+          alert("신고가 완료되었습니다.");
+          setReportedPost(true);
+          addReportedPost(postId); // localStorage에 저장
+          setShowReportModal(false);
+        },
+        onError: (e: any) => {
+          console.error("게시물 신고 실패:", e);
+          if (e?.status === 409 || e?.code === "ALREADY_REPORTED") {
+            alert("이미 신고된 게시물입니다.");
+            setReportedPost(true);
+            addReportedPost(postId); // localStorage에 저장
+          } else if (e?.status === 500) {
+            alert(
+              "이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            );
+          } else {
+            alert(e?.message ?? "신고 처리에 실패했습니다.");
+          }
+        },
+      }
+    );
+  };
+
   return (
     <div className="px-8">
       <div className="flex justify-between items-center mt-4">
@@ -167,7 +258,7 @@ const ItemsPostDetailPage = () => {
         <div className="hidden md:block md:relative md:w-[1100px] md:h-[600px] md:overflow-hidden">
           <img
             src={images[currentImageIndex]}
-            alt="꿀팁"
+            alt="꿀템"
             className="w-full h-full object-cover rounded-4xl"
           />
           {images.length > 1 && (
@@ -199,7 +290,7 @@ const ItemsPostDetailPage = () => {
             <div className="w-3xs h-3xs md:hidden relative flex justify-center">
               <img
                 src={images[currentImageIndex]}
-                alt="꿀팁"
+                alt="꿀템"
                 className="w-full h-full object-cover rounded-4xl"
               />
               {images.length > 1 && (
@@ -242,16 +333,19 @@ const ItemsPostDetailPage = () => {
               className={`w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 rounded-4xl flex justify-center items-center 
               ${
                 scrap.state.isActive
-                  ? "bg-[#E6E6E6] text-[#999999] cursor-not-allowed"
+                  ? "bg-[#0080FF] text-white"
                   : "bg-[#0080FF] text-white"
               } ${scrap.state.isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-              onClick={scrap.state.isActive ? undefined : scrap.toggle}
-              disabled={scrap.state.isLoading || scrap.state.isActive}
+              onClick={() => {
+                if (checkLogin()) {
+                  scrap.toggle();
+                }
+              }}
             >
               <img
-                src={scrap.state.isActive ? afterscrap : whitescrap}
+                src={scrap.state.isActive ? whitefilledscrap : whitescrap}
                 alt="스크랩"
-                className={`w-5 h-5 md:mr-2 ${scrap.state.isActive ? "opacity-50" : ""}`}
+                className="w-5 h-5 md:mr-2"
               />
               {scrap.state.isLoading
                 ? "처리중..."
@@ -261,7 +355,11 @@ const ItemsPostDetailPage = () => {
             </button>
             <button
               className="w-[93px] h-[37px] md:w-[156px] md:h-[54px] text-white text-[14px] md:text-[20px] font-[500] gap-1 md:gap-2 bg-[#0080FF] rounded-4xl flex justify-center items-center"
-              onClick={() => setShowReportModal(true)}
+              onClick={() => {
+                if (checkLogin()) {
+                  setShowReportModal(true);
+                }
+              }}
             >
               <img
                 src={reportIcon}
@@ -278,6 +376,7 @@ const ItemsPostDetailPage = () => {
         <ReportModal
           onClose={() => setShowReportModal(false)}
           targetType="게시물"
+          onSubmit={handleReport}
         />
       )}
       {showLoginModal && (
@@ -295,7 +394,7 @@ const ItemsPostDetailPage = () => {
               onClick={() => navigate(`/${relatedPost.type}/${relatedPost.id}`)}
               className="cursor-pointer"
             >
-              <ItemCard 
+              <ItemCard
                 hashtag={relatedPost.hashtag}
                 imageUrl={relatedPost.imageUrl}
                 title={relatedPost.title}
