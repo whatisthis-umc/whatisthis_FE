@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getScrapList, deleteScrap, type ScrapItem } from "../api/scrapApi";
+import { afterscrap } from "../assets";
 
 const ScrapPage = () => {
   const navigate = useNavigate();
@@ -233,7 +234,7 @@ const ScrapPage = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">이미지 없음</span>
+                      <img src={afterscrap} />
                     </div>
                   )}
                   <button
