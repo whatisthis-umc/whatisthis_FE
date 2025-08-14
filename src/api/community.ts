@@ -2,7 +2,7 @@ import { axiosInstance } from "./axiosInstance";
 import type { CreatePostDto, CommunityPost, CommunitySortType } from "../types/community";
 import type { CommunityPostDetailVM } from "../types/community";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 커뮤니티 글 생성
 export const createPost = async (data: CreatePostDto) => {
