@@ -100,7 +100,7 @@ export default function AdminPostPage() {
             : '/api';
           
           const tipPromises = tipCategories.map((category) =>
-            axiosInstance.get(`${baseUrl}/admin/posts/`, {
+            axiosInstance.get("/admin/posts/", {
               headers: { Authorization: `Bearer ${accessToken}` },
               params: {
                 category: category,
@@ -125,7 +125,7 @@ export default function AdminPostPage() {
             : '/api';
             
           const itemPromises = itemCategories.map((category) =>
-            axiosInstance.get(`${baseUrl}/admin/posts/`, {
+            axiosInstance.get("/admin/posts/", {
               headers: { Authorization: `Bearer ${accessToken}` },
               params: {
                 category: category,
