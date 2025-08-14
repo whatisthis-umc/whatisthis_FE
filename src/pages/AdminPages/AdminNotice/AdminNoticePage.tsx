@@ -20,10 +20,10 @@ import { adminPostCategories } from "../../../data/categoryList";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { deleteNotice, getNotices ,type Notice } from "../../../api/adminNotice";
 import DeleteSuccessModal from "../../../components/common/adminDeleteSuccessModal";
+//페이지네이션 코드 통일 <<
+import Pagination from "../../../components/customer/Pagination";
 
 export default function AdminNoticePage() {
 
@@ -409,31 +409,10 @@ export default function AdminNoticePage() {
           </Button>
         </Box>
 
-
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button onClick={() => !isFirst && setUiPage((p) => Math.max(1, p - 1))}>
-            <ChevronLeftIcon sx={{ color: "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setUiPage(num)}
-                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                  num === uiPage
-                    ? "bg-[#0080FF] text-white"
-                    : "text-[#999999] hover:text-black"
-                }`}
-                style={{ fontFamily: "Pretendard" }}
-              >
-                {num}
-              </button>
-            ),
-          )}
-          <button onClick={() => !isLast && setUiPage((p) => Math.min(totalPages, p + 1))}>
-            <ChevronRightIcon sx={{ color: "#999999" }} />
-          </button>
+        {/* 페이지네이션 (공용 컴포넌트) */}
+        {/* 페이지네이션 코드 통일 << */}
+        <Box className="mt-20">
+          <Pagination currentPage={uiPage} totalPages={totalPages} onPageChange={setUiPage} />
         </Box>
         <DeleteSuccessModal
   open={successOpen}

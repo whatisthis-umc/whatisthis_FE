@@ -18,10 +18,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { deleteQna, getQnas, Qna } from "../../../api/adminQna";
 import DeleteSuccessModal from "../../../components/common/adminDeleteSuccessModal";
+//페이지네이션 코드 통일 <<
+import Pagination from "../../../components/customer/Pagination";
 
 
 export default function AdminQnaPage() {
@@ -98,7 +98,7 @@ export default function AdminQnaPage() {
       <Box className="px-10 py-6">
         {/* 상단 제목 */}
         <Box className="text-left mb-20">
-          <h2 className="text-2xl font-bold">Q&amp;A 관리</h2>
+          <h2 className="text-2xl font-bold">Q&A 관리</h2>
         </Box>
 
         {/* 필터 + 검색 */}
@@ -354,27 +354,10 @@ export default function AdminQnaPage() {
           </Button>
         </Box>
 
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button onClick={() => !isFirst && setUiPage((prev) => Math.max(prev - 1, 1))}>
-            <ChevronLeftIcon sx={{ color: isFirst ? "#ddd" : "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((num) => (
-            <button
-              key={num}
-              onClick={() => setUiPage(num)}
-              className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                num === uiPage ? "bg-[#0080FF] text-white" : "text-[#999999] hover:text-black"
-              }`}
-              style={{ fontFamily: "Pretendard" }}
-            >
-              {num}
-            </button>
-          ))}
-
-          <button onClick={() => !isLast && setUiPage((prev) => Math.min(prev + 1, totalPages))}>
-            <ChevronRightIcon sx={{ color: isLast ? "#ddd" : "#999999" }} />
-          </button>
+        {/* 페이지네이션 (공용 컴포넌트) */}
+        {/* 페이지네이션 코드 통일 << */}
+        <Box className="mt-20">
+          <Pagination currentPage={uiPage} totalPages={totalPages} onPageChange={setUiPage} />
         </Box>
         <DeleteSuccessModal
   open={successOpen}
