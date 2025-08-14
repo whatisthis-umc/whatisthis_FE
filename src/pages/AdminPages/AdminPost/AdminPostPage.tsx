@@ -20,6 +20,7 @@ import arrowDown from "../../../assets/arrow_down.png";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
+import axios from "axios";
 
 interface AdminPost {
   postId: number;
@@ -95,8 +96,11 @@ export default function AdminPostPage() {
 
         if (selectedCategory === "tip2" || selectedCategory === "all") {
           const tipPromises = tipCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
+            axios.get("http://52.78.98.150:8080/admin/posts/", {
+              headers: { 
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}` 
+              },
               params: {
                 category: category,
                 page: 0,
@@ -115,8 +119,11 @@ export default function AdminPostPage() {
 
         if (selectedCategory === "tip1" || selectedCategory === "all") {
           const itemPromises = itemCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
+            axios.get("http://52.78.98.150:8080/admin/posts/", {
+              headers: { 
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}` 
+              },
               params: {
                 category: category,
                 page: 0,

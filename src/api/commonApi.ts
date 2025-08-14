@@ -195,7 +195,8 @@ export const createPostService = (endpoint: string, categories: string[], postTy
       const accessToken = localStorage.getItem("accessToken");
       
       // /admin/posts/ 요청만 직접 백엔드로, 나머지는 기존 방식 사용
-      const isAdminPostsOnly = endpoint === '/admin/posts/';
+      const isAdminPostsOnly = endpoint.includes('/admin/posts');
+      
       const request = isAdminPostsOnly
         ? axios.get(`http://52.78.98.150:8080${endpoint}`, {
             params: { page },
