@@ -40,8 +40,9 @@ export default function AdminPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const [accordionOpen, setAccordionOpen] = useState(false);
-  
+
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침
@@ -213,7 +214,7 @@ export default function AdminPostPage() {
                 .toLowerCase()
                 .includes(search.toLowerCase());
             }
-            
+
             return categoryMatch && searchMatch;
           })
           //최신순
@@ -427,7 +428,7 @@ export default function AdminPostPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleSearchSubmit(e);
                 }
