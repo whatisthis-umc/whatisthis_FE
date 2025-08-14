@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,25 +61,62 @@ const AdminNewPostPage = () => {
   const mainCategory = watch("mainCategory");
 
   const onSubmit = async (data: PostFormData) => {
+    // 관리자 토큰 확인
+    const adminToken = localStorage.getItem("adminAccessToken");
+    console.log("관리자 토큰:", adminToken ? "존재함" : "없음");
+    console.log("토큰 내용:", adminToken);
+    
+    if (!adminToken) {
+      alert("관리자 로그인이 필요합니다.");
+      return;
+    }
+
     const content = [data.content1, data.content2].filter(Boolean).join("\n\n");
     const payload = {
       title: data.title,
       content,
       category: data.mainCategory === "생활꿀팁" ? "LIFE_TIP" : "LIFE_ITEM",
-      subCategory: subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
+      subCategory:
+        subCategoryEnumMap[data.subCategory as keyof typeof subCategoryEnumMap],
       images: images, // 파일 배열 직접 전송
       hashtags: data.tags.map((t) => t.value.trim()).filter(Boolean),
     };
+    
+    console.log("전송할 데이터:", payload);
+    
     try {
       await adminNewPost(payload);
       alert("게시물이 등록되었습니다");
       navigate("/admin/post");
-    } catch (err) {
+    } catch (err: any) {
       console.error("게시물 등록 실패:", err);
-      alert("게시물 등록에 실패했습니다. 다시 시도해주세요.");
+      
+      // 더 자세한 에러 메시지
+      let errorMessage = "게시물 등록에 실패했습니다.";
+      
+      if (err.response) {
+        console.error("응답 상태:", err.response.status);
+        console.error("응답 데이터:", err.response.data);
+        
+        if (err.response.status === 401) {
+          errorMessage = "관리자 인증이 필요합니다. 다시 로그인해주세요.";
+        } else if (err.response.status === 403) {
+          errorMessage = "관리자 권한이 없습니다.";
+        } else if (err.response.status === 500) {
+          errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.request) {
+        console.error("요청 실패:", err.request);
+        errorMessage = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+      } else {
+        console.error("기타 오류:", err.message);
+        errorMessage = err.message || "알 수 없는 오류가 발생했습니다.";
+      }
+      
+      alert(errorMessage);
     }
-    console.log(localStorage.getItem("adminAccessToken"));
-    console.log(payload);
   };
 
   return (

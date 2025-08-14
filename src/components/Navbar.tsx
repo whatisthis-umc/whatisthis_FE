@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { profile, favorite, bookmark, logo, menu } from "../assets";
 import Searchbar from "./Searchbar";
@@ -87,7 +87,7 @@ const Navbar = () => {
         </button>
       </div>
       {/*모바일*/}
-      <div className="flex items-center justify-between mt-1 px-4 py-2 md:hidden">
+      <div className="flex items-center mt-1 px-4 py-2 md:hidden relative">
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
@@ -98,13 +98,15 @@ const Navbar = () => {
           className="w-7 h-7"
           onClick={() => setIsSidebarOpen(true)}
         />
-        <img
-          src={logo}
-          alt="로고"
-          className="w-[50px] h-[27px] cursor-pointer"
-          onClick={() => navigate("/")}
-        />
-        <div className="flex items-center gap-4">
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <img
+            src={logo}
+            alt="로고"
+            className="w-[50px] h-[27px] cursor-pointer"
+            onClick={() => navigate("/")}
+          />
+        </div>
+        <div className="flex items-center gap-4 ml-auto">
           <Searchbar onSearch={handleSearch} />
         </div>
       </div>

@@ -1,26 +1,14 @@
-<<<<<<< Updated upstream
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import SortDropdown from "../../components/common/SortDropdown";
-import Pagination from "../../components/customer/Pagination";
-import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
-import useGetCommunity from "../../hooks/queries/useGetCommunity";
-=======
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import useGetCommunity from "../../hooks/queries/useGetCommunity";
 import SortDropdown from "../../components/common/SortDropdown";
 import Pagination from "../../components/customer/Pagination";
->>>>>>> Stashed changes
 import LoginModal from "../../components/modals/LoginModal";
 
 import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
 import type { CommunityPost, CommunitySortType } from "../../types/community";
 
-<<<<<<< Updated upstream
-const categories = ["전체", "인기글", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"];
-=======
 /* ================= 공용 유틸 ================= */
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 const toAbs = (u?: string) => {
@@ -46,7 +34,6 @@ const formatKST = (isoLike?: string) => {
   const dd = d.getDate();
   return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
 };
->>>>>>> Stashed changes
 
 /* ================= 정렬 UI ⇄ API ================= */
 const uiToApi = (ui: "인기순" | "최신순"): CommunitySortType =>
@@ -207,20 +194,12 @@ const mergeUniqueById = (a: any[], b: any[]) => {
 
 /* ================= 컴포넌트 ================= */
 const CommunityPage = () => {
-<<<<<<< Updated upstream
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]>("전체");
-  // 기본은 최신순으로 시작
-  const [sortType, setSortType] = useState<"인기순" | "최신순">("최신순");
-  const [currentPage, setCurrentPage] = useState(1);
-=======
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("전체");
   const [sortType, setSortType] = useState<"인기순" | "최신순">("인기순"); // 기본 '인기순'
->>>>>>> Stashed changes
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const updateItemsPerPage = () => setItemsPerPage(window.innerWidth < 768 ? 4 : 6);
@@ -237,13 +216,9 @@ const CommunityPage = () => {
     }
   }, [selectedCategory, sortType, currentPage]);
 
-<<<<<<< Updated upstream
-  const { data, isLoading, isError } = useGetCommunity({
-=======
   // 1) 주 쿼리: 실제 선택된 카테고리(인기글이면 '전체'로 대체)
   const fetchCategory: CategoryType = selectedCategory === "인기글" ? "전체" : selectedCategory;
   const { data: mainData, isLoading, isError } = useGetCommunity({
->>>>>>> Stashed changes
     page: currentPage,
     size: itemsPerPage,
     sort: uiToApi(sortType),

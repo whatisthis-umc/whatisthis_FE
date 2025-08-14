@@ -128,7 +128,7 @@ const SearchPage = () => {
         </h2>
 
         {searchResults.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {searchResults.map((post) => (
               <div
                 key={post.postId}
@@ -136,16 +136,12 @@ const SearchPage = () => {
                 className="cursor-pointer"
               >
                 <ItemCard
-                  id={post.postId}
-                  category={post.category}
                   hashtag={post.hashtags}
                   imageUrl={post.imageUrls}
                   title={post.title}
                   description={post.summary}
                   views={post.views}
                   scraps={post.scraps}
-                  date={new Date(post.date)}
-                  type={post.type}
                 />
               </div>
             ))}

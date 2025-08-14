@@ -6,13 +6,7 @@ import Pagination from "../../components/customer/Pagination";
 
 import { getNoticeList, getNoticeDetail } from "../../api/noticeApi";
 import type { NoticeListItem } from "../../types/supportNotice";
-
-interface NoticeUI {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-}
+import { formatTimeAgo } from "../../utils/timeFormatter";
 
 const NoticeListPage = () => {
   const navigate = useNavigate();
@@ -26,27 +20,18 @@ const NoticeListPage = () => {
 
   // 서버 공지 목록 상태 + API 연결
   const [notices, setNotices] = useState<NoticeListItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const res = await getNoticeList(currentPage, itemsPerPage);
         if (res.isSuccess) {
           setNotices(res.result.notices);
           setTotalPages(res.result.totalPages);
-        } else {
-          setError(res.message || '공지사항을 불러오지 못했습니다.');
         }
       } catch (e) {
         console.error('공지 목록 조회 실패:', e);
-        setError('공지사항을 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
       }
     };
     fetchNotices();
@@ -74,7 +59,6 @@ const NoticeListPage = () => {
   };
 
   const toggleExpanded = async (id: number) => {
-    // 동일 항목을 다시 클릭하면 접기
     if (expandedId === id) {
       setExpandedId(null);
       return;
@@ -84,8 +68,6 @@ const NoticeListPage = () => {
       const res = await getNoticeDetail(id);
       if (res.isSuccess) {
         setExpandedId(id);
-      } else {
-        console.warn('공지 상세 조회 실패:', res.message);
       }
     } catch (e) {
       console.error('공지 상세 조회 오류:', e);
@@ -110,6 +92,32 @@ const NoticeListPage = () => {
             <div className="flex items-start justify-between w-full">
               <div className="flex-1">
                 <div className="flex flex-col gap-3 md:gap-6">
+                  {/* 필독 블록 */}
+                  <div
+                    style={{
+                      display: "flex",
+                      padding: "4px 12px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: "32px",
+                      border: "1px solid var(--WIT-Gray200, #999)",
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "var(--WIT-Gray600, #333)",
+                        fontFamily: "Pretendard",
+                        fontSize: "20px",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        lineHeight: "150%",
+                        letterSpacing: "-0.4px",
+                      }}
+                    >
+                      필독
+                    </span>
+                  </div>
                   <h3
                     className="transition-colors text-left"
                     style={{
@@ -140,7 +148,7 @@ const NoticeListPage = () => {
                     </span>
                     <span
                       style={{
-                        color: "var(--WIT-Gray600, #333)",
+                        color: "var(--WIT-Gray200, #999)",
                         fontFamily: "Pretendard",
                         fontSize: "14px",
                         fontStyle: "normal",
@@ -149,7 +157,7 @@ const NoticeListPage = () => {
                         letterSpacing: "-0.14px",
                       }}
                     >
-                      {new Date(notice.createdAt).toLocaleDateString()}
+                      {formatTimeAgo(notice.createdAt)}
                     </span>
                   </div>
                 </div>

@@ -5,8 +5,8 @@ export default function useDeleteMyPost(page: number, size: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (postId: number) => deleteMyPost(postId),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["myPosts", page, size] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["myPosts", page, size] });
     },
   });
 }

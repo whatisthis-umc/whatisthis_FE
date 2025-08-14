@@ -193,12 +193,9 @@ const MyPage = () => {
   const [inqPage, setInqPage] = useState(1);
   const pageSize = 6;
 
-<<<<<<< Updated upstream
-=======
   // 계정
   const { data: account } = useMyAccount();
 
->>>>>>> Stashed changes
   // 데이터
   const {
     data: postData,
@@ -206,20 +203,17 @@ const MyPage = () => {
     isError: errorPosts,
   } = useMyPosts(postPage, pageSize);
 
-<<<<<<< Updated upstream
   const {
     data: inqData,
     isLoading: loadingInq,
     isError: errorInq,
   } = useMyInquiries(inqPage, pageSize);
-=======
   const posts: MyPostItem[] = Array.isArray(postData?.posts)
     ? postData!.posts
     : [];
   const inquiries: MyInquiryItem[] = Array.isArray(inqData?.inquiries)
     ? inqData!.inquiries
     : [];
->>>>>>> Stashed changes
 
   // 삭제
   const deletePostMut = useDeleteMyPost(postPage, pageSize);
@@ -275,15 +269,9 @@ const MyPage = () => {
   const hasNextPosts = !!postData && postData.posts.length === pageSize;
   const hasNextInq = !!inqData && inqData.inquiries.length === pageSize;
 
-<<<<<<< Updated upstream
-  // 숫자 페이징용 임시 totalPages (총 개수 API 나오면 교체)
-  const postTotalPages = postPage + (hasNextPosts ? 1 : 0);
-  const inqTotalPages = inqPage + (hasNextInq ? 1 : 0);
-=======
   // 총 페이지(임시)
   const postTotalPages = Math.max(1, postPage + (hasNextPosts ? 1 : 0));
   const inqTotalPages = Math.max(1, inqPage + (hasNextInq ? 1 : 0));
->>>>>>> Stashed changes
 
   useEffect(() => {
     if (tab === "나의 작성내역") setPostPage(1);
@@ -358,7 +346,6 @@ const MyPage = () => {
       </div>
 
       {/* 컨텐츠 */}
-<<<<<<< Updated upstream
       {isLoading ? (
         <div className="py-20 text-center text-[#999]">로딩 중…</div>
       ) : isError ? (
@@ -367,16 +354,13 @@ const MyPage = () => {
         </div>
       ) : tab === "나의 작성내역" ? (
         // ===== 작성내역 =====
-=======
-      {tab === "나의 작성내역" ? (
->>>>>>> Stashed changes
+
         <div className="flex flex-col gap-6">
           {postData && postData.posts.length === 0 ? (
             <div className="text-center text-[#999] text-[14px] mt-10">
               작성한 게시글이 없습니다.
             </div>
           ) : (
-<<<<<<< Updated upstream
             postData?.posts.map((item: MyPostItem) => (
               <div
                 key={item.postId}
@@ -405,13 +389,12 @@ const MyPage = () => {
                     삭제
                   </button>
                 </div>
-=======
+
             posts.map((item) => {
               const preview = tidyPreview(item.content);
               const hashtags = extractHashtags(item);
               const badges = badgesFor(item);
               const isBest = Boolean((item as any)?.isBest); // 서버가 주면 표시
->>>>>>> Stashed changes
 
               return (
                 <div
@@ -587,10 +570,6 @@ const MyPage = () => {
                         </div>
                       </div>
 
-<<<<<<< Updated upstream
-                      {/* A 블록 */}
-=======
->>>>>>> Stashed changes
                       <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
                         <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
                           답변
@@ -618,11 +597,6 @@ const MyPage = () => {
           />
         </div>
       )}
-
-<<<<<<< Updated upstream
-      {/* 삭제 확인 모달 (게시글/댓글/문의 공용) */}
-=======
->>>>>>> Stashed changes
       <ConfirmDeleteModal
         open={isDeleteOpen}
         targetType={

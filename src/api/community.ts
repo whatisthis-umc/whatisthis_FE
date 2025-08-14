@@ -23,8 +23,6 @@ export async function getCommunityDetail(params: {
   });
   if (res.status >= 400) throw makeErr(res, `요청 실패(${res.status})`);
   return res.data?.result ?? res.data;
-<<<<<<< Updated upstream
-=======
 }
 
 /* -------------------- 공통 유틸 -------------------- */
@@ -144,5 +142,4 @@ export async function deleteCommunityPost(postId: number) {
   });
   if (res.status >= 400) throw makeErr(res, "삭제에 실패했습니다");
   return res.data?.result ?? res.data;
->>>>>>> Stashed changes
 }

@@ -44,31 +44,8 @@ export async function createComment(
   postId: number,
   body: CreateCommentReq
 ): Promise<CommentRes> {
-  const res = await axiosInstance.post(
-    `/posts/${encodeURIComponent(postId)}/comments`,
-    {
-      content: body.content,
-      parentCommentId:
-        body.parentCommentId === null ? null : Number(body.parentCommentId),
-    },
-    { validateStatus: () => true as any, __retry: true as any }
-  );
+  const url = `/posts/${encodeURIComponent(postId)}/comments`;
 
-<<<<<<< Updated upstream
-  const ct = String(res.headers?.["content-type"] || "");
-  if (res.status === 302 || ct.includes("text/html") || res.status === 401) {
-    const err: any = new Error("로그인이 필요합니다.");
-    err.response = { status: 401 };
-    throw err;
-  }
-  if (res.status === 403) {
-    const err: any = new Error("권한이 없습니다.");
-    err.response = { status: 403 };
-    throw err;
-  }
-
-  return (res.data?.result ?? res.data?.data ?? res.data) as CommentRes;
-=======
   const payload = {
     content: body.content,
     parentCommentId:
@@ -185,6 +162,5 @@ export async function reportComment(
     const msg = res.data?.message ?? "댓글 신고 실패";
     throw new Error(msg);
   }
-  return (res.data?.result ?? res.data) as { id?: number };
->>>>>>> Stashed changes
+  return (res.data?.result ?? res.data) as { id?: number }
 }

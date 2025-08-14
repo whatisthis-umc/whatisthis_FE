@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getScrapList, deleteScrap, type ScrapItem } from "../api/scrapApi";
+import { afterscrap } from "../assets";
 
 const ScrapPage = () => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const ScrapPage = () => {
       setLoading(true);
       setError(null);
 
-      // 모든 스크랩 데이터를 가져옴 (페이지네이션 없이)
-      const result = await getScrapList(0, 1000); // 서버와 동일하게 0부터 시작
+      // 스웨거 기본값에 맞춰 조회 (page=1, size=5)
+      const result = await getScrapList(1, 5);
 
       // 중복 제거 (id 기준으로 중복 제거)
       const uniqueScraps = result.scraps.reduce(
@@ -40,6 +41,43 @@ const ScrapPage = () => {
         "첫 번째 스크랩 아이템의 모든 필드:",
         uniqueScraps[0] ? Object.keys(uniqueScraps[0]) : "데이터 없음"
       );
+
+      // 스크랩된 게시물의 scrapId를 localStorage에 저장
+      const scrappedPostIds = JSON.parse(
+        localStorage.getItem("scrappedPosts") || "[]"
+      );
+      const scrappedPostData = JSON.parse(
+        localStorage.getItem("scrappedPostData") || "{}"
+      );
+
+      // 기존 데이터와 새로운 데이터를 병합
+      uniqueScraps.forEach((scrapItem) => {
+        if (!scrappedPostIds.includes(scrapItem.postId)) {
+          scrappedPostIds.push(scrapItem.postId);
+        }
+        scrappedPostData[scrapItem.postId] = {
+          scrapId: scrapItem.id,
+          timestamp: Date.now(),
+        };
+      });
+
+      localStorage.setItem("scrappedPosts", JSON.stringify(scrappedPostIds));
+      localStorage.setItem(
+        "scrappedPostData",
+        JSON.stringify(scrappedPostData)
+      );
+
+      console.log("업데이트된 localStorage:", {
+        scrappedPosts: scrappedPostIds,
+        scrappedPostData: scrappedPostData,
+      });
+
+      // 각 스크랩 아이템의 상세 정보 로그
+      uniqueScraps.forEach((scrapItem) => {
+        console.log(
+          `스크랩 아이템 - postId: ${scrapItem.postId}, scrapId: ${scrapItem.id}, title: ${scrapItem.title}`
+        );
+      });
 
       setAllScraps(uniqueScraps);
       setTotalElements(uniqueScraps.length);
@@ -67,13 +105,17 @@ const ScrapPage = () => {
 
   const handleToggleBookmark = async (scrapId: number) => {
     try {
-      // 스크랩 해제 API 호출
-      await deleteScrap(scrapId);
+      // 해당 스크랩 아이템 찾기
+      const scrapItem = allScraps.find((item) => item.id === scrapId);
+      if (!scrapItem) {
+        throw new Error("스크랩 아이템을 찾을 수 없습니다.");
+      }
 
-      // 성공 시 목록에서 제거 (postId 기준으로 제거)
+      // 스크랩 해제 API 호출 (postId와 scrapId 모두 전달)
+      await deleteScrap(scrapItem.postId, scrapId);
+
+      // 성공 시 목록에서 제거 (id 기준으로 제거)
       setAllScraps((prev) => {
-        const item = prev.find((item) => item.id === scrapId);
-        const postId = item?.postId || item?.id;
         return prev.filter((item) => item.id !== scrapId);
       });
 
@@ -85,11 +127,32 @@ const ScrapPage = () => {
         setCurrentPage(currentPage - 1);
       }
 
-      console.log(`스크랩 해제 - scrapId: ${scrapId}`);
-      console.log(
-        `현재 로컬 스토리지:`,
-        JSON.parse(localStorage.getItem("scrappedPosts") || "[]")
+      // localStorage에서도 제거
+      const scrappedPostIds = JSON.parse(
+        localStorage.getItem("scrappedPosts") || "[]"
       );
+      const scrappedPostData = JSON.parse(
+        localStorage.getItem("scrappedPostData") || "{}"
+      );
+
+      const updatedIds = scrappedPostIds.filter(
+        (id: number) => id !== scrapItem.postId
+      );
+      delete scrappedPostData[scrapItem.postId];
+
+      localStorage.setItem("scrappedPosts", JSON.stringify(updatedIds));
+      localStorage.setItem(
+        "scrappedPostData",
+        JSON.stringify(scrappedPostData)
+      );
+
+      console.log(
+        `스크랩 해제 - postId: ${scrapItem.postId}, scrapId: ${scrapId}`
+      );
+      console.log(`업데이트된 localStorage:`, {
+        scrappedPosts: updatedIds,
+        scrappedPostData: scrappedPostData,
+      });
 
       alert("스크랩이 해제되었습니다.");
     } catch (err: any) {
@@ -99,9 +162,21 @@ const ScrapPage = () => {
   };
 
   const handleItemClick = (item: ScrapItem) => {
-    // API에서 postId가 없으므로 id를 postId로 사용
-    const postId = item.id;
-    const type = item.category?.includes("TIP") ? "tips" : "items";
+    // 스웨거 API에서 제공하는 postId 사용
+    const postId = item.postId;
+
+    // category 정보를 기반으로 타입 결정
+    let type = "tips"; // 기본값
+
+    if (item.category === "LIFE_ITEM") {
+      type = "items";
+    } else if (item.category === "LIFE_TIP") {
+      type = "tips";
+    }
+
+    console.log(
+      `스크랩 아이템 클릭 - postId: ${postId}, type: ${type}, category: ${item.category}`
+    );
     navigate(`/${type}/${postId}`);
   };
 
@@ -159,7 +234,7 @@ const ScrapPage = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">이미지 없음</span>
+                      <img src={afterscrap} />
                     </div>
                   )}
                   <button

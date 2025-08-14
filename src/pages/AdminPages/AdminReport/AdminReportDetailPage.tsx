@@ -4,6 +4,8 @@ import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import { processReport, getReportDetail } from "../../../api/reportApi";
 import type { ReportDetailData } from "../../../types/report";
+import { like as likeIcon, commentIcon } from "../../../assets";
+import reportGrayIcon from "../../../assets/report_gray.png";
 
 export default function AdminReportDetailPage() {
   const { id } = useParams();
@@ -14,6 +16,7 @@ export default function AdminReportDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isProcessed, setIsProcessed] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // 관리자 인증 상태 확인
   useEffect(() => {
@@ -35,18 +38,10 @@ export default function AdminReportDetailPage() {
       try {
         setLoading(true);
         setError(null);
-
-        // 토큰 상태 디버깅
-        const accessToken = localStorage.getItem("accessToken");
-        const adminAccessToken = localStorage.getItem("adminAccessToken");
-        console.log("🔍 토큰 상태 확인:");
-        console.log("- accessToken:", accessToken ? "존재" : "없음");
-        console.log("- adminAccessToken:", adminAccessToken ? "존재" : "없음");
         
         const response = await getReportDetail(Number(id));
         if (response.isSuccess) {
           setReport(response.result);
-          // 상세 응답에 status가 포함되는 경우 처리완료 상태 반영
           const status = (response.result as any)?.status;
           if (status === 'PROCESSED') {
             setIsProcessed(true);
@@ -56,8 +51,6 @@ export default function AdminReportDetailPage() {
         }
       } catch (err) {
         console.error('신고 상세 조회 실패:', err);
-        
-        // 403 오류인 경우 특별한 처리
         if (err instanceof Error && err.message.includes('403')) {
           setError('관리자 권한이 없거나 로그인이 필요합니다. 다시 로그인해주세요.');
         } else {
@@ -71,8 +64,35 @@ export default function AdminReportDetailPage() {
     fetchReportDetail();
   }, [id]);
 
-  const post = report ? report.postPreview : null;
+  const post = report ? (report as any).postPreview : null;
   const isAlreadyProcessed = isProcessed || (report as any)?.status === 'PROCESSED';
+  const isCommentType = (report?.type === 'COMMENT' || report?.type === 'comment');
+
+  // 이미지 소스 구성 (없으면 placeholder)
+  const images: string[] = (() => {
+    if (!post) return [];
+    if (Array.isArray((post as any).images) && (post as any).images.length > 0) {
+      return (post as any).images as string[];
+    }
+    if ((post as any).imageUrl) return [(post as any).imageUrl as string];
+    if ((post as any).thumbnailUrl) return [(post as any).thumbnailUrl as string];
+    return [];
+  })();
+  const displayImages = images.length > 0 ? images : ["https://via.placeholder.com/800x500?text=No+Image"]; 
+
+  const formatRelative = (iso?: string) => {
+    if (!iso) return '';
+    const now = new Date();
+    const t = new Date(iso);
+    const diffMs = now.getTime() - t.getTime();
+    const diffM = Math.floor(diffMs / 60000);
+    if (diffM < 60) return `${diffM}분 전`;
+    const diffH = Math.floor(diffM / 60);
+    if (diffH < 24) return `${diffH}시간 전`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD < 7) return `${diffD}일 전`;
+    return t.toLocaleDateString('ko-KR');
+  };
 
   // 로딩 상태
   if (loading) {
@@ -95,7 +115,7 @@ export default function AdminReportDetailPage() {
             <p className="text-red-500 mb-4">{error}</p>
             <div className="flex justify-center gap-4">
               <button 
-                onClick={() => navigate('/admin/reports')}
+                onClick={() => navigate('/admin/report')}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
               >
                 목록으로 돌아가기
@@ -124,7 +144,7 @@ export default function AdminReportDetailPage() {
           <div className="text-center py-8">
             <p className="mb-4">신고를 찾을 수 없습니다.</p>
             <button 
-              onClick={() => navigate('/admin/reports')}
+              onClick={() => navigate('/admin/report')}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
             >
               목록으로 돌아가기
@@ -145,7 +165,6 @@ export default function AdminReportDetailPage() {
       if (response && response.isSuccess) {
         setModalMessage(`${actionText} 처리되었습니다.`);
         setModalOpen(true);
-        // 상태 업데이트
         setIsProcessed(true);
       } else {
         throw new Error(response?.message || `${actionText} 처리에 실패했습니다.`);
@@ -168,15 +187,9 @@ export default function AdminReportDetailPage() {
 
     try {
       const response = await processReport(report.reportId, 'keep');
-      
-      console.log("🔥 신고 유지 API 응답:", response);
-      
-      // 응답 구조 확인 후 성공 여부 판단
       if (response && response.isSuccess) {
-        // 성공 시 모달 없이 바로 목록 페이지로 이동
-        navigate('/admin/reports');
+        navigate('/admin/report');
       } else if (response && (response as any).code === 'REPORT4001') {
-        // 이미 처리 완료된 신고인 경우
         setIsProcessed(true);
         setModalMessage('이미 처리 완료된 신고입니다.');
         setModalOpen(true);
@@ -185,8 +198,6 @@ export default function AdminReportDetailPage() {
       }
     } catch (error) {
       console.error('신고 처리 실패:', error);
-
-      // Axios 형태의 에러 응답 코드 확인
       const axiosError = error as any;
       const code = axiosError?.response?.data?.code;
       if (code === 'REPORT4001') {
@@ -209,22 +220,7 @@ export default function AdminReportDetailPage() {
     }
 
     try {
-      // 상세 디버깅 정보
-      const accessToken = localStorage.getItem("accessToken");
-      const adminAccessToken = localStorage.getItem("adminAccessToken");
-      
-      console.log("🚀 삭제 API 호출 전 상세 정보:");
-      console.log("- Report ID:", report.reportId);
-      console.log("- Access Token:", accessToken ? `${accessToken.substring(0, 20)}...` : "없음");
-      console.log("- Admin Access Token:", adminAccessToken ? `${adminAccessToken.substring(0, 20)}...` : "없음");
-      console.log("- 사용할 토큰:", adminAccessToken || accessToken ? "존재" : "없음");
-
-      // processReport API 사용
       const response = await processReport(report.reportId, 'delete');
-      
-      console.log("🔥 신고 삭제 API 응답:", response);
-      
-      // 응답 구조 확인 후 성공 여부 판단
       if (response && response.isSuccess) {
         setIsProcessed(true);
         setModalMessage('신고가 삭제되었습니다.');
@@ -238,21 +234,6 @@ export default function AdminReportDetailPage() {
       }
     } catch (error) {
       console.error('🔥 신고 삭제 실패 상세 정보:', error);
-      
-      // AxiosError인 경우 더 자세한 정보 로깅
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
-        console.log("🔍 Axios 오류 상세:");
-        console.log("- Status:", axiosError.response?.status);
-        console.log("- Status Text:", axiosError.response?.statusText);
-        console.log("- Response Data:", axiosError.response?.data);
-        console.log("- Headers:", axiosError.response?.headers);
-        console.log("- Request URL:", axiosError.config?.url);
-        console.log("- Request Method:", axiosError.config?.method);
-        console.log("- Request Headers:", axiosError.config?.headers);
-      }
-      
-      // 에러 코드에 따른 처리
       const axiosError = error as any;
       const code = axiosError?.response?.data?.code;
       if (code === 'REPORT4001') {
@@ -270,10 +251,9 @@ export default function AdminReportDetailPage() {
   const handleModalClose = () => {
     setModalOpen(false);
     setModalMessage("");
-    navigate('/admin/reports');
+    navigate('/admin/report');
   };
 
-  // 신고 사유 매핑
   const getReasonText = (content: string) => {
     const reasonMap: Record<string, string> = {
       'ABUSIVE_LANGUAGE': '욕설/비방',
@@ -285,124 +265,95 @@ export default function AdminReportDetailPage() {
     return reasonMap[content] || content;
   };
 
+  const firstParagraph: string = (() => {
+    const contentText = post && typeof post === 'object' && 'content' in post ? (post as any).content as string : '';
+    if (!contentText) return '';
+    const parts = contentText.split('\n\n');
+    return parts[0] || contentText;
+  })();
+
   return (
     <AdminLayout>
       <div className="px-10 py-6">
         {/* 상단 제목 */}
-        <div className="text-left mb-8">
+        <div className="text-left mb-20">
           <h2 className="text-2xl font-bold">신고내용</h2>
         </div>
 
-        {/* 신고 정보 테이블 */}
-        <div className="mb-8">
-          <table className="w-full max-w-md text-sm">
-            <tbody>
-              <tr className="border-b">
-                <td className="py-2 pr-8 font-medium text-gray-600">카테고리</td>
-                <td className="py-2">{report.category}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-2 pr-8 font-medium text-gray-600">제목</td>
-                <td className="py-2">{report.postTitle}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-2 pr-8 font-medium text-gray-600">작성자</td>
-                <td className="py-2">{report.nickname}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-2 pr-8 font-medium text-gray-600">신고일시</td>
-                <td className="py-2">{new Date(report.reportedAt).toLocaleString()}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-2 pr-8 font-medium text-gray-600">신고사유</td>
-                <td className="py-2">{getReasonText(report.content)}</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* 신고 메타 정보 */}
+        <div className="grid grid-cols-[80px_1fr] gap-x-6 gap-y-2 max-w-xl text-sm mb-20">
+          <div className="text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] tracking-[-0.01em]">카테고리</div>
+          <div className="text-[#333333] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.01em]">{report.category}</div>
+          <div className="text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] tracking-[-0.01em]">제목</div>
+          <div className="truncate text-[#333333] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.01em]">{report.postTitle}</div>
+          <div className="text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] tracking-[-0.01em]">작성자</div>
+          <div className="text-[#333333] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.01em]">{report.nickname}</div>
+          <div className="text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] tracking-[-0.01em]">신고일시</div>
+          <div className="text-[#333333] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.01em]">{new Date(report.reportedAt).toLocaleString()}</div>
+          <div className="text-[#333333] font-[Pretendard] font-bold text-base leading-[150%] tracking-[-0.01em]">신고사유</div>
+          <div className="text-[#333333] font-[Pretendard] font-medium text-base leading-[150%] tracking-[-0.01em]">{getReasonText(report.content)}</div>
         </div>
 
-        {/* 메인 컨텐츠 영역 */}
-        {report.type === 'comment' ? (
-          /* 댓글 신고의 경우 */
-          <div className="mb-8">
-            <div className="bg-white border rounded-lg p-6">
-              {/* 댓글 작성자 정보 */}
-              <div className="flex items-start mb-4">
-                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-sm text-gray-600">👤</span>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-800 mb-1">{report.nickname}</h4>
-                  <p className="text-gray-700 leading-relaxed mb-3">
-                    {report.commentContent || '댓글 내용이 없습니다.'}
-                  </p>
-
-                  {/* 댓글 메타 정보 */}
-                  <div className="flex items-center text-xs text-gray-500 gap-4">
-                    <span>{new Date(report.reportedAt).toLocaleDateString()}</span>
+        {/* 본문 영역 */}
+        {isCommentType ? (
+          <div className="flex flex-col">
+            <div className="w-full border border-[#E6E6E6] rounded-[24px] p-6 bg-white flex items-center justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-gray-300 rounded-full" />
+                <div>
+                  <div className="text-[#333] font-bold">{report.nickname || '닉네임'}</div>
+                  <div className="text-[#333] text-[14px] mt-1 whitespace-pre-line">{report.commentContent || '-'}</div>
+                  <div className="flex items-center gap-4 text-[#999] text-[12px] mt-3">
+                    <span>{formatRelative(report.reportedAt)}</span>
+                    <span className="flex items-center gap-1"><img src={likeIcon} alt="like" className="w-4 h-4 opacity-70" />12</span>
+                    <span className="flex items-center gap-1"><img src={commentIcon} alt="comment" className="w-4 h-4 opacity-70" />1</span>
                   </div>
                 </div>
-
-                {/* 신고 아이콘 */}
-                <div className="ml-4">
-                  <span className="text-red-500">🚨</span>
-                </div>
               </div>
+              <button type="button" aria-label="신고" className="flex w-6 h-6 px-[4px] py-[3.75px] justify-center items-center aspect-square">
+                <img src={reportGrayIcon} alt="report" />
+              </button>
             </div>
           </div>
         ) : (
-          /* 게시글 신고의 경우 */
-          <div className="flex gap-8 mb-8">
-            {/* 왼쪽: 신고된 게시글 내용 */}
-            <div className="flex-1">
-              <div className="bg-gray-200 rounded-lg p-8 min-h-[400px]">
-                <div className="text-gray-700">
-                  <div className="text-center mb-6">
-                    <div className="text-4xl mb-2">📄</div>
-                    <div className="text-lg">신고된 게시글 내용</div>
-                  </div>
-
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-black">{report.postTitle}</h3>
-
-                    <div className="text-sm text-gray-800 mb-4 whitespace-pre-line leading-relaxed">
-                      {post && typeof post === 'object' && 'content' in post ? post.content : '게시글 내용을 불러올 수 없습니다.'}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t text-xs text-gray-500">
-                      <div>신고 사유: {getReasonText(report.content)}</div>
-                      <div className="mt-1">신고 내용: {report.description}</div>
-                    </div>
-                  </div>
+          /* 게시물 신고 UI */
+          <div className="flex gap-12">
+            {/* 좌측 이미지 */}
+            <div className="hidden md:flex relative w-[500px] h-[500px] p-6 flex-col justify-end items-center bg-gray-200 rounded-4xl overflow-hidden aspect-square">
+              <img
+                src={displayImages[currentImageIndex]}
+                alt="신고된 게시물"
+                className="absolute inset-0 w-full h-full object-cover rounded-4xl"
+              />
+              {displayImages.length > 1 && (
+                <div className="relative z-10 mb-2 flex gap-3 bg-[#FFFFFF80] bg-opacity-50 px-3 py-1 rounded-4xl">
+                  {displayImages.map((_, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-4 h-4 rounded-4xl cursor-pointer ${currentImageIndex === idx ? 'bg-[#0080FF]' : 'bg-gray-400'}`}
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* 오른쪽: 게시글 정보 */}
-            <div className="w-80">
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-bold mb-4">{report.postTitle}</h3>
+            {/* 우측 텍스트/세부 */}
+            <div className="flex-1 flex flex-col justify-between">
+              <div className="flex flex-col">
+                <h3 className="text-[22px] md:text-[28px] font-bold text-black mb-4">{report.postTitle}</h3>
+                <p className="text-[14px] md:text-[16px] text-[#333] mb-4 whitespace-pre-line">{firstParagraph || '신고된 게시물의 내용을 확인하세요.'}</p>
 
-                <div className="space-y-4 text-sm">
-                  <div>
-                    <div className="text-gray-600 mb-1">작성자</div>
-                    <div className="font-medium">{report.nickname}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-gray-600 mb-1">신고일시</div>
-                    <div>{new Date(report.reportedAt).toLocaleString()}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-gray-600 mb-1">카테고리</div>
-                    <div>{report.category}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-gray-600 mb-1">신고 타입</div>
-                    <div>{report.type}</div>
-                  </div>
+                {/* 게시물 추가 내용 */}
+                <div className="w-full border border-[#E6E6E6] rounded-4xl p-4 mt-4">
+                  <p className="text-[14px] md:text-[16px] text-[#333] whitespace-pre-line">
+                    {(() => {
+                      const contentText = post && typeof post === 'object' && 'content' in post ? (post as any).content as string : '';
+                      if (!contentText) return '-';
+                      const parts = contentText.split('\n\n');
+                      return parts[1] || contentText;
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
@@ -411,16 +362,16 @@ export default function AdminReportDetailPage() {
 
         {/* 하단 버튼 */}
         {!isAlreadyProcessed && (
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-end gap-6 mt-20">
             <button
               onClick={handleDeleteReport}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex w-[160px] px-4 py-3 justify-center items-center bg-[#0080FF] hover:bg-[#0066CC] text-white rounded-4xl text-[20px] font-[500]"
             >
               삭제
             </button>
             <button
               onClick={handleKeepReport}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex w-[160px] px-4 py-3 justify-center items-center bg-[#0080FF] hover:bg-[#0066CC] text-white rounded-4xl text-[20px] font-[500]"
             >
               유지
             </button>
@@ -428,10 +379,8 @@ export default function AdminReportDetailPage() {
         )}
 
         {isAlreadyProcessed && (
-          <div className="flex justify-center">
-            <span className="bg-blue-500 text-white px-6 py-2 rounded-lg">
-              처리완료된 신고입니다
-            </span>
+          <div className="flex justify-center mt-8">
+            <span className="bg-[#0080FF] text-white px-6 py-2 rounded-4xl">처리완료된 신고입니다</span>
           </div>
         )}
 

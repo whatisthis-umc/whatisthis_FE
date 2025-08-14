@@ -3,15 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import bestBadge from "../assets/best.png";
-import { likes } from "../assets"; // 흰 하트 (게시물 좋아요 버튼 아이콘)
-import heartIcon from "../assets/emptyHeart.png"; // 빈 하트 (댓글)
+import { likes } from "../assets"; // 흰 하트
+import heartIcon from "../assets/emptyHeart.png"; // 빈 하트
 import reportIcon from "../assets/report.png";
 import commentsIcon from "../assets/comments.png";
 import commentsIconB from "../assets/comment_black.png";
 import reportGrayIcon from "../assets/report_gray.png";
 import arrowLeft from "../assets/chevron_backward.svg";
 import arrowRight from "../assets/chevron_forward.svg";
-import { darkHeart } from "../assets"; // 채워진 하트 (댓글)
+import { darkHeart } from "../assets"; // 채워진 하트
 
 import ReportModal from "../components/modals/ReportModal";
 import SortDropdown from "../components/common/SortDropdown";
@@ -184,8 +184,8 @@ const extractCommentsFlat = (
   const base: any[] = Array.isArray(vNew)
     ? vNew
     : Array.isArray(vOld)
-    ? vOld
-    : [];
+      ? vOld
+      : [];
   return base.map((c) => {
     const parentRaw =
       c?.parentId ??
@@ -237,15 +237,22 @@ const PostDetailPage = () => {
   // ✅ 라우트 파라미터 이름을 postId로 통일 (/post/:postId)
   const { postId: postIdParam } = useParams<{ postId: string }>();
   const postIdNum = Number(postIdParam);
+  // ✅ 훅을 조건부로 못 쓰므로 안전 ID로 호출하고, UI는 별도 가드
   const safePostId = Number.isFinite(postIdNum) && postIdNum > 0 ? postIdNum : -1;
 
   const queryClient = useQueryClient();
 
   const [showReportModal, setShowReportModal] = useState(false);
-  const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">("게시물");
-  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">(
+    "게시물"
+  );
+  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(
+    null
+  );
   const [reportedPost, setReportedPost] = useState(false);
-  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
+  const [reportedComments, setReportedComments] = useState<Set<number>>(
+    new Set()
+  );
 
   const [sortType, setSortType] = useState<UISort>("인기순");
   const [currentPage, setCurrentPage] = useState(1);
@@ -258,7 +265,7 @@ const PostDetailPage = () => {
 
   const apiSort = uiToApi(sortType);
   const { data, isLoading, isError } = useGetCommunityDetail({
-    postId: safePostId,
+    postId: safePostId, // ✅ 잘못된 ID면 API 유틸에서 즉시 에러를 던져 네트워크 호출 방지
     page: currentPage,
     size: pageSize,
     sort: apiSort,
@@ -342,7 +349,7 @@ const PostDetailPage = () => {
     });
   };
 
-  /* ===== 게시물 좋아요 (게시물) ===== */
+  /* 게시물 좋아요 */
   const handleToggleLike = () => {
     if (safePostId <= 0) return;
     const opId = ++likeOpRef.current;
@@ -369,7 +376,7 @@ const PostDetailPage = () => {
     });
   };
 
-  /* ===== 댓글 작성/대댓글 ===== */
+  /* 댓글 작성/대댓글 */
   const handleSubmitTopComment = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (safePostId <= 0) return;
@@ -413,74 +420,20 @@ const PostDetailPage = () => {
     await invalidateAll();
   };
 
-  /* ===== 댓글 좋아요: 즉시 반영(optimistic) + 실패 시 원복 ===== */
-  type LikeState = { liked: boolean; likeCount: number };
-  const [commentLikeState, setCommentLikeState] = useState<
-    Record<number, LikeState>
-  >({});
-  const [commentLikePending, setCommentLikePending] = useState<
-    Record<number, boolean>
-  >({});
-
-  const getEffectiveLikeState = (c: RawComment): LikeState => {
-    // 로컬 상태가 있으면 우선, 없으면 서버 값 사용
-    return commentLikeState[c.id] ?? { liked: !!c.liked, likeCount: c.likeCount };
-  };
-
-  const toggleCommentLike = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    c: RawComment
-  ) => {
-    e.stopPropagation();
+  /* 댓글 좋아요/수정/삭제 */
+  const [commentLikeOps, setCommentLikeOps] = useState<Record<number, boolean>>(
+    {}
+  );
+  const toggleCommentLike = (c: RawComment, isCurrentlyLiked: boolean) => {
     if (safePostId <= 0) return;
-    if (commentLikePending[c.id]) return; // 요청 중엔 막기
-
-    const current = getEffectiveLikeState(c);
-    const nextLiked = !current.liked;
-    const nextCount = Math.max(0, current.likeCount + (nextLiked ? 1 : -1));
-
-    // 1) UI 즉시 반영
-    setCommentLikeState((m) => ({ ...m, [c.id]: { liked: nextLiked, likeCount: nextCount } }));
-    setCommentLikePending((m) => ({ ...m, [c.id]: true }));
-
-    // 2) 서버 요청
-    const mutate = nextLiked ? likeCommentM : unlikeCommentM;
-    mutate.mutate(c.id, {
-      onSuccess: (res: any) => {
-        // 서버가 카운트/상태를 내려주는 경우 동기화 (없으면 그대로 둠)
-        const serverLiked = typeof res?.liked === "boolean" ? res.liked : undefined;
-        const serverCount = typeof res?.likeCount === "number" ? res.likeCount : undefined;
-        if (serverLiked !== undefined || serverCount !== undefined) {
-          setCommentLikeState((m) => ({
-            ...m,
-            [c.id]: {
-              liked: serverLiked ?? nextLiked,
-              likeCount: serverCount ?? nextCount,
-            },
-          }));
-        }
-        // 필요 시 배경 refetch (UI는 이미 반영됨)
-        queryClient.invalidateQueries({
-          predicate: (q) =>
-            Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail",
-          refetchType: "inactive",
-        });
-      },
-      onError: () => {
-        // 실패하면 원복
-        setCommentLikeState((m) => ({
-          ...m,
-          [c.id]: { liked: current.liked, likeCount: current.likeCount },
-        }));
-        alert("댓글 좋아요 처리에 실패했어요.");
-      },
-      onSettled: () => {
-        setCommentLikePending((m) => ({ ...m, [c.id]: false }));
-      },
+    setCommentLikeOps((m) => ({ ...m, [c.id]: !isCurrentlyLiked }));
+    (isCurrentlyLiked ? unlikeCommentM : likeCommentM).mutate(c.id, {
+      onSuccess: () => invalidateAll(),
+      onError: () =>
+        setCommentLikeOps((m) => ({ ...m, [c.id]: isCurrentlyLiked })),
     });
   };
 
-  /* ===== 댓글 수정/삭제 ===== */
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [editInputs, setEditInputs] = useState<Record<number, string>>({});
   const beginEdit = (c: RawComment) => {
@@ -509,6 +462,7 @@ const PostDetailPage = () => {
   /* 게시물 수정/삭제 */
   const handleEditPost = () => {
     if (safePostId <= 0) return;
+    // ✅ 수정 페이지로 이동
     navigate(`/post/${safePostId}/edit`);
   };
   const handleDeletePost = async () => {
@@ -665,7 +619,7 @@ const PostDetailPage = () => {
           </div>
           <div className="justify-self-end">
             <SortDropdown
-              defaultValue={uiToApi(sortType)}
+              defaultValue={uiToApi(sortType)} // ✅ 드롭다운은 API 타입
               onChange={(apiVal: CommunitySortType) => {
                 setSortType(apiToUi(apiVal));
                 setCurrentPage(1);
@@ -685,7 +639,7 @@ const PostDetailPage = () => {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="댓글을 입력해주세요."
-              className="w-full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
+              className="w/full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
               aria-label="댓글 입력"
             />
           </div>
@@ -706,9 +660,9 @@ const PostDetailPage = () => {
         {/* 댓글 트리 */}
         <div className="w-full flex flex-col gap-10">
           {tree.map((c) => {
-            const eff = getEffectiveLikeState(c);
-            const isLiked = eff.liked;
-            const likeCountDisplay = eff.likeCount;
+            const isLiked = (commentLikeOps[c.id] ?? c.liked) === true;
+            const displayLikeCount =
+              c.likeCount + (isLiked ? 1 : 0) - (c.liked ? 1 : 0);
 
             return (
               <div key={c.id} className="flex flex-col gap-2">
@@ -768,17 +722,16 @@ const PostDetailPage = () => {
 
                         <button
                           type="button"
-                          onClick={(e) => toggleCommentLike(e, c)}
+                          onClick={() => toggleCommentLike(c, isLiked)}
                           className="flex text-[14px] items-center gap-1"
                           title={isLiked ? "좋아요 취소" : "좋아요"}
-                          disabled={!!commentLikePending[c.id]}
                         >
                           <img
                             src={isLiked ? darkHeart : heartIcon}
                             alt="comment-like"
                             className="w-4 h-4"
                           />
-                          {likeCountDisplay}
+                          {displayLikeCount}
                         </button>
 
                         <button
@@ -869,9 +822,10 @@ const PostDetailPage = () => {
                 {c.replies.length > 0 && (
                   <div className="mt-3 ml-12 flex flex-col gap-4">
                     {c.replies.map((r) => {
-                      const rEff = getEffectiveLikeState(r);
-                      const rIsLiked = rEff.liked;
-                      const rLikeCountDisplay = rEff.likeCount;
+                      const rIsLiked =
+                        (commentLikeOps[r.id] ?? r.liked) === true;
+                      const rDisplayLikeCount =
+                        r.likeCount + (rIsLiked ? 1 : 0) - (r.liked ? 1 : 0);
 
                       return (
                         <div key={r.id} className="flex justify-between">
@@ -929,17 +883,16 @@ const PostDetailPage = () => {
 
                                 <button
                                   type="button"
-                                  onClick={(e) => toggleCommentLike(e, r)}
+                                  onClick={() => toggleCommentLike(r, rIsLiked)}
                                   className="flex text-[14px] items-center gap-1"
                                   title={rIsLiked ? "좋아요 취소" : "좋아요"}
-                                  disabled={!!commentLikePending[r.id]}
                                 >
                                   <img
                                     src={rIsLiked ? darkHeart : heartIcon}
                                     alt="comment-like"
                                     className="w-4 h-4"
                                   />
-                                  {rLikeCountDisplay}
+                                  {rDisplayLikeCount}
                                 </button>
 
                                 {r.isMine && !editing[r.id] && (

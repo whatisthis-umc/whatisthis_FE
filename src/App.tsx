@@ -17,7 +17,7 @@ import MyPage from "./pages/my/MyPage";
 import LikesPage from "./pages/LikesPage";
 import ScrapPage from "./pages/ScrapPage";
 import { InquiryProvider } from "./contexts/InquiryContext";
-import AdminDashboard from "./pages/AdminPages/AdminDashboard";
+
 import AdminPostPage from "./pages/AdminPages/AdminPost/AdminPostPage";
 import AdminLoginPage from "./pages/AdminPages/AdminLogin";
 import AdminPostDetailPage from "./pages/AdminPages/AdminPost/AdminPostDetailPage";
@@ -50,6 +50,7 @@ import LinkSocialPage from "./pages/Signup/SocialLogin/LinkSocialPage";
 
 import SearchPage from "./pages/SearchPage";
 import CommonProtectedRoute from "./routes/CommonProtectedRoute";
+import AdminDashboard from "./pages/AdminPages/AdminDashboard";
 
 function App() {
   return (

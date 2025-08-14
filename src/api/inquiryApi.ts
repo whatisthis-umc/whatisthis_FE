@@ -19,7 +19,7 @@ export const getInquiryList = async (
   keyword?: string
 ): Promise<InquiryListResponse> => {
   const params: Record<string, string | number> = {
-    page: page - 1, // API는 0부터 시작하는 페이지 번호 사용
+    page, // 관리자 API는 1부터 시작 (중복 방지)
     size,
   };
 
@@ -118,7 +118,10 @@ export const createInquiryAnswer = async (
   console.log("✅ 문의 답변 등록 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
   console.log("✅ 답변 데이터:", answerData);
 
-  const response = await axiosInstance.post(`/admin/inquiries/${inquiryId}/answer`, answerData, {
+  // 서버 스펙 불일치 대비: content/answer 키 동시 전송
+  const payload: any = { content: answerData.content, answer: answerData.content };
+
+  const response = await axiosInstance.post(`/admin/inquiries/${inquiryId}/answer`, payload, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -136,7 +139,10 @@ export const updateInquiryAnswer = async (
   console.log("✅ 문의 답변 수정 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
   console.log("✅ 수정 답변 데이터:", answerData);
 
-  const response = await axiosInstance.put(`/admin/inquiries/${inquiryId}/answer`, answerData, {
+  // 서버 스펙 불일치 대비: content/answer 키 동시 전송
+  const payload: any = { content: answerData.content, answer: answerData.content };
+
+  const response = await axiosInstance.put(`/admin/inquiries/${inquiryId}/answer`, payload, {
     headers: {
       'Content-Type': 'application/json',
     },

@@ -1,9 +1,8 @@
 import { axiosInstance } from "./axiosInstance";
-import type { Post } from "./types";
 
 export interface ScrapItem {
-  id: number; 
-  postId: number; 
+  id: number;
+  postId: number; // 스크랩 ID가 아닌 실제 게시물 ID
   title: string;
   content: string;
   thumbnailUrl: string;
@@ -18,15 +17,13 @@ export interface ScrapListResponse {
   message: string;
   result: {
     scraps: ScrapItem[];
-    totalPages: number;
-    totalElements: number;
   };
 }
 
 // 스크랩 목록 조회
 export const getScrapList = async (
-  page: number = 0, // 서버와 동일하게 0부터 시작
-  size: number = 10
+  page: number = 1, // 스웨거에서 기본값이 1
+  size: number = 5  // 스웨거에서 기본값이 5
 ): Promise<{ scraps: ScrapItem[]; totalPages: number; totalElements: number }> => {
   const accessToken = localStorage.getItem("accessToken");
   
@@ -53,8 +50,6 @@ export const getScrapList = async (
     console.log("=== 스크랩 목록 API 응답 ===");
     console.log("스크랩 목록 API 응답:", response.data);
     console.log("스크랩 목록 result:", response.data.result);
-    console.log("스크랩 목록 result 타입:", typeof response.data.result);
-    console.log("스크랩 목록 result 길이:", Array.isArray(response.data.result) ? response.data.result.length : '배열 아님');
     
     // 스크랩 배열이 있는 경우 첫 번째 아이템 확인
     if (response.data.result?.scraps && response.data.result.scraps.length > 0) {
@@ -72,8 +67,8 @@ export const getScrapList = async (
 
     return {
       scraps: response.data.result?.scraps || [],
-      totalPages: response.data.result?.totalPages || 1,
-      totalElements: response.data.result?.totalElements || 0,
+      totalPages: 1, // API에서 제공하지 않으므로 기본값
+      totalElements: response.data.result?.scraps?.length || 0, // scraps 배열 길이로 계산
     };
   } catch (error) {
     console.error("스크랩 목록 조회 실패:", error);
@@ -82,7 +77,7 @@ export const getScrapList = async (
 };
 
 // 스크랩 해제
-export const deleteScrap = async (scrapId: number): Promise<void> => {
+export const deleteScrap = async (postId: number, scrapId: number): Promise<void> => {
   const accessToken = localStorage.getItem("accessToken");
   
   if (!accessToken) {
@@ -90,7 +85,7 @@ export const deleteScrap = async (scrapId: number): Promise<void> => {
   }
 
   try {
-    const response = await axiosInstance.delete(`/scraps/${scrapId}`, {
+    const response = await axiosInstance.delete(`/posts/${postId}/scraps/${scrapId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
