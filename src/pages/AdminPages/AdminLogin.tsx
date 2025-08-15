@@ -21,7 +21,8 @@ export default function AdminLoginPage() {
 
   const handleLogin = async () => {
     try {
-      const accessToken = await adminLogin(username, password);
+      const { accessToken } = await adminLogin(username, password);
+      // adminLogin 내부에서 토큰 저장을 이미 수행
       localStorage.setItem("adminAccessToken", accessToken);
       navigate("/admin");
     } catch (err) {
