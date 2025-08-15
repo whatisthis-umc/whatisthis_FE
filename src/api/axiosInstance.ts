@@ -95,13 +95,26 @@ async function refreshToken(): Promise<string> {
   if (!refresh) throw new Error("로그인이 필요합니다.");
 
   // refresh는 순수 axios로(interceptor 영향 최소화)
-  const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken: refresh });
+  const res = await axios.post(
+    `${baseURL}/members/reissue`,
+    {},
+    {
+      headers: {
+        "Refresh-Token": refresh,
+        Accept: "application/json",
+      },
+    }
+  );
   if (!res.data?.isSuccess) throw new Error(res.data?.message ?? "토큰 재발급 실패");
 
   const newAccess = res.data.result?.accessToken ?? res.data.data?.accessToken;
+  const newRefresh = res.data.result?.refreshToken ?? res.data.data?.refreshToken;
   if (!newAccess) throw new Error("액세스 토큰 없음");
 
   localStorage.setItem("accessToken", newAccess);
+  if (newRefresh) {
+    localStorage.setItem("refreshToken", newRefresh);
+  }
   return newAccess;
 }
 
