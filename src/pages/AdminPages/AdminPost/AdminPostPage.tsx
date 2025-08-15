@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Box,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
