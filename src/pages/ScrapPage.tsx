@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getScrapList, deleteScrap, type ScrapItem } from "../api/scrapApi";
-import { afterscrap } from "../assets";
+import { afterscrap, darkBookmark } from "../assets";
 
 const ScrapPage = () => {
   const navigate = useNavigate();
@@ -234,7 +234,11 @@ const ScrapPage = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <img src={afterscrap} />
+                      <img
+                        src={afterscrap}
+                        alt="기본 이미지"
+                        className="w-8 h-8 opacity-50"
+                      />
                     </div>
                   )}
                   <button
@@ -245,7 +249,7 @@ const ScrapPage = () => {
                     className="absolute bottom-2 right-2"
                   >
                     <img
-                      src="/src/assets/darkBookmark.png"
+                      src={darkBookmark}
                       alt="bookmark"
                       className="w-4 h-4 opacity-100"
                     />
