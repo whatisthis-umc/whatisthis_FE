@@ -4,7 +4,6 @@
 
 생활에 유용한 꿀팁과 꿀템을 공유하고, AI 기반 맞춤형 콘텐츠를 추천받을 수 있는 자취생 특화 웹 서비스입니다.
 
-![이게뭐예요 메인](https://github.com/user-attachments/assets/banner-image-url)
 
 ## 목차
 
