@@ -12,6 +12,7 @@ import type {
   MyPostItem,
   MyInquiryItem,
 } from "../../api/mypage";
+import useMyAccount from "../../hooks/queries/useMyAccount";
 
 /* ===== 시간 규칙 ===== */
 const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
@@ -193,7 +194,7 @@ const MyPage = () => {
   const [inqPage, setInqPage] = useState(1);
   const pageSize = 6;
 
-  // 계정
+  // 계정 (추후 구현 시 사용)
   const { data: account } = useMyAccount();
 
   // 데이터
@@ -390,112 +391,72 @@ const MyPage = () => {
                   </button>
                 </div>
 
-            posts.map((item) => {
-              const preview = tidyPreview(item.content);
-              const hashtags = extractHashtags(item);
-              const badges = badgesFor(item);
-              const isBest = Boolean((item as any)?.isBest); // 서버가 주면 표시
-
-              return (
-                <div
-                  key={item.postId}
-                  className={`relative rounded-[32px] p-6 pr-8 hover:shadow-md transition-all duration-150 cursor-pointer ${
-                    isBest
-                      ? "bg-[#CCE5FF] border-none"
-                      : "bg-white border border-[#CCCCCC]"
-                  }`}
-                  onClick={() => navigate(`/post/${item.postId}`)}
-                >
-                  {/* 수정/삭제 */}
-                  <div className="absolute top-4 right-4 flex gap-2 text-[14px] text-[#999] z-10">
-                    <button
-                      className="hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/post/${item.postId}/edit`);
-                      }}
+                {/* 카테고리/Best/해시태그 뱃지 */}
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  {badgesFor(item).map((label) => (
+                    <div
+                      key={`cat-${label}`}
+                      className="flex items-center px-3 py-1 border rounded-[32px] text-[12px] border-[#999999] text-[#333333]"
                     >
-                      수정
-                    </button>
-                    <span>|</span>
-                    <button
-                      className="hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget({ kind: "post", id: item.postId });
-                      }}
+                      {label}
+                    </div>
+                  ))}
+                  {Boolean((item as any)?.isBest) && (
+                    <div className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#66B2FF] text-white">
+                      Best
+                    </div>
+                  )}
+                  {extractHashtags(item).map((tag, idx) => (
+                    <div
+                      key={`${tag}-${idx}`}
+                      className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#CCE5FF] text-[#666666]"
                     >
-                      삭제
-                    </button>
-                  </div>
+                      #{tag}
+                    </div>
+                  ))}
+                </div>
 
-                  {/* 카테고리/Best/해시태그 뱃지 */}
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
-                    {badges.map((label) => (
-                      <div
-                        key={`cat-${label}`}
-                        className="flex items-center px-3 py-1 border rounded-[32px] text-[12px] border-[#999999] text-[#333333]"
-                      >
-                        {label}
-                      </div>
-                    ))}
-                    {isBest && (
-                      <div className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#66B2FF] text-white">
-                        Best
-                      </div>
-                    )}
-                    {hashtags.map((tag, idx) => (
-                      <div
-                        key={`${tag}-${idx}`}
-                        className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#CCE5FF] text-[#666666]"
-                      >
-                        #{tag}
-                      </div>
-                    ))}
+                {/* 제목/본문 */}
+                <div className="mt-1">
+                  <div className="text-[18px] sm:text-[20px] font-bold truncate w-full">
+                    {item.title}
                   </div>
-
-                  {/* 제목/본문 */}
-                  <div className="mt-1">
-                    <div className="text-[18px] sm:text-[20px] font-bold truncate w-full">
-                      {item.title}
-                    </div>
-                    <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2 whitespace-pre-wrap">
-                      {preview}
-                    </div>
-                  </div>
-
-                  {/* 메타 */}
-                  <div className="flex gap-4 mt-3 text-[#999] text-[14px] flex-wrap">
-                    <span className="flex items-center gap-1 text-[#333]">
-                      {isBest && (
-                        <img
-                          src={bestBadge}
-                          alt="best"
-                          className="w-[16px] h-[16px]"
-                        />
-                      )}
-                      {item.nickname} · {formatKST(item.createdAt)}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <img src={eye} alt="views" className="w-4 h-4" />
-                      {item.viewCount}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <img src={like} alt="likes" className="w-4 h-4" />
-                      {item.likeCount}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <img
-                        src={commentIcon}
-                        alt="comments"
-                        className="w-4 h-4"
-                      />
-                      {item.commentCount}
-                    </div>
+                  <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2 whitespace-pre-wrap">
+                    {tidyPreview(item.content)}
                   </div>
                 </div>
-              );
-            })
+
+                {/* 메타 */}
+                <div className="flex gap-4 mt-3 text-[#999] text-[14px] flex-wrap">
+                  <span className="flex items-center gap-1 text-[#333]">
+                    {Boolean((item as any)?.isBest) && (
+                      <img
+                        src={bestBadge}
+                        alt="best"
+                        className="w-[16px] h-[16px]"
+                      />
+                    )}
+                    {item.nickname} · {formatKST(item.createdAt)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <img src={eye} alt="views" className="w-4 h-4" />
+                    {item.viewCount}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <img src={like} alt="likes" className="w-4 h-4" />
+                    {item.likeCount}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <img
+                      src={commentIcon}
+                      alt="comments"
+                      className="w-4 h-4"
+                    />
+                    {item.commentCount}
+                  </div>
+                </div>
+              </div>
+            ))
           )}
 
           <Pagination
