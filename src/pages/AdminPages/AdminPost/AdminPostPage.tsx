@@ -40,6 +40,7 @@ export default function AdminPostPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [accordionOpen, setAccordionOpen] = useState(false);
 
+
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침
@@ -179,14 +180,15 @@ export default function AdminPostPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (accordionOpen && !target.closest("[data-accordion]")) {
+      if (accordionOpen && !target.closest('[data-accordion]')) {
         setAccordionOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [accordionOpen]);
 
@@ -349,22 +351,22 @@ export default function AdminPostPage() {
                   flexGrow: 1,
                 }}
               >
-                {adminPostCategories.find(
-                  (cat: any) => cat.id === selectedCategory
-                )?.name || "전체"}
+
+                {adminPostCategories.find((cat: any) => cat.id === selectedCategory)?.name || "전체"}
               </Box>
-              <img
-                src={arrowDown}
-                alt="arrow"
-                width={24}
-                height={24}
-                style={{
+              <img 
+                src={arrowDown} 
+                alt="arrow" 
+                width={24} 
+                height={24} 
+                style={{ 
                   opacity: 0.8,
-                  transform: accordionOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.2s ease",
-                }}
+                  transform: accordionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} 
               />
             </Box>
+            
 
             {/* 아코디언 드롭다운 */}
             {accordionOpen && (
@@ -384,29 +386,29 @@ export default function AdminPostPage() {
                   background: "#E6E6E6",
                 }}
               >
-                {adminPostCategories
-                  .filter((cat: any) => cat.id !== "all")
-                  .map((cat: any) => (
-                    <Box
-                      key={cat.id}
-                      onClick={() => {
-                        setSelectedCategory(cat.id);
-                        setCurrentPage(1);
-                        setAccordionOpen(false);
-                      }}
-                      sx={{
-                        width: "100%",
-                        cursor: "pointer",
-                        fontFamily: "Pretendard",
-                        fontWeight: 700,
-                        fontSize: "16px",
-                        color: "#333333",
-                        lineHeight: "150%",
-                      }}
-                    >
-                      {cat.name}
-                    </Box>
-                  ))}
+
+                {adminPostCategories.filter((cat: any) => cat.id !== "all").map((cat: any) => (
+                  <Box
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setCurrentPage(1);
+                      setAccordionOpen(false);
+                    }}
+                    sx={{
+                      width: "100%",
+                      cursor: "pointer",
+                      fontFamily: "Pretendard",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#333333",
+                      lineHeight: "150%",
+                    }}
+                  >
+                    {cat.name}
+                  </Box>
+                ))}
+
               </Box>
             )}
           </Box>
@@ -539,13 +541,7 @@ export default function AdminPostPage() {
           >
             {paginatedPosts.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  sx={{
-                    textAlign: "center",
-                    borderBottom: "1px solid #333333",
-                  }}
-                >
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
                   게시물이 없습니다.
                 </TableCell>
               </TableRow>
@@ -556,9 +552,9 @@ export default function AdminPostPage() {
                   onClick={() => navigate(`/admin/post/${post.postId}`)}
                   style={{ cursor: "pointer" }}
                 >
-                  <TableCell
-                    sx={{ borderBottom: "1px solid #333333", pr: "130px" }}
-                  >
+
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "130px" }}>
+
                     <Box
                       sx={{
                         display: "inline-block",
