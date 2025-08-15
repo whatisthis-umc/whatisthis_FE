@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { itemCategories } from "../../data/categoryList";
@@ -9,11 +8,12 @@ import ItemCard from "../../components/ItemCard";
 import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
 import { tipService } from "../../api/lifeTipsApi";
-import type { ItemPost, ItemPostDetail } from "../../api/types";
+import type { ItemPost, ItemPostDetail, Post } from "../../api/types";
 import { itemDetailService } from "../../api/itemDetailApi";
 import { useScrap } from "../../hooks/useInteraction";
 import useReportPost from "../../hooks/mutations/useReportPost";
 import { useAuth } from "../../hooks/useAuth";
+import { getSimilarPosts } from "../../api/similarPostsApi";
 
 const ItemsPostDetailPage = () => {
   const { id } = useParams();
@@ -27,7 +27,9 @@ const ItemsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<ItemPost[]>([]);
-  
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+
   // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
   // localStorage에서 신고한 게시물 목록 가져오기
   const getReportedPosts = () => {
@@ -52,11 +54,9 @@ const ItemsPostDetailPage = () => {
     }
   };
 
-  const relatedPosts = dummyPosts.slice(0, 5);
-
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
-  
+
   // 같은 세션에서 재신고 방지(로컬)
   const [reportedPost, setReportedPost] = useState(() => {
     return getReportedPosts().includes(postId);
@@ -66,7 +66,7 @@ const ItemsPostDetailPage = () => {
   useEffect(() => {
     setReportedPost(getReportedPosts().includes(postId));
   }, [postId]);
-  
+
   const scrap = useScrap(id ? parseInt(id) : 0, { isActive: false, count: 0 });
   const reportPostM = useReportPost(postId);
 
@@ -114,6 +114,26 @@ const ItemsPostDetailPage = () => {
       .finally(() => {
         setLoading(false);
       });
+  }, [id]);
+
+  // 관련 게시물 로드
+  useEffect(() => {
+    if (!id) return;
+
+    const loadRelatedPosts = async () => {
+      setRelatedLoading(true);
+      try {
+        const similarPosts = await getSimilarPosts(parseInt(id), 5);
+        setRelatedPosts(similarPosts);
+      } catch (error) {
+        console.error("관련 게시물 로딩 실패:", error);
+        setRelatedPosts([]);
+      } finally {
+        setRelatedLoading(false);
+      }
+    };
+
+    loadRelatedPosts();
   }, [id]);
 
   // 모든 게시물 데이터 가져오기
@@ -197,14 +217,17 @@ const ItemsPostDetailPage = () => {
     return true;
   };
 
-  const handleReport = (data: { content: string; description: string | null }) => {
+  const handleReport = (data: {
+    content: string;
+    description: string | null;
+  }) => {
     if (!post) return;
-    
+
     if (reportedPost) {
       alert("이미 이 게시물을 신고하셨습니다.");
       return;
     }
-    
+
     reportPostM.mutate(
       { content: data.content, description: data.description },
       {
@@ -221,7 +244,9 @@ const ItemsPostDetailPage = () => {
             setReportedPost(true);
             addReportedPost(postId); // localStorage에 저장
           } else if (e?.status === 500) {
-            alert("이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            alert(
+              "이미 신고한 게시물이거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            );
           } else {
             alert(e?.message ?? "신고 처리에 실패했습니다.");
           }
@@ -384,22 +409,34 @@ const ItemsPostDetailPage = () => {
           관련 꿀템 게시물
         </h3>
         <div className="flex gap-5 md:gap-10 overflow-x-auto hide-scrollbar">
-          {relatedPosts.map((relatedPost) => (
-            <div
-              key={relatedPost.id}
-              onClick={() => navigate(`/${relatedPost.type}/${relatedPost.id}`)}
-              className="cursor-pointer"
-            >
-              <ItemCard
-                hashtag={relatedPost.hashtag}
-                imageUrl={relatedPost.imageUrl}
-                title={relatedPost.title}
-                description={relatedPost.description}
-                views={relatedPost.views}
-                scraps={relatedPost.scraps}
-              />
+          {relatedLoading ? (
+            <div className="text-gray-500 text-center py-8">
+              관련 게시물을 불러오는 중...
             </div>
-          ))}
+          ) : relatedPosts.length > 0 ? (
+            relatedPosts.map((relatedPost) => (
+              <div
+                key={relatedPost.postId}
+                onClick={() =>
+                  navigate(`/${relatedPost.type}/${relatedPost.postId}`)
+                }
+                className="cursor-pointer"
+              >
+                <ItemCard
+                  hashtag={relatedPost.hashtags}
+                  imageUrl={relatedPost.imageUrls}
+                  title={relatedPost.title}
+                  description={relatedPost.summary}
+                  views={relatedPost.views}
+                  scraps={relatedPost.scraps}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500 text-center py-8">
+              관련 게시물이 없습니다.
+            </div>
+          )}
         </div>
       </div>
     </div>
