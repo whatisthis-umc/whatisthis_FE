@@ -333,9 +333,9 @@ export default function AdminInquiryPage() {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>유형</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>문의 내용</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>작성일</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "130px" }}>유형</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "130px" }}>문의 내용</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "130px" }}>작성일</TableCell>
               <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>처리 상태</TableCell>
             </TableRow>
           </TableHead>
@@ -349,13 +349,27 @@ export default function AdminInquiryPage() {
             ) : (
               displayInquiries.map((inquiry: InquiryListItem) => (
                 <TableRow key={inquiry.id} onClick={() => navigate(`/admin/inquiry/${inquiry.id}`)} style={{ cursor: "pointer" }}>
-                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "140px" }}>
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "130px" }}>
                     <Box sx={{ display: "inline-block", padding: "4px 12px", border: "1px solid #999999", borderRadius: "32px", fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333" }}>
                       문의
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{inquiry.title}</TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</TableCell>
+                  <TableCell sx={{ 
+                    fontFamily: "Pretendard", 
+                    fontWeight: 500, 
+                    fontSize: "20px", 
+                    lineHeight: "150%", 
+                    letterSpacing: "-2%", 
+                    color: "#333333", 
+                    textAlign: "left", 
+                    borderBottom: "1px solid #333333", 
+                    pr: "130px",
+                    maxWidth: 400,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                  }}>{inquiry.title}</TableCell>
+                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "130px" }}>{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</TableCell>
                   <TableCell sx={{ borderBottom: "1px solid #333333" }}>
                     {inquiry.status === "UNPROCESSED" ? (
                       <Box
