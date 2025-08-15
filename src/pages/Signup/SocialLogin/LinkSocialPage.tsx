@@ -13,6 +13,10 @@ export default function LinkSocialPage() {
   const provider = state?.provider ?? '';
   const providerId = state?.providerId ?? '';
 
+  // 배포 환경에서 혹시 http가 들어오면 강제로 https로 바꿔치기
+  const RAW_API = import.meta.env.VITE_API_BASE_URL || '';
+  const API = RAW_API.replace(/^http:\/\//, 'https://');
+
    // 잘못된 접근 가드
   useEffect(() => {
     if (!email || !provider || !providerId) {
