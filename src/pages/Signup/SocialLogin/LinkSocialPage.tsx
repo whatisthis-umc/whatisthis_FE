@@ -1,4 +1,5 @@
 // src/pages/Signup/SocialLogin/LinkSocialPage.tsx
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function LinkSocialPage() {
@@ -10,13 +11,15 @@ export default function LinkSocialPage() {
   const email = state?.email ?? '';
   const provider = state?.provider ?? '';
   const providerId = state?.providerId ?? '';
-  const API = import.meta.env.VITE_API_BASE_URL ;
+  const API = 'https://api.whatisthis.co.kr';
 
    // 잘못된 접근 가드
-  if (!email || !provider || !providerId) {
-    navigate('/login', { replace: true, state: { error: '잘못된 접근입니다.' } });
-    return null;
-  }
+  useEffect(() => {
+    if (!email || !provider || !providerId) {
+      setShowErrorModal(true);
+    }
+  }, [email, provider, providerId]);
+
 
   const handleLink = async () => {
   try {
@@ -99,3 +102,7 @@ export default function LinkSocialPage() {
 );
 
 }
+function setShowErrorModal(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
+
