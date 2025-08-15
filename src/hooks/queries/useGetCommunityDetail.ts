@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCommunityDetail } from "../../api/community";
 
-/** 백엔드 스펙 맞춘 정렬 타입 */
+/** UI/내부에서 쓰는 정렬 타입 (AI 포함) */
 type CommunitySortType = "LATEST" | "BEST" | "AI";
 
-/** 이 훅만 쓰는 로컬 파라미터 타입 (API 모듈에서 import 안 함) */
+/** API가 실제로 허용하는 정렬 타입 */
+type ApiSort = "LATEST" | "BEST";
+
+/** 이 훅만 쓰는 로컬 파라미터 타입 */
 type GetCommunityDetailParamsLocal = {
   postId: number;
   page: number;
   size: number;
-  /** 서버가 필수로 요구하면 기본값을 아래에서 LATEST로 채워줌 */
-  sort?: CommunitySortType;
+  sort?: CommunitySortType; // UI에서는 AI를 가질 수 있음
 };
 
 export default function useGetCommunityDetail({
@@ -19,7 +21,10 @@ export default function useGetCommunityDetail({
   size,
   sort,
 }: GetCommunityDetailParamsLocal) {
+  // UI 기본값
   const safeSort: CommunitySortType = sort ?? "LATEST";
+  // API로 보낼 값: AI가 오면 LATEST로 강제 매핑
+  const apiSort: ApiSort = safeSort === "BEST" ? "BEST" : "LATEST";
 
   return useQuery({
     queryKey: ["communityDetail", postId, page, size, safeSort],
@@ -28,7 +33,7 @@ export default function useGetCommunityDetail({
         postId,
         page,
         size,
-        sort: safeSort,
+        sort: apiSort, // ← API는 LATEST/BEST만
       }),
     staleTime: 60_000,
   });
