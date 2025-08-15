@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCommunityDetail } from "../../api/community";
-import type { CommunitySortType } from "../../types/community";
 
-/** API가 기대하는 디테일 조회 파라미터(로컬 정의) */
-type GetCommunityDetailParamsLocal = {
+// ✅ 타입을 로컬에서 선언
+type CommunitySortType = "LATEST" | "BEST" | "AI";
+type GetCommunityDetailParams = {
   postId: number;
   page: number;
   size: number;
-  sort?: CommunitySortType; // 옵션으로 받되, 아래에서 기본값으로 정규화
+  sort?: CommunitySortType;
 };
 
 export default function useGetCommunityDetail({
@@ -15,13 +15,11 @@ export default function useGetCommunityDetail({
   page,
   size,
   sort,
-}: GetCommunityDetailParamsLocal) {
-  // ✅ undefined 방지: 기본값 "LATEST"
-  const normalizedSort: CommunitySortType = (sort ?? "LATEST") as CommunitySortType;
-
+}: GetCommunityDetailParams) {
   return useQuery({
-    queryKey: ["communityDetail", postId, page, size, normalizedSort],
-    queryFn: () => getCommunityDetail({ postId, page, size, sort: normalizedSort }),
-    // 필요하면 staleTime, gcTime, placeholderData 등 옵션 추가
+    queryKey: ["communityDetail", postId, page, size, sort ?? "LATEST"],
+    queryFn: () => getCommunityDetail({ postId, page, size, sort }),
+    staleTime: 60_000,
+    retry: 0,
   });
 }
