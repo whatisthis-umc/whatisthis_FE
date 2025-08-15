@@ -1,6 +1,7 @@
 // src/pages/Signup/SocialLogin/LinkSocialPage.tsx
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { axiosInstance } from '../../../api/axiosInstance';
 
 export default function LinkSocialPage() {
   const { state } = useLocation() as {
@@ -16,41 +17,26 @@ export default function LinkSocialPage() {
    // 잘못된 접근 가드
   useEffect(() => {
     if (!email || !provider || !providerId) {
-    alert('잘못된 접근입니다.');
+      alert('잘못된 접근입니다.');
     }
   }, [email, provider, providerId]);
 
-
   const handleLink = async () => {
-  try {
-    if (!API) throw new Error('API URL not set');
-
-    
-    const res = await fetch(`${API}/members/link-social`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' ,
-        Accept: 'application/json',
-        },
-      credentials: 'include', // 쿠키 사용 시 필수
-      body: JSON.stringify({
+    try {
+      // 하드코딩된 URL을 사용하되 axiosInstance의 인증 로직 활용
+      const res = await axiosInstance.post(`${API}/members/link-social`, {
         email,        // useLocation()에서 받은 값
         provider,     // 'kakao' | 'naver' | 'google'
         providerId,   // 소셜 고유 id
-      }),
-    });
-    if (!res.ok) {
-      throw new Error(`Failed: ${res.status}`);
-    }
+      });
 
-    const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.isSuccess === false) {
-        throw new Error(data?.message || '연동에 실패했습니다.');
+      if (res.data.isSuccess) {
+        navigate('/community', { replace: true });
+      } else {
+        throw new Error(res.data.message || '연동에 실패했습니다.');
       }
-
-
-      navigate('/community', { replace: true }); // ★ 오타 수정
     } catch (e: any) {
+      console.error('연동 실패:', e);
       alert(e?.message || '네트워크 오류가 발생했습니다.');
     }
   };
