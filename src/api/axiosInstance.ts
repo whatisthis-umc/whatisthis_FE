@@ -98,7 +98,7 @@ async function refreshToken(isAdmin: boolean = false): Promise<string> {
     : localStorage.getItem("refreshToken");
   if (!refresh) throw new Error("로그인이 필요합니다.");
 
-  // refresh는 순수 axios로(interceptor 영향 최소화)
+
   const url = isAdmin ? `${baseURL}/admin/reissue` : `${baseURL}/members/reissue`;
   const res = await axios.post(
     url,
@@ -115,6 +115,7 @@ async function refreshToken(isAdmin: boolean = false): Promise<string> {
   const newAccess = res.data.result?.accessToken ?? res.data.data?.accessToken;
   const newRefresh = res.data.result?.refreshToken ?? res.data.data?.refreshToken;
   if (!newAccess) throw new Error("액세스 토큰 없음");
+
 
   if (isAdmin) {
     localStorage.setItem("adminAccessToken", newAccess);
