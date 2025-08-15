@@ -42,8 +42,9 @@ const apiToUi = (api: CommunitySortType): "인기순" | "최신순" =>
   api === "BEST" ? "인기순" : "최신순";
 
 /* ================= 카테고리 라벨/매핑 ================= */
-const UI_CATEGORIES = ["전체", "인기글", "생활꿀팁", "꿀템추천", "살까말까?", "궁금해요!"] as const;
-type CategoryType = typeof UI_CATEGORIES[number];
+/** ✅ 공백 포함 표기('꿀템 추천')로 통일 */
+const UI_CATEGORIES = ["전체", "인기글", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"] as const;
+type CategoryType = (typeof UI_CATEGORIES)[number];
 
 const API_TO_UI: Record<string, CategoryType> = {
   ALL: "전체",
@@ -54,13 +55,13 @@ const API_TO_UI: Record<string, CategoryType> = {
   LIFE_TIP: "생활꿀팁",
   "생활꿀팁": "생활꿀팁",
 
-  RECOMMEND: "꿀템추천",
-  ITEM_RECOMMEND: "꿀템추천",
-  ITEMRECOMMEND: "꿀템추천",
-  ITEM: "꿀템추천",
-  GOODS_RECOMMEND: "꿀템추천",
-  "꿀템추천": "꿀템추천",
-  "꿀템 추천": "꿀템추천",
+  RECOMMEND: "꿀템 추천",
+  ITEM_RECOMMEND: "꿀템 추천",
+  ITEMRECOMMEND: "꿀템 추천",
+  ITEM: "꿀템 추천",
+  GOODS_RECOMMEND: "꿀템 추천",
+  "꿀템추천": "꿀템 추천",
+  "꿀템 추천": "꿀템 추천",
 
   BUY_OR_NOT: "살까말까?",
   BUYORNOT: "살까말까?",
@@ -167,7 +168,7 @@ const categorySetOf = (item: any): Set<CategoryType> => {
   });
 
   const hs = extractHashtags(item).map((h) => NORM(h));
-  if (hs.some((h) => h === NORM("꿀템추천"))) set.add("꿀템추천");
+  if (hs.some((h) => h === NORM("꿀템추천") || h === NORM("꿀템 추천"))) set.add("꿀템 추천");
   if (hs.some((h) => h === NORM("살까말까?"))) set.add("살까말까?");
   if (hs.some((h) => h === NORM("궁금해요!"))) set.add("궁금해요!");
 
@@ -177,7 +178,7 @@ const categorySetOf = (item: any): Set<CategoryType> => {
 /* 카드에 표시할 카테고리 뱃지들(⚠️ '인기글' 배지는 붙이지 않음) */
 const badgesFor = (item: any): CategoryType[] => {
   const set = categorySetOf(item);
-  const ORDER: CategoryType[] = ["전체", "생활꿀팁", "꿀템추천", "살까말까?", "궁금해요!"];
+  const ORDER: CategoryType[] = ["전체", "생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"];
   const primary = toDisplayCategory(getRawCategory(item));
   const ordered = new Set<CategoryType>([primary, ...ORDER]);
   return [...ordered].filter((x) => x && (x === primary || set.has(x)));
@@ -255,10 +256,10 @@ const CommunityPage = () => {
       return top4.map((p: any) => ({ ...p, __isBestLocal: true }));
     }
 
-    // 일반 카테고리(생활꿀팁/꿀템추천/살까말까?/궁금해요!):
+    // 일반 카테고리(생활꿀팁/꿀템 추천/살까말까?/궁금해요!):
     // - API가 제대로 주면 mainData 기준
     // - 혹시 비어오면 '전체' 데이터로 보강(처음 클릭해도 바로 뜨도록)
-    if (["생활꿀팁", "꿀템추천", "살까말까?", "궁금해요!"].includes(selectedCategory)) {
+    if (["생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"].includes(selectedCategory)) {
       const merged = mergeUniqueById(posts as any[], allPosts as any[]);
       const filtered = merged.filter((p: any) => categorySetOf(p).has(selectedCategory as CategoryType));
       return flagBest(filtered);
@@ -271,7 +272,7 @@ const CommunityPage = () => {
   // 페이지네이션: 기본은 API 값을 사용.
   // 만약 일반 카테고리인데 API가 빈 결과를 줘서 all로 보강한 경우엔 최소 1페이지 보장.
   const totalPages =
-    ["생활꿀팁", "꿀템추천", "살까말까?", "궁금해요!"].includes(selectedCategory) && (posts.length === 0 && displayed.length > 0)
+    ["생활꿀팁", "꿀템 추천", "살까말까?", "궁금해요!"].includes(selectedCategory) && (posts.length === 0 && displayed.length > 0)
       ? 1
       : totalPagesFromApi;
 
