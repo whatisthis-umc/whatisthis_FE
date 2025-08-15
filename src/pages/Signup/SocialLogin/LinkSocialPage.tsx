@@ -16,7 +16,7 @@ export default function LinkSocialPage() {
    // 잘못된 접근 가드
   useEffect(() => {
     if (!email || !provider || !providerId) {
-      setShowErrorModal(true);
+    alert('잘못된 접근입니다.');
     }
   }, [email, provider, providerId]);
 
@@ -25,15 +25,13 @@ export default function LinkSocialPage() {
   try {
     if (!API) throw new Error('API URL not set');
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) throw new Error("Access token not found");
-
+    
     const res = await fetch(`${API}/members/link-social`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json' ,
         Accept: 'application/json',
-        Authorization: `Bearer ${token}`,},
+        },
       credentials: 'include', // 쿠키 사용 시 필수
       body: JSON.stringify({
         email,        // useLocation()에서 받은 값
