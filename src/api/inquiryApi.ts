@@ -10,7 +10,7 @@ import type {
 import type { SupportInquiryListResponse, SupportInquiryDetailResponse, SupportInquiryCreateRequest, SupportInquiryCreateResponse } from "../types/supportInquiry";
 import type { PublicAxiosConfig } from "./axiosInstance";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 관리자 문의 목록 조회
 export const getInquiryList = async (

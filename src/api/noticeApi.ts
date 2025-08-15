@@ -1,7 +1,7 @@
 import { axiosInstance } from "./axiosInstance";
 import type { NoticeListResponse, NoticeDetailResponse } from "../types/supportNotice";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getNoticeList = async (
   page: number = 1,
