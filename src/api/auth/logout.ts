@@ -4,7 +4,7 @@ import axios from "axios";
 export async function logout() {
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/members/logout`,
+      `${import.meta.env.VITE_API_BASE_URL}/members/logout`,
       {},
       { withCredentials: true } // 쿠키(토큰) 포함
     );

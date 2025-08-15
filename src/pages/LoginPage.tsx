@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   const goSocial = (provider: 'kakao' | 'google' | 'naver') => {
     // 
-    window.location.href = `https://api.whatisthis.co.kr/oauth2/authorization/${provider}`;
+    window.location.href = `${API}/oauth2/authorization/${provider}`;
   }
 
   const [memberId, setMemberId] = useState('');
