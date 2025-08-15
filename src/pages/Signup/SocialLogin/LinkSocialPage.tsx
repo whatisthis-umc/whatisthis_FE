@@ -1,4 +1,5 @@
 // src/pages/Signup/SocialLogin/LinkSocialPage.tsx
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function LinkSocialPage() {
@@ -10,21 +11,29 @@ export default function LinkSocialPage() {
   const email = state?.email ?? '';
   const provider = state?.provider ?? '';
   const providerId = state?.providerId ?? '';
-  const API = import.meta.env.VITE_API_BASE_URL ;
+  const API = 'https://api.whatisthis.co.kr';
 
    // 잘못된 접근 가드
-  if (!email || !provider || !providerId) {
-    navigate('/login', { replace: true, state: { error: '잘못된 접근입니다.' } });
-    return null;
-  }
+  useEffect(() => {
+    if (!email || !provider || !providerId) {
+      setShowErrorModal(true);
+    }
+  }, [email, provider, providerId]);
+
 
   const handleLink = async () => {
   try {
     if (!API) throw new Error('API URL not set');
 
+    const token = localStorage.getItem("accessToken");
+    if (!token) throw new Error("Access token not found");
+
     const res = await fetch(`${API}/members/link-social`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' ,Accept: 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json' ,
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,},
       credentials: 'include', // 쿠키 사용 시 필수
       body: JSON.stringify({
         email,        // useLocation()에서 받은 값
@@ -32,14 +41,15 @@ export default function LinkSocialPage() {
         providerId,   // 소셜 고유 id
       }),
     });
+    if (!res.ok) {
+      throw new Error(`Failed: ${res.status}`);
+    }
 
     const data = await res.json().catch(() => ({}));
       if (!res.ok || data.isSuccess === false) {
         throw new Error(data?.message || '연동에 실패했습니다.');
       }
 
-      // (선택) me 호출로 세션 확인
-      // await fetch(`${API}/members/me`, { credentials: 'include' });
 
       navigate('/community', { replace: true }); // ★ 오타 수정
     } catch (e: any) {
@@ -99,3 +109,7 @@ export default function LinkSocialPage() {
 );
 
 }
+function setShowErrorModal(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
+

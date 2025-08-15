@@ -8,6 +8,8 @@ const ENABLE_LOG = String(import.meta.env.VITE_API_LOG) === "1";
 export type PublicAxiosConfig = AxiosRequestConfig & {
   /** true면 Authorization 헤더를 강제로 제외 */
   isPublic?: boolean;
+  /** true면 401/403 에러 시 토큰 재발급을 시도하지 않음 */
+  skipTokenRefresh?: boolean;
 };
 
 export const axiosInstance = axios.create({
@@ -90,18 +92,38 @@ axiosInstance.interceptors.request.use((config: any) => {
 });
 
 /* --------- 토큰 재발급 --------- */
-async function refreshToken(): Promise<string> {
-  const refresh = localStorage.getItem("refreshToken");
+async function refreshToken(isAdmin: boolean = false): Promise<string> {
+  const refresh = isAdmin
+    ? localStorage.getItem("adminRefreshToken")
+    : localStorage.getItem("refreshToken");
   if (!refresh) throw new Error("로그인이 필요합니다.");
 
-  // refresh는 순수 axios로(interceptor 영향 최소화)
-  const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken: refresh });
+
+  const url = isAdmin ? `${baseURL}/admin/reissue` : `${baseURL}/members/reissue`;
+  const res = await axios.post(
+    url,
+    {},
+    {
+      headers: {
+        "Refresh-Token": refresh,
+        Accept: "application/json",
+      },
+    }
+  );
   if (!res.data?.isSuccess) throw new Error(res.data?.message ?? "토큰 재발급 실패");
 
   const newAccess = res.data.result?.accessToken ?? res.data.data?.accessToken;
+  const newRefresh = res.data.result?.refreshToken ?? res.data.data?.refreshToken;
   if (!newAccess) throw new Error("액세스 토큰 없음");
 
-  localStorage.setItem("accessToken", newAccess);
+
+  if (isAdmin) {
+    localStorage.setItem("adminAccessToken", newAccess);
+    if (newRefresh) localStorage.setItem("adminRefreshToken", newRefresh);
+  } else {
+    localStorage.setItem("accessToken", newAccess);
+    if (newRefresh) localStorage.setItem("refreshToken", newRefresh);
+  }
   return newAccess;
 }
 
@@ -139,7 +161,10 @@ axiosInstance.interceptors.response.use(
     if ((original as any).__retry) return Promise.reject(error);
 
     if (status === 401 || status === 403) {
-      const refresh = localStorage.getItem("refreshToken");
+      const originalUrl = (original?.url ?? "").toString();
+      const isAdminApi = originalUrl.startsWith("/admin") || originalUrl.startsWith("/upload");
+      const refreshKey = isAdminApi ? "adminRefreshToken" : "refreshToken";
+      const refresh = localStorage.getItem(refreshKey);
       if (!refresh) return Promise.reject(error);
 
       if (isRefreshing) {
@@ -157,7 +182,7 @@ axiosInstance.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const newAccess = await refreshToken();
+        const newAccess = await refreshToken(isAdminApi);
         waiters.forEach((fn) => {
           try {
             fn(newAccess);
@@ -166,8 +191,13 @@ axiosInstance.interceptors.response.use(
         waiters = [];
         return retryOriginal(original, newAccess);
       } catch (e) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        if (isAdminApi) {
+          localStorage.removeItem("adminAccessToken");
+          localStorage.removeItem("adminRefreshToken");
+        } else {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
         return Promise.reject(e);
       } finally {
         isRefreshing = false;

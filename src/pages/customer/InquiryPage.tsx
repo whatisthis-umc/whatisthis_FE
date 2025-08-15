@@ -109,11 +109,14 @@ const InquiryPage = () => {
       }
     } catch (e: any) {
       console.error("고객 문의 상세 조회 실패:", e);
-      // 권한 없는 경우(작성자 아님)
+      // 권한 없는 경우(작성자 아님) - 403 에러인 경우만 처리
       if (e?.response?.status === 403) {
+        // 비밀글 권한 부족 모달 표시
         setShowPrivateModal(true);
         return false;
       }
+      // 다른 에러는 그대로 throw하여 상위에서 처리하도록 함
+      throw e;
     }
     return false;
   };
