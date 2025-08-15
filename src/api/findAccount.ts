@@ -1,4 +1,5 @@
 import { axiosInstance } from "./axiosInstance";
+import axios from "axios";
 
 
 // ---------- 타입 ----------
@@ -67,26 +68,32 @@ export async function findId(body: FindIdReq) {
   return data;
 }
 export async function sendResetCode(body: SendCodeReq) {
-  const { data } = await axiosInstance.post<SendCodeRes>(
-    "/members/reset-password/send-code",
-    body
+  // resetToken 관련 쿠키를 위해 withCredentials: true 사용
+  const { data } = await axios.post<SendCodeRes>(
+    `${import.meta.env.VITE_API_BASE_URL}/members/reset-password/send-code`,
+    body,
+    { withCredentials: true }
   );
   return data;
 }
 /** 인증코드 검증 (토큰 발급) */
 export async function verifyResetCode(body: VerifyCodeReq) {
-  const { data } = await axiosInstance.post<VerifyCodeRes>(
-    "/members/reset-password/verify-code",
-    body
+  // resetToken 관련 쿠키를 위해 withCredentials: true 사용
+  const { data } = await axios.post<VerifyCodeRes>(
+    `${import.meta.env.VITE_API_BASE_URL}/members/reset-password/verify-code`,
+    body,
+    { withCredentials: true }
   );
   return data;
 }
 
 /** 비밀번호 재설정 */
 export async function resetPassword(body: ResetPasswordReq) {
-  const { data } = await axiosInstance.post<ResetPasswordRes>(
-    "/members/reset-password",
-    body // resetToken은 쿠키에서 자동으로 전송됨
+  // resetToken이 쿠키에 있으므로 withCredentials: true 필요
+  const { data } = await axios.post<ResetPasswordRes>(
+    `${import.meta.env.VITE_API_BASE_URL}/members/reset-password`,
+    body,
+    { withCredentials: true } // 쿠키 전송을 위해 필요
   );
   return data;
 }
