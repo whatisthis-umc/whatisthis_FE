@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { dummyPosts } from "../../data/dummyPosts";
 import CategoryBar from "../../components/CategoryBar";
 import Searchbar from "../../components/Searchbar";
 import { tipCategories } from "../../data/categoryList";
@@ -10,10 +9,11 @@ import ReportModal from "../../components/modals/ReportModal";
 import LoginModal from "../../components/modals/LoginModal";
 import { tipDetailService } from "../../api/tipDetailApi";
 import { tipService } from "../../api/lifeTipsApi";
-import type { TipPostDetail, TipPost } from "../../api/types";
+import type { TipPostDetail, TipPost, Post } from "../../api/types";
 import { useScrap } from "../../hooks/useInteraction";
 import useReportPost from "../../hooks/mutations/useReportPost";
 import { useAuth } from "../../hooks/useAuth";
+import { getSimilarPosts } from "../../api/similarPostsApi";
 
 const TipsPostDetailPage = () => {
   const { id } = useParams();
@@ -27,6 +27,8 @@ const TipsPostDetailPage = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [allPosts, setAllPosts] = useState<TipPost[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
 
   // 신고한 게시물 ID를 localStorage에 저장하여 재방문 시에도 방지
   // localStorage에서 신고한 게시물 목록 가져오기
@@ -51,8 +53,6 @@ const TipsPostDetailPage = () => {
       console.error("localStorage 저장 실패:", error);
     }
   };
-
-  const relatedPosts = dummyPosts.slice(0, 5);
 
   // 스크랩 Hook - 항상 호출하되 postId가 없으면 0으로 초기화
   const postId = id ? parseInt(id) : 0;
@@ -113,6 +113,26 @@ const TipsPostDetailPage = () => {
       .finally(() => {
         setLoading(false);
       });
+  }, [id]);
+
+  // 관련 게시물 로드
+  useEffect(() => {
+    if (!id) return;
+
+    const loadRelatedPosts = async () => {
+      setRelatedLoading(true);
+      try {
+        const similarPosts = await getSimilarPosts(parseInt(id), 5);
+        setRelatedPosts(similarPosts);
+      } catch (error) {
+        console.error("관련 게시물 로딩 실패:", error);
+        setRelatedPosts([]);
+      } finally {
+        setRelatedLoading(false);
+      }
+    };
+
+    loadRelatedPosts();
   }, [id]);
 
   // 모든 게시물 데이터 가져오기
@@ -388,22 +408,34 @@ const TipsPostDetailPage = () => {
           관련 꿀팁 게시물
         </h3>
         <div className="flex gap-5 md:gap-10 overflow-x-auto hide-scrollbar">
-          {relatedPosts.map((relatedPost) => (
-            <div
-              key={relatedPost.id}
-              onClick={() => navigate(`/${relatedPost.type}/${relatedPost.id}`)}
-              className="cursor-pointer"
-            >
-              <ItemCard
-                hashtag={relatedPost.hashtag}
-                imageUrl={relatedPost.imageUrl}
-                title={relatedPost.title}
-                description={relatedPost.description}
-                views={relatedPost.views}
-                scraps={relatedPost.scraps}
-              />
+          {relatedLoading ? (
+            <div className="text-gray-500 text-center py-8">
+              관련 게시물을 불러오는 중...
             </div>
-          ))}
+          ) : relatedPosts.length > 0 ? (
+            relatedPosts.map((relatedPost) => (
+              <div
+                key={relatedPost.postId}
+                onClick={() =>
+                  navigate(`/${relatedPost.type}/${relatedPost.postId}`)
+                }
+                className="cursor-pointer"
+              >
+                <ItemCard
+                  hashtag={relatedPost.hashtags}
+                  imageUrl={relatedPost.imageUrls}
+                  title={relatedPost.title}
+                  description={relatedPost.summary}
+                  views={relatedPost.views}
+                  scraps={relatedPost.scraps}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500 text-center py-8">
+              관련 게시물이 없습니다.
+            </div>
+          )}
         </div>
       </div>
     </div>

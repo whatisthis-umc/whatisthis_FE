@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { profile, favorite, bookmark, logo, menu } from "../assets";
+import { profile, favorite, bookmark, logo, logo2, menu } from "../assets";
 import Searchbar from "./Searchbar";
 import Sidebar from "./Sidebar";
 
@@ -135,9 +135,9 @@ const Navbar = () => {
       <div className="hidden md:flex items-center justify-between px-6 py-3 relative w-full">
         <div className="flex items-center">
           <img
-            src={logo}
+            src={logo2}
             alt="로고"
-            className="w-[72px] h-[36px] cursor-pointer"
+            className="w-[180px] h-[50px] cursor-pointer"
             onClick={() => navigate("/")}
           />
         </div>

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Box,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -40,8 +38,8 @@ export default function AdminPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const [accordionOpen, setAccordionOpen] = useState(false);
+
 
   const postsPerPage = 5;
 
@@ -186,6 +184,7 @@ export default function AdminPostPage() {
         setAccordionOpen(false);
       }
     };
+
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -352,6 +351,7 @@ export default function AdminPostPage() {
                   flexGrow: 1,
                 }}
               >
+
                 {adminPostCategories.find((cat: any) => cat.id === selectedCategory)?.name || "전체"}
               </Box>
               <img 
@@ -367,6 +367,7 @@ export default function AdminPostPage() {
               />
             </Box>
             
+
             {/* 아코디언 드롭다운 */}
             {accordionOpen && (
               <Box
@@ -385,6 +386,7 @@ export default function AdminPostPage() {
                   background: "#E6E6E6",
                 }}
               >
+
                 {adminPostCategories.filter((cat: any) => cat.id !== "all").map((cat: any) => (
                   <Box
                     key={cat.id}
@@ -406,6 +408,7 @@ export default function AdminPostPage() {
                     {cat.name}
                   </Box>
                 ))}
+
               </Box>
             )}
           </Box>
@@ -549,7 +552,9 @@ export default function AdminPostPage() {
                   onClick={() => navigate(`/admin/post/${post.postId}`)}
                   style={{ cursor: "pointer" }}
                 >
+
                   <TableCell sx={{ borderBottom: "1px solid #333333", pr: "130px" }}>
+
                     <Box
                       sx={{
                         display: "inline-block",
@@ -673,7 +678,11 @@ export default function AdminPostPage() {
         {/* 페이지네이션 (공용 컴포넌트) */}
         {/* 페이지네이션 코드 통일 */}
         <Box className="mt-20">
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </Box>
       </Box>
     </AdminLayout>
