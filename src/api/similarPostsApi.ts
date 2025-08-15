@@ -60,7 +60,7 @@ export const getSimilarPosts = async (postId: number, size: number = 5): Promise
     console.log("변환된 유사 게시물:", similarPosts);
     return similarPosts;
   } catch (error) {
-    console.error("유사 게시물 API 오류:", error);
+    console.error("유사 게시물 API 오류", error);
     return [];
   }
 };

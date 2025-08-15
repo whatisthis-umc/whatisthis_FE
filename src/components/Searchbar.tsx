@@ -21,18 +21,11 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
     const loadPopularKeywords = async () => {
       try {
         const popularKeywords = await getPopularKeywords();
-        setKeywords(popularKeywords.slice(0, 6)); // 상위 6개만 표시
+        setKeywords(popularKeywords.slice(0, 8)); // 상위 8개만 표시
       } catch (error) {
         console.error("인기 검색어 로딩 실패:", error);
         // 기본값 사용
-        setKeywords([
-          "청소",
-          "분리수거", 
-          "세탁",
-          "요리",
-          "냉장고",
-          "옷"
-        ]);
+        setKeywords(["청소", "분리수거", "세탁", "요리", "냉장고", "옷"]);
       }
     };
 
@@ -57,8 +50,6 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
     }
   };
 
-
-
   return (
     <div className="relative w-[80px] md:w-[240px] ml-auto mt-4 md:sticky md:top-4 md:right-4 md:z-50 md:mt-0 md:float-right">
       <div className="flex w-full h-[30px] md:h-[40px] border-b border-[#333333] relative">
@@ -68,11 +59,15 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            placeholder={keywords.length > 0 ? `${currentKeywordIndex + 1}. ${keywords[currentKeywordIndex]}` : "검색어를 입력하세요"}
+            placeholder={
+              keywords.length > 0
+                ? `${currentKeywordIndex + 1}. ${keywords[currentKeywordIndex]}`
+                : "검색어를 입력하세요"
+            }
             className="w-full text-xs md:text-base placeholder-gray-400"
           />
         </div>
-        
+
         {/* 데스크톱용 화살표 */}
         <img
           src={arrowDownIcon}
@@ -80,7 +75,7 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
           className="hidden md:inline-block w-[24px] h-[24px] md:cursor-pointer md:ml-auto"
           onClick={() => setIsOpen(!isOpen)}
         />
-        
+
         {/* 검색 아이콘 */}
         <img
           src={search}
