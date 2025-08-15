@@ -3,9 +3,9 @@ import { axiosInstance } from "../../api/axiosInstance";
 import type { CommunitySortType, CommunityPost } from "../../types/community";
 
 type Params = {
-  page: number;  // 1-based
-  size: number;  // e.g., 6
-  sort: CommunitySortType; // "BEST" | "LATEST"
+  page: number;
+  size: number;
+  sort: CommunitySortType;
   uiCategory: "전체" | "인기글" | "생활꿀팁" | "꿀템 추천" | "살까말까?" | "궁금해요!";
 };
 
@@ -15,6 +15,9 @@ type ServerItem = {
   nickname: string; createdAt: string; isBestUser: boolean;
   viewCount: number; likeCount: number; commentCount: number;
   imageUrl: string[];
+  // 있을 수도 있는 필드들 보강
+  hashtags?: Array<{ content: string }>;
+  hashtagListDto?: { hashtagList: Array<{ content: string }> };
 };
 type ServerPage = {
   postList: ServerItem[]; listSize: number; totalPage: number;
@@ -23,11 +26,24 @@ type ServerPage = {
 type Envelope = { isSuccess: boolean; code: string; message: string; result: ServerPage | null };
 
 function map(i: ServerItem): CommunityPost {
+  const tags =
+    i.hashtags?.map((h) => h.content).filter(Boolean)
+    ?? i.hashtagListDto?.hashtagList?.map((h) => h.content).filter(Boolean)
+    ?? [];
+
   return {
-    id: i.id, title: i.title, content: i.content, category: i.category,
-    nickname: i.nickname, createdAt: i.createdAt, isBest: i.isBestUser,
-    views: i.viewCount, likes: i.likeCount, comments: i.commentCount,
-    imageUrls: i.imageUrl ?? [], hashtags: [],
+    id: i.id,
+    title: i.title,
+    content: i.content,
+    category: i.category,
+    nickname: i.nickname,
+    createdAt: i.createdAt,
+    isBest: i.isBestUser,
+    views: i.viewCount,
+    likes: i.likeCount,
+    comments: i.commentCount,
+    imageUrls: i.imageUrl ?? [],
+    hashtags: tags,
   };
 }
 
@@ -55,7 +71,6 @@ async function getPublicOnce(url: string, params?: Record<string, any>): Promise
   return res.data.result;
 }
 
-/* sort 포함해서 호출 */
 async function fetchCategoryOnce(
   segment: NonNullable<ReturnType<typeof segOf>>,
   page: number,
@@ -72,7 +87,6 @@ async function fetchCategoryOnce(
   };
 }
 
-/* 전체+최신순 병합 시에도 sort=LATEST 붙여서 4카테 1회씩만 */
 async function mergeLatest(page: number, size: number, sort: CommunitySortType = "LATEST") {
   const segs: Array<NonNullable<ReturnType<typeof segOf>>> =
     ["tips", "items", "should-i-buy", "curious"];
@@ -94,7 +108,6 @@ async function mergeLatest(page: number, size: number, sort: CommunitySortType =
 }
 
 async function fetchPopular(page: number, size: number) {
-  // popular는 sort 요구 X (스펙 기준)
   const r = await getPublicOnce("/posts/communities/popular", { page, size });
   return {
     posts: (r.postList ?? []).map(map),
@@ -117,7 +130,6 @@ async function fetchCommunities({ page, size, sort, uiCategory }: Params) {
     return fetchPopular(page, size);
   }
 
-  // 전체 + 최신순
   return mergeLatest(page, size, "LATEST");
 }
 
