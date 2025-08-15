@@ -8,6 +8,8 @@ const ENABLE_LOG = String(import.meta.env.VITE_API_LOG) === "1";
 export type PublicAxiosConfig = AxiosRequestConfig & {
   /** true면 Authorization 헤더를 강제로 제외 */
   isPublic?: boolean;
+  /** true면 401/403 에러 시 토큰 재발급을 시도하지 않음 */
+  skipTokenRefresh?: boolean;
 };
 
 export const axiosInstance = axios.create({
@@ -137,6 +139,7 @@ axiosInstance.interceptors.response.use(
 
     if (original?.isPublic) return Promise.reject(error);
     if ((original as any).__retry) return Promise.reject(error);
+    if (original?.skipTokenRefresh) return Promise.reject(error);
 
     if (status === 401 || status === 403) {
       const refresh = localStorage.getItem("refreshToken");
