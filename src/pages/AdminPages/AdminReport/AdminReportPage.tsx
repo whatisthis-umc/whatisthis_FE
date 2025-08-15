@@ -29,7 +29,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Pagination from "../../../components/customer/Pagination";
 
 export default function AdminReportPage() {
-  const [selectedStatus, setSelectedStatus] = useState<ReportStatus>("all");
+  const [selectedStatus, setSelectedStatus] = useState<ReportStatus>("all" as any);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 400);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +41,7 @@ export default function AdminReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState(false);
   const navigate = useNavigate();
 
   // 로컬 캐시: 처리 완료 후에도 유형/내용/사유를 유지하기 위한 간단한 저장소
@@ -195,6 +196,21 @@ export default function AdminReportPage() {
     fetchReports();
   }, [fetchReports]);
 
+  // 아코디언 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (accordionOpen && !target.closest('[data-accordion]')) {
+        setAccordionOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [accordionOpen]);
+
   const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
@@ -300,51 +316,94 @@ export default function AdminReportPage() {
           className="mb-6"
           sx={{
             width: 921,
-            height: 72,
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
+            position: "relative",
           }}
         >
-          {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
-              value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value as ReportStatus);
-                setCurrentPage(1);
-              }}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => null}
+          {/* 커스텀 아코디언 Select 박스 */}
+          <Box sx={{ position: "relative" }} data-accordion>
+            <Box
+              onClick={() => setAccordionOpen(!accordionOpen)}
               sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
+                width: 567,
+                height: 72,
+                borderRadius: "32px",
+                backgroundColor: "#E6E6E6",
+                px: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
               }}
             >
-              {reportStatuses.map((status) => (
-                <MenuItem key={status.id} value={status.id}>
-                  {status.name}
-                </MenuItem>
-              ))}
-            </Select>
-            <img src={arrowDown} alt="arrow" width={24} height={24} style={{ opacity: 0.8 }} />
+              <Box
+                sx={{
+                  fontFamily: "Pretendard",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  color: "#333333",
+                  lineHeight: "150%",
+                  flexGrow: 1,
+                }}
+              >
+                {reportStatuses.find((status) => status.id === selectedStatus)?.name || "전체"}
+              </Box>
+              <img 
+                src={arrowDown} 
+                alt="arrow" 
+                width={24} 
+                height={24} 
+                style={{ 
+                  opacity: 0.8,
+                  transform: accordionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} 
+              />
+            </Box>
+            
+            {/* 아코디언 드롭다운 */}
+            {accordionOpen && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "80px", // 8px 아래
+                  left: 0,
+                  zIndex: 1000,
+                  display: "flex",
+                  width: "568px",
+                  padding: "24px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  borderRadius: "32px",
+                  background: "#E6E6E6",
+                }}
+              >
+                {reportStatuses.filter((status) => status.id !== "all").map((status) => (
+                  <Box
+                    key={status.id}
+                    onClick={() => {
+                      setSelectedStatus(status.id as ReportStatus);
+                      setCurrentPage(1);
+                      setAccordionOpen(false);
+                    }}
+                    sx={{
+                      width: "100%",
+                      cursor: "pointer",
+                      fontFamily: "Pretendard",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#333333",
+                      lineHeight: "150%",
+                    }}
+                  >
+                    {status.name}
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
 
           {/* 검색창 */}
@@ -405,54 +464,81 @@ export default function AdminReportPage() {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>유형</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>신고 내용</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>신고 사유</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>신고일</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>유형</TableCell>
+              {/* 신고 내용 컬럼 삭제 */}
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>신고 사유</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>신고일</TableCell>
               <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>처리 상태</TableCell>
             </TableRow>
           </TableHead>
           <TableBody sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>
-            {displayReports.length === 0 ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={5} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
+                  로딩 중...
+                </TableCell>
+              </TableRow>
+            ) : displayReports.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
                   신고 내역이 없습니다.
                 </TableCell>
               </TableRow>
             ) : (
               displayReports.map((report) => (
                 <TableRow key={report.reportId} onClick={() => navigate(`/admin/report/${report.reportId}`)} style={{ cursor: "pointer" }}>
-                  <TableCell sx={{ borderBottom: "1px solid #333333" }}>
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "140px" }}>
                     <Box sx={{ display: "inline-block", padding: "4px 12px", border: "1px solid #999999", borderRadius: "32px", fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333" }}>
                       {REPORT_TYPE_LABELS[report.type]}
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333" }}>{report.content}</TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#666666", textAlign: "left", borderBottom: "1px solid #333333" }}>{REPORT_CONTENT_LABELS[report.reportContent]}</TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333" }}>{formatReportDate(report.reportedAt)}</TableCell>
+                  {/* 신고 내용 셀 삭제 */}
+                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#666666", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{REPORT_CONTENT_LABELS[report.reportContent]}</TableCell>
+                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{formatReportDate(report.reportedAt)}</TableCell>
                   <TableCell sx={{ borderBottom: "1px solid #333333" }}>
                     {report.status === "UNPROCESSED" ? (
-                      <button
+                      <Box
                         onClick={(e) => { e.stopPropagation(); handleStatusChange(report.reportId); }}
-                        disabled={processing}
-                        style={{
-                          backgroundColor: processing ? "#CCCCCC" : "#0080FF",
-                          color: "#FFFFFF",
+                        sx={{
+                          display: "flex",
+                          padding: "4px 12px",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          borderRadius: "32px",
+                          border: "1px solid #999",
                           fontFamily: "Pretendard",
                           fontSize: "14px",
+                          fontStyle: "normal",
                           fontWeight: 500,
                           lineHeight: "150%",
-                          letterSpacing: "-1%",
-                          padding: "4px 12px",
-                          borderRadius: "32px",
-                          border: "none",
+                          letterSpacing: "-0.14px",
+                          color: processing ? "#CCCCCC" : "#999",
+                          backgroundColor: processing ? "#F5F5F5" : "transparent",
                           cursor: processing ? "not-allowed" : "pointer",
                         }}
                       >
-                        {processing ? "처리중..." : "처리하기"}
-                      </button>
+                        {processing ? "처리중..." : "미처리"}
+                      </Box>
                     ) : (
-                      <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">처리완료</span>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "4px 12px",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          borderRadius: "32px",
+                          background: "#333",
+                          fontFamily: "Pretendard",
+                          fontSize: "14px",
+                          fontStyle: "normal",
+                          fontWeight: 500,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.14px",
+                          color: "#FFF",
+                        }}
+                      >
+                        처리완료
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>

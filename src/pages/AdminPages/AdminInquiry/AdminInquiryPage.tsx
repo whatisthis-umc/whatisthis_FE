@@ -40,6 +40,7 @@ export default function AdminInquiryPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState(false);
   const inquiriesPerPage = 5;
   const navigate = useNavigate();
 
@@ -47,10 +48,15 @@ export default function AdminInquiryPage() {
     try {
       setLoading(true);
       setError(null);
+      
+      // selectedStatus가 "unprocessed"나 "processed"일 때는 해당 상태만 조회
+      const statusParam = selectedStatus === "all" ? selectedStatus : 
+                         selectedStatus === "unprocessed" ? "unprocessed" : "processed";
+      
       const response = await getInquiryList(
         currentPage,
         inquiriesPerPage,
-        selectedStatus,
+        statusParam as InquiryStatus,
         debouncedSearch || undefined
       );
       if (response.isSuccess) {
@@ -74,6 +80,21 @@ export default function AdminInquiryPage() {
   useEffect(() => {
     fetchInquiries();
   }, [fetchInquiries]);
+
+  // 아코디언 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (accordionOpen && !target.closest('[data-accordion]')) {
+        setAccordionOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [accordionOpen]);
 
   const displayInquiries = useMemo(() => inquiries, [inquiries]);
 
@@ -164,51 +185,94 @@ export default function AdminInquiryPage() {
           className="mb-6"
           sx={{
             width: 921,
-            height: 72,
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
+            position: "relative",
           }}
         >
-          {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
-              value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value as InquiryStatus);
-                setCurrentPage(1);
-              }}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => null}
+          {/* 커스텀 아코디언 Select 박스 */}
+          <Box sx={{ position: "relative" }} data-accordion>
+            <Box
+              onClick={() => setAccordionOpen(!accordionOpen)}
               sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
+                width: 567,
+                height: 72,
+                borderRadius: "32px",
+                backgroundColor: "#E6E6E6",
+                px: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
               }}
             >
-              {inquiryStatuses.map((status) => (
-                <MenuItem key={status.id} value={status.id}>
-                  {status.name}
-                </MenuItem>
-              ))}
-            </Select>
-            <img src={arrowDown} alt="arrow" width={24} height={24} style={{ opacity: 0.8 }} />
+              <Box
+                sx={{
+                  fontFamily: "Pretendard",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  color: "#333333",
+                  lineHeight: "150%",
+                  flexGrow: 1,
+                }}
+              >
+                {inquiryStatuses.find((status) => status.id === selectedStatus)?.name || "전체"}
+              </Box>
+              <img 
+                src={arrowDown} 
+                alt="arrow" 
+                width={24} 
+                height={24} 
+                style={{ 
+                  opacity: 0.8,
+                  transform: accordionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} 
+              />
+            </Box>
+            
+            {/* 아코디언 드롭다운 */}
+            {accordionOpen && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "80px", // 8px 아래
+                  left: 0,
+                  zIndex: 1000,
+                  display: "flex",
+                  width: "568px",
+                  padding: "24px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  borderRadius: "32px",
+                  background: "#E6E6E6",
+                }}
+              >
+                {inquiryStatuses.filter((status) => status.id !== "all").map((status) => (
+                  <Box
+                    key={status.id}
+                    onClick={() => {
+                      setSelectedStatus(status.id as InquiryStatus);
+                      setCurrentPage(1);
+                      setAccordionOpen(false);
+                    }}
+                    sx={{
+                      width: "100%",
+                      cursor: "pointer",
+                      fontFamily: "Pretendard",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#333333",
+                      lineHeight: "150%",
+                    }}
+                  >
+                    {status.name}
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
 
           {/* 검색창 */}
@@ -269,9 +333,9 @@ export default function AdminInquiryPage() {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>유형</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>문의 내용</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>작성일</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>유형</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>문의 내용</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", pr: "140px" }}>작성일</TableCell>
               <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left" }}>처리 상태</TableCell>
             </TableRow>
           </TableHead>
@@ -285,35 +349,56 @@ export default function AdminInquiryPage() {
             ) : (
               displayInquiries.map((inquiry: InquiryListItem) => (
                 <TableRow key={inquiry.id} onClick={() => navigate(`/admin/inquiry/${inquiry.id}`)} style={{ cursor: "pointer" }}>
-                  <TableCell sx={{ borderBottom: "1px solid #333333" }}>
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "140px" }}>
                     <Box sx={{ display: "inline-block", padding: "4px 12px", border: "1px solid #999999", borderRadius: "32px", fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333" }}>
                       문의
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333" }}>{inquiry.title}</TableCell>
-                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333" }}>{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</TableCell>
+                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{inquiry.title}</TableCell>
+                  <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 500, fontSize: "20px", lineHeight: "150%", letterSpacing: "-2%", color: "#333333", textAlign: "left", borderBottom: "1px solid #333333", pr: "140px" }}>{new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}</TableCell>
                   <TableCell sx={{ borderBottom: "1px solid #333333" }}>
                     {inquiry.status === "UNPROCESSED" ? (
-                      <button
+                      <Box
                         onClick={(e) => { e.stopPropagation(); handleStatusChange(inquiry.id); }}
-                        style={{
-                          backgroundColor: "#0080FF",
-                          color: "#FFFFFF",
+                        sx={{
+                          display: "flex",
+                          padding: "4px 12px",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          borderRadius: "32px",
+                          border: "1px solid #999",
                           fontFamily: "Pretendard",
                           fontSize: "14px",
+                          fontStyle: "normal",
                           fontWeight: 500,
                           lineHeight: "150%",
-                          letterSpacing: "-1%",
-                          padding: "4px 12px",
-                          borderRadius: "32px",
-                          border: "none",
+                          letterSpacing: "-0.14px",
+                          color: "#999",
                           cursor: "pointer",
                         }}
                       >
-                        처리하기
-                      </button>
+                        미답변
+                      </Box>
                     ) : (
-                      <span className="bg-[#0080FF] text-white text-sm font-medium py-1 px-3 rounded-[32px] inline-block">답변완료</span>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          padding: "4px 12px",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          borderRadius: "32px",
+                          background: "#333",
+                          fontFamily: "Pretendard",
+                          fontSize: "14px",
+                          fontStyle: "normal",
+                          fontWeight: 500,
+                          lineHeight: "150%",
+                          letterSpacing: "-0.14px",
+                          color: "#FFF",
+                        }}
+                      >
+                        답변완료
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>
