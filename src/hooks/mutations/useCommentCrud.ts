@@ -1,13 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateComment, deleteComment } from "../../api/comments";
+// ⬇️ deleteComment -> deleteCommentAPI 로 수정
+import { updateComment, deleteCommentAPI } from "../../api/comments";
 
 export function useUpdateComment(postId: number) {
   const qc = useQueryClient();
   return useMutation({
+    // ⬇️ content를 문자열이 아니라 객체로 전달
     mutationFn: ({ commentId, content }: { commentId: number; content: string }) =>
-      updateComment(postId, commentId, content),
+      updateComment(postId, commentId, { content }),
     onSuccess: () => {
-      qc.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail" });
+      qc.invalidateQueries({
+        predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail",
+      });
     },
   });
 }
@@ -15,9 +19,12 @@ export function useUpdateComment(postId: number) {
 export function useDeleteComment(postId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (commentId: number) => deleteComment(postId, commentId),
+    // ⬇️ deleteCommentAPI로 교체
+    mutationFn: (commentId: number) => deleteCommentAPI(postId, commentId),
     onSuccess: () => {
-      qc.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail" });
+      qc.invalidateQueries({
+        predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "communityDetail",
+      });
     },
   });
 }
