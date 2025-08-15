@@ -12,19 +12,20 @@ export default function LinkSocialPage() {
   const email = state?.email ?? '';
   const provider = state?.provider ?? '';
   const providerId = state?.providerId ?? '';
-  const API = 'https://api.whatisthis.co.kr';
 
    // 잘못된 접근 가드
   useEffect(() => {
     if (!email || !provider || !providerId) {
       alert('잘못된 접근입니다.');
+      navigate('/login');
+      return;
     }
-  }, [email, provider, providerId]);
+  }, [email, provider, providerId, navigate]);
 
   const handleLink = async () => {
     try {
-      // 하드코딩된 URL을 사용하되 axiosInstance의 인증 로직 활용
-      const res = await axiosInstance.post(`${API}/members/link-social`, {
+      // axiosInstance의 baseURL을 사용하여 일관성 유지
+      const res = await axiosInstance.post('/members/link-social', {
         email,        // useLocation()에서 받은 값
         provider,     // 'kakao' | 'naver' | 'google'
         providerId,   // 소셜 고유 id
