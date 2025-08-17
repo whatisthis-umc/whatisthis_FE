@@ -26,6 +26,23 @@ export default function LinkSocialPage() {
     }
   }, [email, provider, providerId, navigate]);
 
+  // URL 정리: conflict=true만 남기고 다른 파라미터들 모두 제거
+  useEffect(() => {
+    const currentUrl = new URL(window.location.href);
+    const hasConflict = currentUrl.searchParams.get('conflict') === 'true';
+    
+    // conflict=true가 있으면 다른 파라미터들 모두 제거
+    if (hasConflict) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.search = '?conflict=true';
+      
+      // 현재 URL과 다르면 교체
+      if (cleanUrl.toString() !== window.location.href) {
+        window.history.replaceState({}, '', cleanUrl.toString());
+      }
+    }
+  }, []);
+
   const handleLink = async () => {
     try {
       // axiosInstance의 baseURL을 사용하여 일관성 유지
