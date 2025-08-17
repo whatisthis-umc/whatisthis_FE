@@ -9,9 +9,11 @@ export default function LinkSocialPage() {
   };
   const navigate = useNavigate();
 
-  const email = state?.email ?? '';
-  const provider = state?.provider ?? '';
-  const providerId = state?.providerId ?? '';
+  // state와 URL 파라미터 모두에서 데이터 읽기
+  const searchParams = new URLSearchParams(window.location.search);
+  const email = state?.email ?? searchParams.get('email') ?? '';
+  const provider = state?.provider ?? searchParams.get('provider') ?? '';
+  const providerId = state?.providerId ?? searchParams.get('providerId') ?? '';
 
   // 배포 환경에서 혹시 http가 들어오면 강제로 https로 바꿔치기
   const RAW_API = import.meta.env.VITE_API_BASE_URL || '';
