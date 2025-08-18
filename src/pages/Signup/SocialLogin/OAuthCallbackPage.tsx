@@ -14,25 +14,14 @@ function toBool(v: string | null): boolean | null {
 export default function OAuthCallbackPage() {
   const { search } = useLocation();
   const navigate = useNavigate();
-
-  // Query 파싱
   const qp = useMemo(() => new URLSearchParams(search), [search]);
+
   const isNew        = toBool(qp.get('isNew'));            // true | false | null
   const conflict     = toBool(qp.get('conflict'));         // true | null
   const error        = qp.get('error');                    // 'conflict-provider' | null
 
-
-
-  // 로컬 테스트 토큰(운영에선 사용 안 함)
-  const accessToken  = qp.get('accessToken');
-  const refreshToken = qp.get('refreshToken');
-
   useEffect(() => {
-    // 로컬 테스트용 토큰 저장
-    if (accessToken && refreshToken) {
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-    }
+    
   
     // 3) 다른 소셜과 이미 연동된 이메일
     if (error === 'conflict-provider') {
@@ -65,7 +54,7 @@ export default function OAuthCallbackPage() {
 
     // 안전장치
     navigate('/login', { replace: true });
-  },  [isNew, conflict, error, accessToken, refreshToken, navigate]);
+  },  [isNew, conflict, error, navigate]);
 
   return (
     <div className="w-full h-screen flex items-center justify-center text-[#666]">

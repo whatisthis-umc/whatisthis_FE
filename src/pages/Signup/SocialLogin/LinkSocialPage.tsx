@@ -1,6 +1,7 @@
 // src/pages/Signup/SocialLogin/LinkSocialPage.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { axiosInstance } from '../../../api/axiosInstance';
 
 export default function LinkSocialPage() {
   const navigate = useNavigate();
@@ -23,31 +24,36 @@ export default function LinkSocialPage() {
   }, []);
 
   const handleLink = async () => {
+    setLoading(true);
+    setErr(null);
     try {
-      setLoading(true);
-      setErr(null);
+    // 1) 연동
+    await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
 
-      const res = await fetch(`${API_BASE}/members/link-social`, {
-        method: 'POST',
-        credentials: 'include',   // linkToken/세션 쿠키 전송
-        // 바디/Content-Type 없음 (사전요청 줄이고 스펙에 맞춤)
-      });
-
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
-
-      if (!res.ok || data.isSuccess === false) {
-        throw new Error(data?.message || `연동 실패 (${res.status})`);
-      }
-
-      
+    // 2) 로그인 상태 확인
+    const meRes = await axiosInstance.get('/members/me'); // 쿠키 포함
+    if (meRes.status === 200) {
+      // 필요하면 사용자 정보 저장
+      // localStorage.setItem('me', JSON.stringify(meRes.data.result));
       navigate('/community', { replace: true });
-    } catch (e: any) {
-      setErr(e?.message || '네트워크 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+
+    // 혹시 200이 아닌데 ok 처리되는 경우 방어
+    throw new Error(`상태 확인 실패 (${meRes.status})`);
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const msg = err?.response?.data?.message;
+    if (status === 401) {
+      alert('로그인 세션이 없습니다. 다시 시도해 주세요.');
+      navigate('/login', { replace: true });
+    } else {
+      setErr(msg || '연동에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
