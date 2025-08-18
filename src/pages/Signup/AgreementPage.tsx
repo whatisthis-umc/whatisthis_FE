@@ -70,14 +70,15 @@ export default function AgreementPage() {
       navigate('/signup/nickname');
     } else {
       alert('모든 필수 항목에 동의해주세요.');
+      return;
     }
     if (state?.from === 'social') {
       // 소셜 가입 플로우 → 닉네임 설정
-      navigate('/signup/socialnickname', { state }); // email, provider, providerId 그대로 전달
-    } else {
-      // 일반 가입 플로우 → 기존 Info 페이지
-      navigate('/signup/nickname');
+      navigate('/signup/socialNickName', { state }); // email, provider, providerId 그대로 전달
+      return;
     }
+    // 일반 가입 플로우 → 기존 Info 페이지
+    navigate('/signup/nickname');
   };
 
   return (
