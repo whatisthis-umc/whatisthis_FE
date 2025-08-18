@@ -2,7 +2,6 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-type Provider = 'kakao' | 'naver' | 'google';
 
 function toBool(v: string | null): boolean | null {
   if (v === null) return null;
@@ -21,19 +20,20 @@ export default function OAuthCallbackPage() {
   const isNew        = toBool(qp.get('isNew'));            // true | false | null
   const conflict     = toBool(qp.get('conflict'));         // true | null
   const error        = qp.get('error');                    // 'conflict-provider' | null
-  const email        = qp.get('email');
-  const provider     = qp.get('provider') as Provider | null;
-  const providerId   = qp.get('providerId');
-  const accessToken  = qp.get('accessToken');              // 로컬 테스트용
-  const refreshToken = qp.get('refreshToken');             // 로컬 테스트용
+
+
+
+  // 로컬 테스트 토큰(운영에선 사용 안 함)
+  const accessToken  = qp.get('accessToken');
+  const refreshToken = qp.get('refreshToken');
 
   useEffect(() => {
-    // 로컬 테스트에서만 사용 (배포에선 HttpOnly 쿠키 예정)
+    // 로컬 테스트용 토큰 저장
     if (accessToken && refreshToken) {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
     }
-
+  
     // 3) 다른 소셜과 이미 연동된 이메일
     if (error === 'conflict-provider') {
       navigate('/login', {
@@ -45,19 +45,15 @@ export default function OAuthCallbackPage() {
 
     // 1) 기존 일반계정은 있는데 소셜 연동 안 됨 → 연동 안내
     if (conflict === true) {
-      navigate('/link-social', {
-        replace: true,
-        state: { email, provider, providerId },
-      });
+      // state 없이 이동 (서버 세션이 모든 정보 보유)
+       navigate('/link-social', { replace: true });
       return;
     }
 
     // 4) 신규 유저 → 약관 동의 + 닉네임 설정 플로우 시작
     if (isNew === true) {
-      navigate('/signup/', {
-        replace: true,
-        state: { email, provider, providerId, from: 'social' },
-      });
+      // state 없이 이동
+      navigate('/signup', { replace: true });
       return;
     }
 
@@ -69,17 +65,7 @@ export default function OAuthCallbackPage() {
 
     // 안전장치
     navigate('/login', { replace: true });
-  }, [
-    isNew,
-    conflict,
-    error,
-    email,
-    provider,
-    providerId,
-    accessToken,
-    refreshToken,
-    navigate,
-  ]);
+  },  [isNew, conflict, error, accessToken, refreshToken, navigate]);
 
   return (
     <div className="w-full h-screen flex items-center justify-center text-[#666]">

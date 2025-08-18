@@ -1,65 +1,51 @@
 // src/pages/Signup/SocialLogin/LinkSocialPage.tsx
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { axiosInstance } from '../../../api/axiosInstance';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function LinkSocialPage() {
-  const { state } = useLocation() as {
-    state?: { email?: string; provider?: string; providerId?: string };
-  };
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  const email = state?.email ?? '';
-  const provider = state?.provider ?? '';
-  const providerId = state?.providerId ?? '';
+  // 절대주소 보장 (환경변수 잘못된 경우 대비)
+  const ENV = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const API_BASE = ENV && ENV.startsWith('http') ? ENV : 'https://api.whatisthis.co.kr';
 
-  // 배포 환경에서 혹시 http가 들어오면 강제로 https로 바꿔치기
-  const RAW_API = import.meta.env.VITE_API_BASE_URL || '';
-  const API = RAW_API.replace(/^http:\/\//, 'https://');
-
-   // 잘못된 접근 가드
+  // 주소 정리: conflict=true만 남기기
   useEffect(() => {
-    if (!email || !provider || !providerId) {
-      alert('잘못된 접근입니다.');
-      navigate('/login');
-      return;
-    }
-  }, [email, provider, providerId, navigate]);
-
-  // URL 정리: conflict=true만 남기고 다른 파라미터들 모두 제거
-  useEffect(() => {
-    const currentUrl = new URL(window.location.href);
-    const hasConflict = currentUrl.searchParams.get('conflict') === 'true';
-    
-    // conflict=true가 있으면 다른 파라미터들 모두 제거
-    if (hasConflict) {
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.search = '?conflict=true';
-      
-      // 현재 URL과 다르면 교체
-      if (cleanUrl.toString() !== window.location.href) {
-        window.history.replaceState({}, '', cleanUrl.toString());
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('conflict') === 'true') {
+      url.search = '?conflict=true';
+      if (url.toString() !== window.location.href) {
+        window.history.replaceState({}, '', url.toString());
       }
     }
   }, []);
 
   const handleLink = async () => {
     try {
-      // axiosInstance의 baseURL을 사용하여 일관성 유지
-      const res = await axiosInstance.post('/members/link-social', {
-        email,        // useLocation()에서 받은 값
-        provider,     // 'kakao' | 'naver' | 'google'
-        providerId,   // 소셜 고유 id
+      setLoading(true);
+      setErr(null);
+
+      const res = await fetch(`${API_BASE}/members/link-social`, {
+        method: 'POST',
+        credentials: 'include',   // linkToken/세션 쿠키 전송
+        // 바디/Content-Type 없음 (사전요청 줄이고 스펙에 맞춤)
       });
 
-      if (res.data.isSuccess) {
-        navigate('/community', { replace: true });
-      } else {
-        throw new Error(res.data.message || '연동에 실패했습니다.');
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (!res.ok || data.isSuccess === false) {
+        throw new Error(data?.message || `연동 실패 (${res.status})`);
       }
+
+      
+      navigate('/community', { replace: true });
     } catch (e: any) {
-      console.error('연동 실패:', e);
-      alert(e?.message || '네트워크 오류가 발생했습니다.');
+      setErr(e?.message || '네트워크 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
