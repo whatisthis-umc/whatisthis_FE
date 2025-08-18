@@ -18,7 +18,7 @@ export const axiosInstance = axios.create({
     // JSON은 axios가 자동, FormData는 브라우저가 자동으로 Content-Type 설정
     Accept: "application/json",
   },
-  withCredentials: false, // JWT 헤더만 사용
+  withCredentials: true, // JWT 헤더만 사용
 });
 
 let isRefreshing = false;
