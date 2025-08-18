@@ -115,7 +115,7 @@ export default function AgreementPage() {
         <div className="flex justify-center">
           <div className="w-[343px] md:w-[1032px] mx-auto mt-[60px]">
             <p className="text-[16px] md:text-[20px] font-bold leading-[150%] text-[#000000] mb-[10px]">서비스 이용 약관 동의</p>
-            <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-[0] md:style-custom">
+            <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-tl-[32px] md:rounded-tr-[16px] md:rounded-br-[16px] md:rounded-bl-[32px]">
               <div className="w-full h-full overflow-y-scroll pr-[8px] custom-scroll">
                 <FormattedLegal raw={TERMS_TEXT} />
               </div>
@@ -123,9 +123,7 @@ export default function AgreementPage() {
             <div className="flex justify-end items-center gap-[10px] mt-4">
               <p className="font-bold text-[16px] leading-[150%] text-[#0080FF]">필수</p>
               <div
-
                 className="w-[24px] h-[24px] rounded-full  bg-white flex justify-center items-center cursor-pointer"
-
                 onClick={() => {
                   const newTerms = !termsChecked;
                   setTermsChecked(newTerms);
@@ -135,10 +133,8 @@ export default function AgreementPage() {
                 <img 
                 src={termsChecked ? checkedCircle : checkCircle} 
                 alt="check" 
-
                 width={27} 
                 height={27} 
-
                 />
               </div>
               <p className="text-[#333333] text-[16px] leading-[150%] font-medium">동의합니다.</p>
@@ -149,7 +145,7 @@ export default function AgreementPage() {
         <div className="flex justify-center">
           <div className="w-[343px] md:w-[1032px] mx-auto">
             <p className="text-[16px] md:text-[20px] font-bold leading-[150%] text-[#000000] mb-[10px]">개인정보 접근 동의</p>
-            <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-[0] md:style-custom">
+            <div className="w-[343px] h-[160px] md:w-[1032px] md:h-[200px] border border-[#E6E6E6] rounded-[8px] md:rounded-tl-[32px] md:rounded-tr-[16px] md:rounded-br-[16px] md:rounded-bl-[32px]">
               <div className="w-full h-full overflow-y-scroll pr-[8px] custom-scroll">
                 <FormattedLegal raw={PRIVACY_TEXT} />
               </div>
