@@ -41,8 +41,8 @@ export default function OAuthCallbackPage() {
 
     // 4) 신규 유저 → 약관 동의 + 닉네임 설정 플로우 시작
     if (isNew === true) {
-      // state 없이 이동
-      navigate('/signup', { replace: true });
+      // 소셜 플로우 표식만 전달
+      navigate('/signup', { replace: true, state: { from: 'social' } });
       return;
     }
 
