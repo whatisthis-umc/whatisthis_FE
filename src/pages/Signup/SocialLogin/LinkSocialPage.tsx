@@ -27,33 +27,46 @@ export default function LinkSocialPage() {
     setLoading(true);
     setErr(null);
     try {
-    // 1) 연동
-    await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
+      // 1) 연동
+      await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
 
-    // 2) 로그인 상태 확인
-    const meRes = await axiosInstance.get('/members/me'); // 쿠키 포함
-    if (meRes.status === 200) {
-      // 필요하면 사용자 정보 저장
-      // localStorage.setItem('me', JSON.stringify(meRes.data.result));
-      navigate('/community', { replace: true });
-      return;
-    }
+      // 2) 로그인 상태 확인
+      const meRes = await axiosInstance.get('/members/me'); // 쿠키 포함
+      
+      // 응답 구조 확인 (Swagger 문서 기준)
+      if (meRes.data?.isSuccess && meRes.data?.result) {
+        // 사용자 정보 저장 (자동 로그인을 위해)
+        const userInfo = meRes.data.result;
+        console.log('연동 성공, 사용자 정보:', userInfo);
+        
+        // 토큰이 있다면 저장 (쿠키 기반이지만 혹시 헤더에 토큰이 올 수도 있음)
+        const authHeader = meRes.headers?.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          localStorage.setItem('accessToken', token);
+        }
+        
+        navigate('/community', { replace: true });
+        return;
+      }
 
-    // 혹시 200이 아닌데 ok 처리되는 경우 방어
-    throw new Error(`상태 확인 실패 (${meRes.status})`);
-  } catch (err: any) {
-    const status = err?.response?.status;
-    const msg = err?.response?.data?.message;
-    if (status === 401) {
-      alert('로그인 세션이 없습니다. 다시 시도해 주세요.');
-      navigate('/login', { replace: true });
-    } else {
-      setErr(msg || '연동에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      // 응답 구조가 예상과 다른 경우
+      throw new Error('사용자 정보를 가져올 수 없습니다.');
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message;
+      
+      if (status === 401) {
+        alert('로그인 세션이 없습니다. 다시 시도해 주세요.');
+        navigate('/login', { replace: true });
+      } else {
+        console.error('연동 실패:', err);
+        setErr(msg || '연동에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
@@ -105,9 +118,5 @@ export default function LinkSocialPage() {
     </div>
   </div>
 );
-
-}
-function setShowErrorModal(arg0: boolean) {
-  throw new Error('Function not implemented.');
 }
 
