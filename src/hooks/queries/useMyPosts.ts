@@ -1,15 +1,13 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getMyPosts, type MyPostsResponse } from "../../api/mypage";
-import { isAxios404 } from "../../utils/isAxios404";
 
 export default function useMyPosts(page: number, size: number) {
-  return useQuery<MyPostsResponse, Error>({
+  return useQuery<MyPostsResponse>({
     queryKey: ["myPosts", page, size],
     queryFn: () => getMyPosts({ page, size }),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
-    // v5 서명: (failureCount, error) => boolean
-    retry: (failureCount, error) => !isAxios404(error) && failureCount < 1,
-    throwOnError: (error) => !isAxios404(error),
+    refetchOnWindowFocus: false,
+    // ❌ throwOnError / 커스텀 retry 금지 (404는 정상 흐름으로 처리)
   });
 }

@@ -1,18 +1,178 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { eye, like, commentIcon } from "../../assets";
+import { eye, like, commentIcon, bestBadge } from "../../assets";
 import useMyPosts from "../../hooks/queries/useMyPosts";
 import useMyInquiries from "../../hooks/queries/useMyInquiries";
 import useDeleteMyPost from "../../hooks/mutations/useDeleteMyPost";
 import useDeleteMyInquiry from "../../hooks/mutations/useDeleteMyInquiry";
-import useMyAccount from "../../hooks/queries/useMyAccount";
 import Pagination from "../../components/customer/Pagination";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
-import type {
-  InquiryStatus,
-  MyPostItem,
-  MyInquiryItem,
-} from "../../api/mypage";
+import type { InquiryStatus, MyPostItem, MyInquiryItem } from "../../api/mypage";
+import useMyAccount from "../../hooks/queries/useMyAccount";
+
+/* ===== 시간 규칙 ===== */
+const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+const formatKST = (isoLike?: string) => {
+  if (!isoLike) return "";
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) return isoLike;
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}시간 전`;
+  if (diffHr < 48) return "1일 전";
+  const yy = d.getFullYear() % 100;
+  const mm = d.getMonth() + 1;
+  const dd = d.getDate();
+  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+};
+
+/* ===== 미리보기 정리 ===== */
+const removeExtraBlock = (text: string) =>
+  text.replace(/<!--EXTRA:\{[\s\S]*?\}-->/g, "").trim();
+
+const removeSourceLine = (text: string) => {
+  const lines = text.split(/\n+/);
+  const idx = [...lines]
+    .reverse()
+    .findIndex((s) => /^출처\s*[:：]/.test(s.trim()));
+  if (idx === -1) return text;
+  const realIdx = lines.length - 1 - idx;
+  lines.splice(realIdx, 1);
+  return lines.join("\n");
+};
+
+const stripHtml = (html: string) =>
+  html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+
+const tidyPreview = (raw?: string) => {
+  const s = String(raw ?? "");
+  const noExtra = removeExtraBlock(s);
+  const noSrc = removeSourceLine(noExtra);
+  const plain = stripHtml(noSrc);
+  return plain.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
+};
+
+/* ===== 카테고리/해시태그 ===== */
+const UI_CATEGORIES = [
+  "전체",
+  "인기글",
+  "생활꿀팁",
+  "꿀템추천",
+  "살까말까?",
+  "궁금해요!",
+] as const;
+type CategoryType = (typeof UI_CATEGORIES)[number];
+
+const API_TO_UI: Record<string, CategoryType> = {
+  ALL: "전체",
+  BEST: "인기글",
+  TIP: "생활꿀팁",
+  LIFEHACK: "생활꿀팁",
+  LIFE_TIP: "생활꿀팁",
+  생활꿀팁: "생활꿀팁",
+  RECOMMEND: "꿀템추천",
+  ITEM_RECOMMEND: "꿀템추천",
+  ITEMRECOMMEND: "꿀템추천",
+  ITEM: "꿀템추천",
+  GOODS_RECOMMEND: "꿀템추천",
+  꿀템추천: "꿀템추천",
+  "꿀템 추천": "꿀템추천",
+  BUY_OR_NOT: "살까말까?",
+  BUYORNOT: "살까말까?",
+  BUY_OR_NOT_Q: "살까말까?",
+  SHOULD_I_BUY: "살까말까?",
+  "살까말까?": "살까말까?",
+  QUESTION: "궁금해요!",
+  QNA: "궁금해요!",
+  CURIOUS: "궁금해요!",
+  ASK: "궁금해요!",
+  "궁금해요!": "궁금해요!",
+};
+
+const NORM = (s: string) => s.replace(/[\s_?!]/g, "").toUpperCase();
+
+const API_TO_UI_NORM: Record<string, CategoryType> = Object.fromEntries(
+  Object.entries(API_TO_UI).map(([k, v]) => [NORM(k), v])
+);
+
+const toDisplayCategory = (raw?: string): CategoryType => {
+  if (!raw) return "전체";
+  const key = String(raw).trim();
+  const norm = NORM(key);
+  if (API_TO_UI_NORM[norm]) return API_TO_UI_NORM[norm];
+  const direct = UI_CATEGORIES.find((k) => NORM(k) === norm);
+  return (direct as CategoryType) ?? "전체";
+};
+
+const extractHashtags = (item: any): string[] => {
+  const a = Array.isArray(item?.hashtags) ? item.hashtags : [];
+  const b = Array.isArray(item?.hashtagList) ? item.hashtagList : [];
+  const c =
+    item?.hashtagListDto?.hashtagList
+      ?.map((h: any) => h?.content)
+      .filter(Boolean) ?? [];
+  return Array.from(
+    new Set<string>(
+      [...a, ...b, ...c]
+        .map((t) => (typeof t === "string" ? t : (t?.content ?? "")))
+        .filter(Boolean)
+    )
+  );
+};
+
+const categorySetOf = (item: any): Set<CategoryType> => {
+  const set = new Set<CategoryType>();
+  const primary = toDisplayCategory((item as any)?.category);
+  if (primary && primary !== "전체" && primary !== "인기글") set.add(primary);
+
+  const extraSources: (string | undefined)[] = [
+    (item as any)?.categoryEn,
+    (item as any)?.type,
+    (item as any)?.topic,
+    (item as any)?.postType,
+    (item as any)?.subCategory,
+    (item as any)?.category2,
+    (item as any)?.tagCategory,
+    ...((Array.isArray((item as any)?.categories)
+      ? (item as any).categories
+      : []) as string[]),
+  ];
+  extraSources.forEach((s) => {
+    const lab = toDisplayCategory(s);
+    if (lab && lab !== "전체" && lab !== "인기글") set.add(lab);
+  });
+
+  const hs = extractHashtags(item).map((h) => NORM(h));
+  if (hs.some((h) => h === NORM("꿀템추천"))) set.add("꿀템추천");
+  if (hs.some((h) => h === NORM("살까말까?"))) set.add("살까말까?");
+  if (hs.some((h) => h === NORM("궁금해요!"))) set.add("궁금해요!");
+
+  return set;
+};
+
+const badgesFor = (item: any): CategoryType[] => {
+  const set = categorySetOf(item);
+  const ORDER: CategoryType[] = [
+    "전체",
+    "생활꿀팁",
+    "꿀템추천",
+    "살까말까?",
+    "궁금해요!",
+  ];
+  const primary = toDisplayCategory((item as any)?.category);
+  const ordered = new Set<CategoryType>([primary, ...ORDER]);
+  return [...ordered].filter((x) => x && (x === primary || set.has(x)));
+};
 
 type Tab = "나의 작성내역" | "나의 문의내역";
 
@@ -33,18 +193,26 @@ const MyPage = () => {
   const [inqPage, setInqPage] = useState(1);
   const pageSize = 6;
 
-  // ✅ 계정(프로필) — 목록과 독립
+  // 계정
   const { data: account } = useMyAccount();
 
   // 데이터
-  const { data: postData } = useMyPosts(postPage, pageSize);
-  const { data: inqData } = useMyInquiries(inqPage, pageSize);
+  const {
+    data: postData,
+    isLoading: loadingPosts,
+    isError: errorPosts,
+  } = useMyPosts(postPage, pageSize);
 
-  // 항상 배열로 안전화 (빈 데이터/로딩/에러 모두 대비)
+  const {
+    data: inqData,
+    isLoading: loadingInq,
+    isError: errorInq,
+  } = useMyInquiries(inqPage, pageSize);
+
   const posts: MyPostItem[] = Array.isArray(postData?.posts) ? postData!.posts : [];
   const inquiries: MyInquiryItem[] = Array.isArray(inqData?.inquiries) ? inqData!.inquiries : [];
 
-  // 삭제 뮤테이션
+  // 삭제
   const deletePostMut = useDeleteMyPost(postPage, pageSize);
   const deleteInqMut = useDeleteMyInquiry(inqPage, pageSize);
 
@@ -57,12 +225,12 @@ const MyPage = () => {
     try {
       if (deleteTarget.kind === "post") {
         await deletePostMut.mutateAsync(deleteTarget.id);
-        if ((postData?.posts?.length ?? 0) === 1 && postPage > 1) {
+        if (postData && postData.posts.length === 1 && postPage > 1) {
           setPostPage((p) => p - 1);
         }
       } else {
         await deleteInqMut.mutateAsync(deleteTarget.id);
-        if ((inqData?.inquiries?.length ?? 0) === 1 && inqPage > 1) {
+        if (inqData && inqData.inquiries.length === 1 && inqPage > 1) {
           setInqPage((p) => p - 1);
         }
       }
@@ -74,57 +242,84 @@ const MyPage = () => {
     }
   };
 
-  // 다음 페이지 존재 여부(총 개수 없음 → size 기준)
-  const hasNextPosts = posts.length === pageSize;
-  const hasNextInq = inquiries.length === pageSize;
+  // 프로필 계산: account 1순위, 탭 메타 보강
+  const profile = useMemo(() => {
+    const fromAccount =
+      account &&
+      ({
+        nickname: account.nickname || "",
+        email: account.email || "",
+        profileImageUrl: account.profileImage ?? null,
+      } as { nickname: string; email: string; profileImageUrl: string | null });
 
-  // 숫자 페이징용 임시 totalPages (총 개수 API 나오면 교체)
+    const fromPosts =
+      postData &&
+      ({
+        nickname: postData.nickname || "",
+        email: postData.email || "",
+        profileImageUrl: postData.profileImageUrl ?? null,
+      } as { nickname: string; email: string; profileImageUrl: string | null });
+
+    const fromInq =
+      inqData &&
+      ({
+        nickname: inqData.nickname || "",
+        email: inqData.email || "",
+        profileImageUrl: inqData.profileImageUrl ?? null,
+      } as { nickname: string; email: string; profileImageUrl: string | null });
+
+    const fromTab = tab === "나의 작성내역" ? fromPosts : fromInq;
+
+    return {
+      nickname: (fromTab?.nickname || fromAccount?.nickname || "") as string,
+      email: (fromTab?.email || fromAccount?.email || "") as string,
+      profileImageUrl:
+        (fromTab?.profileImageUrl ?? fromAccount?.profileImageUrl ?? null) as string | null,
+    };
+  }, [tab, postData, inqData, account]);
+
+  // 다음 페이지 존재 여부(총 개수 없음 → size 기준)
+  const hasNextPosts = !!postData && postData.posts.length === pageSize;
+  const hasNextInq = !!inqData && inqData.inquiries.length === pageSize;
+
+  // 총 페이지(임시)
   const postTotalPages = Math.max(1, postPage + (hasNextPosts ? 1 : 0));
   const inqTotalPages = Math.max(1, inqPage + (hasNextInq ? 1 : 0));
 
-  // 탭 전환 시 페이지 초기화
   useEffect(() => {
     if (tab === "나의 작성내역") setPostPage(1);
     else setInqPage(1);
   }, [tab]);
 
-  // 문의 아코디언: 펼친 항목 id들
+  // 문의 아코디언
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const toggleInq = (id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
+  const isLoading = tab === "나의 작성내역" ? loadingPosts : loadingInq;
+  const isError = tab === "나의 작성내역" ? errorPosts : errorInq;
+
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
       {/* 상단 제목 */}
-      <h1 className="text-[24px] md:text-[32px] font-bold text-[#333] mb-10">
-        마이페이지
-      </h1>
+      <h1 className="text-[24px] md:text-[32px] font-bold text-[#333] mb-10">마이페이지</h1>
 
-      {/* ✅ 프로필 — 글/문의 유무와 무관하게 항상 표시 */}
+      {/* 프로필 */}
       <div className="flex items-center gap-4 mb-10">
         <div className="w-[80px] h-[80px] rounded-full bg-[#D9D9D9] overflow-hidden">
-          {account?.profileImage && (
-            <img
-              src={account.profileImage}
-              alt="profile"
-              className="w-full h-full object-cover"
-            />
+          {profile.profileImageUrl && (
+            <img src={profile.profileImageUrl} alt="profile" className="w-full h-full object-cover" />
           )}
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full justify-between">
           <div>
-            <p className="text-[18px] sm:text-[20px] font-bold">
-              {account?.nickname || "닉네임"}
-            </p>
-            <p className="text-[14px] text-[#999]">
-              {account?.email || "이메일"}
-            </p>
+            <p className="text-[18px] sm:text-[20px] font-bold">{profile.nickname || "닉네임"}</p>
+            <p className="text-[14px] text-[#999]">{profile.email || "이메일"}</p>
           </div>
           <button
             onClick={() => navigate("/myinfo")}
@@ -152,15 +347,16 @@ const MyPage = () => {
       </div>
 
       {/* 컨텐츠 */}
-      {tab === "나의 작성내역" ? (
-        // ===== 작성내역 =====
+      {isLoading ? (
+        <div className="py-20 text-center text-[#999]">로딩 중…</div>
+      ) : isError ? (
+        <div className="py-20 text-center text-[#f00]">데이터를 불러오지 못했습니다.</div>
+      ) : tab === "나의 작성내역" ? (
         <div className="flex flex-col gap-6">
-          {posts.length === 0 ? (
-            <div className="text-center text-[#999] text-[14px] mt-10">
-              게시물이 없습니다.
-            </div>
+          {postData && postData.posts.length === 0 ? (
+            <div className="text-center text-[#999] text-[14px] mt-10">작성한 게시글이 없습니다.</div>
           ) : (
-            posts.map((item) => (
+            posts.map((item: MyPostItem) => (
               <div
                 key={item.postId}
                 className="relative border border-[#CCCCCC] rounded-[32px] p-6 pr-8 hover:shadow-md transition-all duration-150 cursor-pointer"
@@ -189,57 +385,76 @@ const MyPage = () => {
                   </button>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-[12px] border border-[#CCCCCC] rounded-full px-3 py-1">
-                      {item.category}
-                    </span>
+                {/* 카테고리/Best/해시태그 뱃지 */}
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  {badgesFor(item).map((label) => (
+                    <div
+                      key={`cat-${label}`}
+                      className="flex items-center px-3 py-1 border rounded-[32px] text-[12px] border-[#999999] text-[#333333]"
+                    >
+                      {label}
+                    </div>
+                  ))}
+                  {Boolean((item as any)?.isBest) && (
+                    <div className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#66B2FF] text-white">
+                      Best
+                    </div>
+                  )}
+                  {extractHashtags(item).map((tag, idx) => (
+                    <div
+                      key={`${tag}-${idx}`}
+                      className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#CCE5FF] text-[#666666]"
+                    >
+                      #{tag}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 제목/본문 */}
+                <div className="mt-1">
+                  <div className="text-[18px] sm:text-[20px] font-bold truncate w-full">{item.title}</div>
+                  <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2 whitespace-pre-wrap">
+                    {tidyPreview(item.content)}
                   </div>
-                  <div className="mt-1">
-                    <div className="text-[18px] sm:text-[20px] font-bold truncate w-full">
-                      {item.title}
-                    </div>
-                    <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2">
-                      {item.content}
-                    </div>
+                </div>
+
+                {/* 메타 */}
+                <div className="flex gap-4 mt-3 text-[#999] text-[14px] flex-wrap">
+                  <span className="flex items-center gap-1 text-[#333]">
+                    {Boolean((item as any)?.isBest) && (
+                      <img src={bestBadge} alt="best" className="w-[16px] h-[16px]" />
+                    )}
+                    {item.nickname} · {formatKST(item.createdAt)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <img src={eye} alt="views" className="w-4 h-4" />
+                    {item.viewCount}
                   </div>
-                  <div className="flex gap-4 mt-3 text-[#999] text-[14px] flex-wrap">
-                    <span>{item.nickname}</span>
-                    <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                    <div className="flex items-center gap-1">
-                      <img src={eye} alt="views" className="w-4 h-4" />
-                      {item.viewCount}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <img src={like} alt="likes" className="w-4 h-4" />
-                      {item.likeCount}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <img src={commentIcon} alt="comments" className="w-4 h-4" />
-                      {item.commentCount}
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <img src={like} alt="likes" className="w-4 h-4" />
+                    {item.likeCount}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <img src={commentIcon} alt="comments" className="w-4 h-4" />
+                    {item.commentCount}
                   </div>
                 </div>
               </div>
             ))
           )}
 
-          {/* 숫자형 페이지네이션 (작성내역) */}
           <Pagination
             currentPage={postPage}
-            totalPages={postTotalPages}
+            totalPages={Math.max(1, postTotalPages)}
             onPageChange={(p) => setPostPage(p)}
           />
         </div>
       ) : (
-        // ===== 나의 문의내역 (아코디언) =====
         <div className="flex flex-col gap-6">
-          {inquiries.length === 0 ? (
-            <div className="text-center text-[#999] text-[14px] mt-10">
-              게시물이 없습니다.
-            </div>
+          {inqData && inqData.inquiries.length === 0 ? (
+            <div className="text-center text-[#999] text-[14px] mt-10">문의내역이 없습니다.</div>
           ) : (
-            inquiries.map((q) => {
+            inquiries.map((q: MyInquiryItem) => {
               const open = expanded.has(q.inquiryId);
               return (
                 <div key={q.inquiryId} className="flex flex-col gap-3">
@@ -250,7 +465,6 @@ const MyPage = () => {
                     }`}
                     onClick={() => toggleInq(q.inquiryId)}
                   >
-                    {/* 우측 편집 액션 */}
                     <div className="absolute top-4 right-4 flex gap-2 text-[14px] text-[#999] z-10">
                       <button
                         className="hover:underline"
@@ -279,40 +493,30 @@ const MyPage = () => {
                       </span>
                     </div>
 
-                    <div className="text-[16px] sm:text-[18px] font-medium">
-                      {q.title}
-                    </div>
-                    <div className="text-[#999] text-[13px] mt-2">
-                      {new Date(q.createdAt).toLocaleDateString()}
-                    </div>
+                    <div className="text-[16px] sm:text-[18px] font-medium">{q.title}</div>
+                    <div className="text-[#999] text-[13px] mt-2">{formatKST(q.createdAt)}</div>
                   </div>
 
                   {/* 펼침 영역: Q/A 블록 */}
                   {open && (
                     <div className="flex flex-col gap-3">
-                      {/* Q 블록 */}
                       <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
                         <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
                           질문
                         </div>
-                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
-                          {q.title}
-                        </div>
+                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">{q.title}</div>
                       </div>
 
-                      {/* A 블록 (샘플) */}
                       <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
                         <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
                           답변
                         </div>
                         <div className="text-[15px] text-[#333] whitespace-pre-wrap">
                           {statusLabel(q.status) === "답변완료"
-                            ? "답변이 등록되었습니다. (상세 API에서 본문 붙이기)"
+                            ? "답변이 등록되었습니다. (필요 시 상세 API로 실제 답변 본문을 붙여주세요)"
                             : "아직 답변이 등록되지 않았습니다."}
                         </div>
-                        <div className="text-[12px] text-[#999] mt-3">
-                          {new Date(q.createdAt).toLocaleString()}
-                        </div>
+                        <div className="text-[12px] text-[#999] mt-3">{formatKST(q.createdAt)}</div>
                       </div>
                     </div>
                   )}
@@ -321,16 +525,13 @@ const MyPage = () => {
             })
           )}
 
-          {/* 숫자형 페이지네이션 (문의내역) */}
           <Pagination
             currentPage={inqPage}
-            totalPages={inqTotalPages}
+            totalPages={Math.max(1, inqTotalPages)}
             onPageChange={(p) => setInqPage(p)}
           />
         </div>
       )}
-
-      {/* 삭제 확인 모달 (게시글/문의 공용) */}
       <ConfirmDeleteModal
         open={isDeleteOpen}
         targetType={
