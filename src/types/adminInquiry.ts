@@ -45,6 +45,7 @@ export interface InquiryDetail {
   content: string;
   status: 'PROCESSED' | 'UNPROCESSED';
   createdAt: string; // ISO 8601 format: "2025-08-11T17:21:25.251Z"
+  isPrivate?: boolean; // 비밀글 여부
 }
 
 // 문의 상세 응답 타입

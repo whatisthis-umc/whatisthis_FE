@@ -18,10 +18,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { deleteQna, getQnas, Qna } from "../../../api/adminQna";
 import DeleteSuccessModal from "../../../components/common/adminDeleteSuccessModal";
+//페이지네이션 코드 통일 <<
+import Pagination from "../../../components/customer/Pagination";
 
 
 export default function AdminQnaPage() {
@@ -36,6 +36,7 @@ export default function AdminQnaPage() {
   const [isLast, setIsLast] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState(false);
   
   const navigate = useNavigate();
 
@@ -61,6 +62,21 @@ export default function AdminQnaPage() {
   useEffect(() => {
     load(uiPage);
   }, [uiPage]);
+
+  // 아코디언 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (accordionOpen && !target.closest('[data-accordion]')) {
+        setAccordionOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [accordionOpen]);
 
   // 서버 검색 파라미터가 없으므로 일단 제목만 클라이언트 필터
   const visibleRows = rows.filter((r) =>
@@ -98,56 +114,98 @@ export default function AdminQnaPage() {
       <Box className="px-10 py-6">
         {/* 상단 제목 */}
         <Box className="text-left mb-20">
-          <h2 className="text-2xl font-bold">Q&amp;A 관리</h2>
+          <h2 className="text-2xl font-bold">Q&A 관리</h2>
         </Box>
 
         {/* 필터 + 검색 */}
 
         <Box
-          component="form"
-          onSubmit={handleSearchSubmit}
           className="mb-6"
           sx={{
             width: 921,
-            height: 72,
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
+            position: "relative",
           }}
         >
-          {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
-              value="all"
-              onChange={() => {}}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => (
-                <img src={arrowDown} alt="arrow" width={24} height={24} />
-              )}
+          {/* 커스텀 아코디언 Select 박스 */}
+          <Box sx={{ position: "relative" }} data-accordion>
+            <Box
+              onClick={() => setAccordionOpen(!accordionOpen)}
               sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
+                width: 567,
+                height: 72,
+                borderRadius: "32px",
+                backgroundColor: "#E6E6E6",
+                px: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
               }}
             >
-              <MenuItem value="all">전체</MenuItem>
-            </Select>
+              <Box
+                sx={{
+                  fontFamily: "Pretendard",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  color: "#333333",
+                  lineHeight: "150%",
+                  flexGrow: 1,
+                }}
+              >
+                전체
+              </Box>
+              <img 
+                src={arrowDown} 
+                alt="arrow" 
+                width={24} 
+                height={24} 
+                style={{ 
+                  opacity: 0.8,
+                  transform: accordionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} 
+              />
+            </Box>
+            
+            {/* 아코디언 드롭다운 */}
+            {accordionOpen && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "80px", // 8px 아래
+                  left: 0,
+                  zIndex: 1000,
+                  display: "flex",
+                  width: "568px",
+                  padding: "24px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  borderRadius: "32px",
+                  background: "#E6E6E6",
+                }}
+              >
+                <Box
+                  onClick={() => {
+                    setAccordionOpen(false);
+                  }}
+                  sx={{
+                    width: "100%",
+                    cursor: "pointer",
+                    fontFamily: "Pretendard",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    color: "#333333",
+                    lineHeight: "150%",
+                  }}
+                >
+                  전체
+                </Box>
+              </Box>
+            )}
           </Box>
 
           {/* 검색창 */}
@@ -209,9 +267,9 @@ export default function AdminQnaPage() {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333" }}>유형</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333" }}>게시글 제목</TableCell>
-              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333" }}>작성일</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333", pr: "130px" }}>유형</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333", pr: "130px" }}>게시글 제목</TableCell>
+              <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333", pr: "130px" }}>작성일</TableCell>
               <TableCell sx={{ fontFamily: "Pretendard", fontWeight: 700, fontSize: "20px", color: "#333333" }}>처리 상태</TableCell>
             </TableRow>
           </TableHead>
@@ -229,14 +287,14 @@ export default function AdminQnaPage() {
           >
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} sx={{ py: 6, textAlign: "center" }}>
-                  불러오는 중…
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
+                  로딩 중...
                 </TableCell>
               </TableRow>
             ) : visibleRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} sx={{ py: 6, textAlign: "center" }}>
-                  데이터가 없습니다.
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
+                  Q&A가 없습니다.
                 </TableCell>
               </TableRow>
             ) : (
@@ -246,7 +304,7 @@ export default function AdminQnaPage() {
                   onClick={() => navigate(`/admin/qna/${row.id}`)}
                   style={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ borderBottom: "1px solid #333333" }}>
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "130px" }}>
                     <Box
                       sx={{
                         display: "inline-block",
@@ -275,6 +333,11 @@ export default function AdminQnaPage() {
                       color: "#333333",
                       textAlign: "left",
                       borderBottom: "1px solid #333333",
+                      pr: "130px",
+                      maxWidth: 400,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {row.title}
@@ -290,33 +353,37 @@ export default function AdminQnaPage() {
                       color: "#333333",
                       textAlign: "left",
                       borderBottom: "1px solid #333333",
+                      pr: "130px",
                     }}
                   >
                     {fmtDate(row.createdAt)}
                   </TableCell>
 
                   <TableCell sx={{ borderBottom: "1px solid #333333" }}>
-                    <button
+                    <Box
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(row.id);
                       }}
-                      style={{
-                        backgroundColor: "#0080FF",
-                        color: "#FFFFFF",
+                      sx={{
+                        display: "flex",
+                        padding: "4px 12px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: "32px",
+                        background: "#333",
                         fontFamily: "Pretendard",
                         fontSize: "14px",
+                        fontStyle: "normal",
                         fontWeight: 500,
                         lineHeight: "150%",
-                        letterSpacing: "-1%",
-                        padding: "4px 12px",
-                        borderRadius: "32px",
-                        border: "none",
+                        letterSpacing: "-0.14px",
+                        color: "#FFF",
                         cursor: "pointer",
                       }}
                     >
                       삭제
-                    </button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -338,7 +405,7 @@ export default function AdminQnaPage() {
             sx={{
               width: "160px",
               height: "54px",
-              backgroundColor: "#0080FF",
+              backgroundColor: "#333333",
               borderRadius: "32px",
               padding: "12px 16px",
               color: "#FFFFFF",
@@ -347,34 +414,17 @@ export default function AdminQnaPage() {
               fontSize: "20px",
               lineHeight: "150%",
               letterSpacing: "-0.02em",
-              "&:hover": { backgroundColor: "#0066CC" },
+              "&:hover": { backgroundColor: "#111111" },
             }}
           >
             등록
           </Button>
         </Box>
 
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button onClick={() => !isFirst && setUiPage((prev) => Math.max(prev - 1, 1))}>
-            <ChevronLeftIcon sx={{ color: isFirst ? "#ddd" : "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((num) => (
-            <button
-              key={num}
-              onClick={() => setUiPage(num)}
-              className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                num === uiPage ? "bg-[#0080FF] text-white" : "text-[#999999] hover:text-black"
-              }`}
-              style={{ fontFamily: "Pretendard" }}
-            >
-              {num}
-            </button>
-          ))}
-
-          <button onClick={() => !isLast && setUiPage((prev) => Math.min(prev + 1, totalPages))}>
-            <ChevronRightIcon sx={{ color: isLast ? "#ddd" : "#999999" }} />
-          </button>
+        {/* 페이지네이션 (공용 컴포넌트) */}
+        {/* 페이지네이션 코드 통일 << */}
+        <Box className="mt-20">
+          <Pagination currentPage={uiPage} totalPages={totalPages} onPageChange={setUiPage} />
         </Box>
         <DeleteSuccessModal
   open={successOpen}

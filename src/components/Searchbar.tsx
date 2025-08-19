@@ -2,18 +2,46 @@ import { useEffect } from "react";
 import { search, arrowDownIcon } from "../assets";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getPopularKeywords } from "../api/popularKeywordsApi";
 
 const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [currentKeywordIndex, setCurrentKeywordIndex] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     setInput("");
-    setIsSearchOpen(false);
   }, [location.pathname]);
+
+  // 인기 검색어 데이터 가져오기
+  useEffect(() => {
+    const loadPopularKeywords = async () => {
+      try {
+        const popularKeywords = await getPopularKeywords();
+        setKeywords(popularKeywords.slice(0, 8)); // 상위 8개만 표시
+      } catch (error) {
+        console.error("인기 검색어 로딩 실패:", error);
+        // 기본값 사용
+        setKeywords(["청소", "분리수거", "세탁", "요리", "냉장고", "옷"]);
+      }
+    };
+
+    loadPopularKeywords();
+  }, []);
+
+  // placeholder 자동 순환
+  useEffect(() => {
+    if (keywords.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentKeywordIndex((prev) => (prev + 1) % keywords.length);
+    }, 2000); // 2초마다 변경
+
+    return () => clearInterval(interval);
+  }, [keywords]);
 
   const handleSearch = () => {
     if (input.trim()) {
@@ -22,69 +50,42 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
     }
   };
 
-  // 인기 검색어 목록 임시목록
-  const keywords = [
-    "다이소 티슈",
-    "다이소 수건",
-    "다이소 물티슈",
-    "다이소 옷걸이",
-    "다이소 머그컵",
-    "다이소 인형",
-  ];
-
   return (
-    <div className="relative w-[40px] md:w-[240px] ml-auto mt-4 md:sticky md:top-4 md:right-4 md:z-50 md:mt-0 md:float-right">
-      <div className="flex w-full h-[40px] md:border-b md:border-[#333333] relative">
-        {/*모바일용 검색창*/}
-        {isSearchOpen && (
+    <div className="relative w-[80px] md:w-[240px] ml-auto mt-4 md:sticky md:top-4 md:right-4 md:z-50 md:mt-0 md:float-right">
+      <div className="flex w-full h-[30px] md:h-[40px] border-b border-[#333333] relative">
+        {/* 모바일 + 데스크톱 공통 검색창 */}
+        <div className="flex-1 w-full text-start">
           <input
-            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="검색어 입력"
-            className="absolute right-4 top-0 w-[100px] h-[30px] px-2 text-sm text-black placeholder-gray-400 border-b border-b-gray-300 z-20 md:hidden"
-            autoFocus
+            placeholder={
+              keywords.length > 0
+                ? `${currentKeywordIndex + 1}. ${keywords[currentKeywordIndex]}`
+                : "검색어를 입력하세요"
+            }
+            className="w-full text-xs md:text-base placeholder-gray-400"
           />
-        )}
-        {!isSearchOpen && (
-          <div className="hidden md:block w-[152px] md:text-start ">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="1. 인기검색어"
-              className="placeholder:invisible md:placeholder:visible"
-            />
-          </div>
-        )}
-        {!isSearchOpen && (
-          <img
-            src={arrowDownIcon}
-            alt="보기"
-            className="hidden md:inline-block w-[24px] h-[24px] md:cursor-pointer md:ml-auto"
-            onClick={() => setIsOpen(!isOpen)}
-          />
-        )}
+        </div>
+
+        {/* 데스크톱용 화살표 */}
+        <img
+          src={arrowDownIcon}
+          alt="보기"
+          className="hidden md:inline-block w-[24px] h-[24px] md:cursor-pointer md:ml-auto"
+          onClick={() => setIsOpen(!isOpen)}
+        />
+
+        {/* 검색 아이콘 */}
         <img
           src={search}
           alt="검색"
-          onClick={() => {
-            if (window.innerWidth < 768) {
-              if (isSearchOpen) {
-                handleSearch(); // 검색창 열려 있을 때는 검색 실행
-              } else {
-                setIsSearchOpen(true); // 닫혀 있을 때는 검색창 열기
-              }
-            } else {
-              handleSearch(); // PC에서는 바로 검색
-            }
-          }}
-          className="w-6 md:w-[24px] h-6 md:h-[24px] ml-auto cursor-pointer z-30"
+          onClick={handleSearch}
+          className="w-6 md:w-[24px] h-6 md:h-[24px] ml-2 cursor-pointer z-30"
         />
       </div>
       {/*인기검색어 목록*/}
-      {isOpen && !isSearchOpen && (
+      {isOpen && (
         <ul className="absolute flex flex-col items-start text-left bg-white text-[#999999] border-[#E6E6E6] border-t-white w-full shadow z-10">
           {keywords.map((word, index) => (
             <li

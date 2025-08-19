@@ -10,6 +10,7 @@ import { useAuth } from "../../hooks/useAuth";
 import lockIcon from "../../assets/lock.svg";
 import writingIcon from "../../assets/writing.svg";
 import { getSupportInquiryList, getSupportInquiryDetail } from "../../api/inquiryApi";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 
 const InquiryPage = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const InquiryPage = () => {
             content: i.content,
             answer: i.answerContent ?? undefined,
             status: i.answerContent ? "답변완료" as const : "미답변" as const,
-            date: new Date(i.createdAt).toLocaleDateString("ko-KR"),
+            date: formatTimeAgo(i.createdAt),
             isPublic: !i.isSecret,
             authorId: 0,
             type: "post",
@@ -97,7 +98,7 @@ const InquiryPage = () => {
                   ...it,
                   content: res.result.content,
                   answer: res.result.answerContent ?? undefined,
-                  date: new Date(res.result.createdAt).toLocaleDateString("ko-KR"),
+                  date: formatTimeAgo(res.result.createdAt),
                   isPublic: !res.result.isSecret,
                 }
               : it,
@@ -108,11 +109,14 @@ const InquiryPage = () => {
       }
     } catch (e: any) {
       console.error("고객 문의 상세 조회 실패:", e);
-      // 권한 없는 경우(작성자 아님)
+      // 권한 없는 경우(작성자 아님) - 403 에러인 경우만 처리
       if (e?.response?.status === 403) {
+        // 비밀글 권한 부족 모달 표시
         setShowPrivateModal(true);
         return false;
       }
+      // 다른 에러는 그대로 throw하여 상위에서 처리하도록 함
+      throw e;
     }
     return false;
   };
@@ -194,7 +198,7 @@ const InquiryPage = () => {
                           }
                         : {
                             padding: "4px 12px",
-                            background: "var(--WIT-Blue, #0080FF)",
+                            background: "black",
                             color: "white",
                           }
                     }

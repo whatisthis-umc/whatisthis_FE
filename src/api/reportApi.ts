@@ -7,7 +7,7 @@ import type {
   ProcessReportResponse
 } from "../types/report";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 신고 목록 조회
 export const getReportList = async (

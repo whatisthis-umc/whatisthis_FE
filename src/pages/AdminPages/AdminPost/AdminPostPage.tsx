@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Box,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -17,9 +15,10 @@ import { adminPostCategories } from "../../../data/categoryList";
 import AdminLayout from "../../../layouts/AdminLayout/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import arrowDown from "../../../assets/arrow_down.png";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { axiosInstance } from "../../../api/axiosInstance";
+//페이지네이션 코드 통일
+import Pagination from "../../../components/customer/Pagination";
+import { getAdminPosts } from "../../../api/adminPosts";
 
 interface AdminPost {
   postId: number;
@@ -39,7 +38,9 @@ export default function AdminPostPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+  const [accordionOpen, setAccordionOpen] = useState(false);
+
+
   const postsPerPage = 5;
 
   // 페이지 로드 시 자동 새로고침
@@ -95,40 +96,26 @@ export default function AdminPostPage() {
 
         if (selectedCategory === "tip2" || selectedCategory === "all") {
           const tipPromises = tipCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              params: {
-                category: category,
-                page: 0,
-                size: 20,
-              },
-            })
+            getAdminPosts({ category, page: 0, size: 20 })
           );
 
           const tipResponses = await Promise.all(tipPromises);
           tipResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
 
         if (selectedCategory === "tip1" || selectedCategory === "all") {
           const itemPromises = itemCategories.map((category) =>
-            axiosInstance.get("/admin/posts/", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              params: {
-                category: category,
-                page: 0,
-                size: 20,
-              },
-            })
+            getAdminPosts({ category, page: 0, size: 20 })
           );
 
           const itemResponses = await Promise.all(itemPromises);
           itemResponses.forEach((response) => {
-            if (response.data.isSuccess) {
-              allPosts.push(...response.data.result.posts);
+            if (response.isSuccess) {
+              allPosts.push(...response.result.posts);
             }
           });
         }
@@ -189,6 +176,22 @@ export default function AdminPostPage() {
     fetchPosts();
   }, [currentPage, selectedCategory, refreshTrigger]); // search 제거
 
+  // 아코디언 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (accordionOpen && !target.closest('[data-accordion]')) {
+        setAccordionOpen(false);
+      }
+    };
+
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [accordionOpen]);
+
   // 필터링
   const filteredPosts =
     posts.length > 0
@@ -210,7 +213,7 @@ export default function AdminPostPage() {
                 .toLowerCase()
                 .includes(search.toLowerCase());
             }
-            
+
             return categoryMatch && searchMatch;
           })
           //최신순
@@ -311,66 +314,104 @@ export default function AdminPostPage() {
         <Box className="text-left mb-20">
           <h2 className="text-2xl font-bold">게시글 관리</h2>
         </Box>
-
         {/* 필터 + 검색 */}
         <Box
           className="mb-6"
           sx={{
             width: 921,
-            height: 72,
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "space-between",
+            position: "relative",
           }}
         >
-          {/* Select 박스 wrapper */}
-          <Box
-            sx={{
-              width: 567,
-              height: 72,
-              borderRadius: "32px",
-              backgroundColor: "#E6E6E6",
-              px: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setCurrentPage(1);
-              }}
-              disableUnderline
-              variant="standard"
-              IconComponent={() => null}
+          {/* 커스텀 아코디언 Select 박스 */}
+          <Box sx={{ position: "relative" }} data-accordion>
+            <Box
+              onClick={() => setAccordionOpen(!accordionOpen)}
               sx={{
-                fontFamily: "Pretendard",
-                fontWeight: 700,
-                fontSize: "16px",
-                color: "#333333",
-                lineHeight: "150%",
-                flexGrow: 1,
-                backgroundColor: "transparent",
+                width: 567,
+                height: 72,
+                borderRadius: "32px",
+                backgroundColor: "#E6E6E6",
+                px: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
               }}
             >
-              {adminPostCategories.map((cat: any) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
+              <Box
+                sx={{
+                  fontFamily: "Pretendard",
+                  fontWeight: 700,
+                  fontSize: "16px",
+                  color: "#333333",
+                  lineHeight: "150%",
+                  flexGrow: 1,
+                }}
+              >
 
-            <img
-              src={arrowDown}
-              alt="arrow"
-              width={24}
-              height={24}
-              style={{ opacity: 0.8 }}
-            />
+                {adminPostCategories.find((cat: any) => cat.id === selectedCategory)?.name || "전체"}
+              </Box>
+              <img 
+                src={arrowDown} 
+                alt="arrow" 
+                width={24} 
+                height={24} 
+                style={{ 
+                  opacity: 0.8,
+                  transform: accordionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }} 
+              />
+            </Box>
+            
+
+            {/* 아코디언 드롭다운 */}
+            {accordionOpen && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "80px", // 8px 아래
+                  left: 0,
+                  zIndex: 1000,
+                  display: "flex",
+                  width: "568px",
+                  padding: "24px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  borderRadius: "32px",
+                  background: "#E6E6E6",
+                }}
+              >
+
+                {adminPostCategories.filter((cat: any) => cat.id !== "all").map((cat: any) => (
+                  <Box
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setCurrentPage(1);
+                      setAccordionOpen(false);
+                    }}
+                    sx={{
+                      width: "100%",
+                      cursor: "pointer",
+                      fontFamily: "Pretendard",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#333333",
+                      lineHeight: "150%",
+                    }}
+                  >
+                    {cat.name}
+                  </Box>
+                ))}
+
+              </Box>
+            )}
           </Box>
-
           {/* 검색창 */}
           <Box
             component="form"
@@ -390,7 +431,7 @@ export default function AdminPostPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleSearchSubmit(e);
                 }
@@ -411,10 +452,6 @@ export default function AdminPostPage() {
                   fontSize: "16px",
                   lineHeight: "150%",
                   letterSpacing: "-1%",
-                  "& input::placeholder": {
-                    color: "#333333 !important",
-                    opacity: 1,
-                  },
                 },
               }}
             />
@@ -423,7 +460,6 @@ export default function AdminPostPage() {
             </IconButton>
           </Box>
         </Box>
-
         {/* 게시글 테이블 */}
         <Table
           sx={{
@@ -444,6 +480,7 @@ export default function AdminPostPage() {
                   letterSpacing: "-2%",
                   color: "#333333",
                   textAlign: "left",
+                  pr: "130px",
                 }}
               >
                 유형
@@ -457,6 +494,7 @@ export default function AdminPostPage() {
                   letterSpacing: "-2%",
                   color: "#333333",
                   textAlign: "left",
+                  pr: "130px",
                 }}
               >
                 게시글 제목
@@ -470,6 +508,7 @@ export default function AdminPostPage() {
                   letterSpacing: "-2%",
                   color: "#333333",
                   textAlign: "left",
+                  pr: "130px",
                 }}
               >
                 신고일
@@ -502,13 +541,7 @@ export default function AdminPostPage() {
           >
             {paginatedPosts.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  sx={{
-                    textAlign: "center",
-                    borderBottom: "1px solid #333333",
-                  }}
-                >
+                <TableCell colSpan={4} sx={{ textAlign: "center", borderBottom: "1px solid #333333" }}>
                   게시물이 없습니다.
                 </TableCell>
               </TableRow>
@@ -519,7 +552,9 @@ export default function AdminPostPage() {
                   onClick={() => navigate(`/admin/post/${post.postId}`)}
                   style={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ borderBottom: "1px solid #333333" }}>
+
+                  <TableCell sx={{ borderBottom: "1px solid #333333", pr: "130px" }}>
+
                     <Box
                       sx={{
                         display: "inline-block",
@@ -549,6 +584,11 @@ export default function AdminPostPage() {
                       color: "#333333",
                       textAlign: "left",
                       borderBottom: "1px solid #333333",
+                      pr: "130px",
+                      maxWidth: 400,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {post.title}
@@ -563,39 +603,42 @@ export default function AdminPostPage() {
                       color: "#333333",
                       textAlign: "left",
                       borderBottom: "1px solid #333333",
+                      pr: "130px",
                     }}
                   >
                     {new Date(post.createdAt).toLocaleDateString("ko-KR")}
                   </TableCell>
                   <TableCell sx={{ borderBottom: "1px solid #333333" }}>
-                    <button
+                    <Box
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(post.postId);
                       }}
-                      style={{
-                        backgroundColor: "#0080FF",
-                        color: "#FFFFFF",
+                      sx={{
+                        display: "flex",
+                        padding: "4px 12px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: "32px",
+                        background: "#333",
                         fontFamily: "Pretendard",
                         fontSize: "14px",
+                        fontStyle: "normal",
                         fontWeight: 500,
                         lineHeight: "150%",
-                        letterSpacing: "-1%",
-                        padding: "4px 12px",
-                        borderRadius: "32px",
-                        border: "none",
+                        letterSpacing: "-0.14px",
+                        color: "#FFF",
                         cursor: "pointer",
                       }}
                     >
                       삭제
-                    </button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-
         {/* 등록 버튼 + 페이지네이션 */}
         <Box
           sx={{
@@ -614,7 +657,7 @@ export default function AdminPostPage() {
               sx={{
                 width: "160px",
                 height: "54px",
-                backgroundColor: "#0080FF",
+                backgroundColor: "#333333",
                 borderRadius: "32px",
                 padding: "12px 16px",
                 color: "#FFFFFF",
@@ -624,7 +667,7 @@ export default function AdminPostPage() {
                 lineHeight: "150%",
                 letterSpacing: "-0.02em",
                 "&:hover": {
-                  backgroundColor: "#0066CC",
+                  backgroundColor: "#111111",
                 },
               }}
             >
@@ -632,38 +675,14 @@ export default function AdminPostPage() {
             </Button>
           </Box>
         </Box>
-
-        <Box className="flex justify-center mt-20 gap-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            <ChevronLeftIcon sx={{ color: "#999999" }} />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setCurrentPage(num)}
-                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center font-medium text-[20px] leading-[150%] tracking-[-0.02em] ${
-                  num === currentPage
-                    ? "bg-[#0080FF] text-white"
-                    : "text-[#999999] hover:text-black"
-                }`}
-                style={{ fontFamily: "Pretendard" }}
-              >
-                {num}
-              </button>
-            )
-          )}
-
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
-            <ChevronRightIcon sx={{ color: "#999999" }} />
-          </button>
+        {/* 페이지네이션 (공용 컴포넌트) */}
+        {/* 페이지네이션 코드 통일 */}
+        <Box className="mt-20">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </Box>
       </Box>
     </AdminLayout>

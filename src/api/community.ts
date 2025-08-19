@@ -1,84 +1,183 @@
 import { axiosInstance } from "./axiosInstance";
-import type { CreatePostDto, CommunityPost, CommunitySortType } from "../types/community";
-import type { CommunityPostDetailVM } from "../types/community";
+import type { AxiosRequestConfig } from "axios";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-// 커뮤니티 글 생성
-export const createPost = async (data: CreatePostDto) => {
-  const response = await axiosInstance.post(`/posts`, data);
-  return response.data;
+/** axios 옵션에 meta(passThrough)만 확장해서 쓰기 위한 지역 타입 */
+type WithMeta<D = any> = AxiosRequestConfig<D> & {
+  meta?: { passThrough?: boolean };
 };
 
-// 커뮤니티 글 목록 조회
-export const getCommunityPosts = async (
-  page: number,
-  size: number,
-  sort: CommunitySortType
-): Promise<CommunityPost[]> => {
-  console.log("✅ 최종 요청 URL:", `${API_URL}/posts/communities`);
-  console.log("✅ API 호출 params 확인:", { page, size, sort });
+export type UpdateCategory =
+  | "LIFE_TIP"
+  | "LIFE_ITEM"
+  | "BUY_OR_NOT"
+  | "CURIOUS";
 
-  const response = await axiosInstance.get(`/posts/communities`, {
-    params: {
-      page: `${page}`,
-      size: `${size}`,
-      sort: `${sort}`,
-    },
-  });
-
-  console.log("🔥 API 응답 데이터", response.data);
-  return response.data.result?.postList ?? [];
+export type UpdateCommunityRequest = {
+  category: UpdateCategory;
+  title: string;
+  /** 에디터 원문(<!--EXTRA:{...}--> 포함 가능) */
+  content: string;
+  hashtags: string[];
 };
 
-/** 게시글 상세 조회: GET /posts/communities/{postId}?page=&size=&sort= */
-export const getCommunityPostDetail = async (
-  postId: number,
-  page: number,
-  size: number,
-  sort: CommunitySortType | "AI" = "LATEST"
-): Promise<CommunityPostDetailVM> => {
-  const res = await axiosInstance.get(`/posts/communities/${postId}`, {
-    params: { page, size, sort },
-  });
+/* -------------------- 공통 유틸 -------------------- */
+function makeErr(res: any, fallback: string) {
+  const data = res?.data;
+  const msg =
+    data?.message ??
+    data?.error ??
+    data?.errors?.[0]?.defaultMessage ??
+    data?.errors?.[0]?.message ??
+    data?.errors?.[0] ??
+    fallback;
+  const err: any = new Error(
+    typeof msg === "string" ? msg : JSON.stringify(msg)
+  );
+  err.status = res?.status;
+  err.data = data;
+  return err;
+}
 
-  const r = res.data?.result;
-  // 안전 매핑
-  const hashtags: string[] =
-    r?.hashtagListDto?.hashtagList?.map((h: any) => h?.content).filter(Boolean) ?? [];
-  const imageUrls: string[] =
-    r?.imageListDto?.imageList?.map((i: any) => i?.url).filter(Boolean) ?? [];
-  const cList = r?.commentListDto;
-
+function stablePayload(req: UpdateCommunityRequest) {
+  // 서버가 hashtags 또는 hashtagList 어느 쪽을 보더라도 수용되게 둘 다 실어 보냄
+  const uniq = Array.from(
+    new Set(
+      (req.hashtags || [])
+        .map((s) => String(s).trim())
+        .filter(Boolean)
+    )
+  );
+  const withAtLeastOne = uniq.length > 0 ? uniq : ["general"]; // 빈 배열 막는 서버 대비 안전값
   return {
-    id: r?.id ?? postId,
-    title: r?.title ?? "",
-    content: r?.content ?? "",
-    category: r?.category ?? "",
-    hashtags,
-    imageUrls,
-    nickname: r?.nickname ?? "",
-    isBestUser: !!r?.isBestUser,
-    profileImageUrl: r?.profileimageUrl ?? undefined,
-    views: r?.viewCount ?? 0,
-    likes: r?.likeCount ?? 0,
-    comments: r?.commentCount ?? 0,
-    createdAt: r?.createdAt ?? "",
-    commentPage: {
-      list:
-        cList?.commentList?.map((c: any) => ({
-          id: c?.id,
-          content: c?.content ?? "",
-          likeCount: c?.likeCount ?? 0,
-          nickname: c?.nickname ?? "",
-          profileImageUrl: c?.profileimageUrl ?? undefined,
-          createdAt: c?.createdAt ?? "",
-        })) ?? [],
-      listSize: cList?.listSize ?? 0,
-      totalPage: cList?.totalPage ?? 0,
-      totalElements: cList?.totalElements ?? 0,
-      isFirst: !!cList?.isFirst,
-      isLast: !!cList?.isLast,
-    },
+    category: req.category,
+    title: String(req.title ?? ""),
+    content: String(req.content ?? ""),
+    hashtags: withAtLeastOne,
+    hashtagList: withAtLeastOne,
   };
-};
+}
+
+function buildFD(
+  req: UpdateCommunityRequest,
+  files?: File[],
+  opt?: {
+    jsonFieldName?: "request" | "updateRequest";
+    jsonAsString?: boolean;
+    imageFieldName?: "images" | "files";
+  }
+) {
+  const o = {
+    jsonFieldName: "request",
+    jsonAsString: false,
+    imageFieldName: "images",
+    ...(opt || {}),
+  } as const;
+
+  const fd = new FormData();
+  const jsonObj = stablePayload(req);
+
+  if (o.jsonAsString) {
+    fd.append(o.jsonFieldName, JSON.stringify(jsonObj)); // text/plain
+  } else {
+    fd.append(
+      o.jsonFieldName,
+      new Blob([JSON.stringify(jsonObj)], { type: "application/json" })
+    );
+  }
+
+  if (Array.isArray(files) && files.length > 0) {
+    for (const f of files) fd.append(o.imageFieldName, f);
+  }
+
+  return fd;
+}
+
+/* -------------------- 상세 -------------------- */
+export async function getCommunityDetail(params: {
+  postId: number;
+  page: number;
+  size: number;
+  sort: "BEST" | "LATEST";
+}) {
+  const { postId, page, size, sort } = params;
+  const res = await axiosInstance.get(
+    `/posts/communities/${postId}`,
+    {
+      params: { page, size, sort },
+      validateStatus: () => true,
+      meta: { passThrough: true }, // ← envelope 우회
+    } as WithMeta
+  );
+  if (res.status >= 400) throw makeErr(res, `요청 실패(${res.status})`);
+  return res.data?.result ?? res.data;
+}
+
+/* -------------------- 업데이트 (4단계 폴백) -------------------- */
+export async function updateCommunityPost(
+  postId: number,
+  req: UpdateCommunityRequest,
+  files?: File[]
+) {
+  // 1) request + Blob(JSON) + images
+  let res = await axiosInstance.patch(
+    `/posts/communities/${postId}`,
+    buildFD(req, files, {
+      jsonFieldName: "request",
+      jsonAsString: false,
+      imageFieldName: "images",
+    }),
+    { validateStatus: () => true, meta: { passThrough: true } } as WithMeta<FormData>
+  );
+  if (res.status < 400) return res.data?.result ?? res.data;
+
+  // 2) request + String(JSON) + images
+  res = await axiosInstance.patch(
+    `/posts/communities/${postId}`,
+    buildFD(req, files, {
+      jsonFieldName: "request",
+      jsonAsString: true,
+      imageFieldName: "images",
+    }),
+    { validateStatus: () => true, meta: { passThrough: true } } as WithMeta<FormData>
+  );
+  if (res.status < 400) return res.data?.result ?? res.data;
+
+  // 3) updateRequest + Blob(JSON) + files
+  res = await axiosInstance.patch(
+    `/posts/communities/${postId}`,
+    buildFD(req, files, {
+      jsonFieldName: "updateRequest",
+      jsonAsString: false,
+      imageFieldName: "files",
+    }),
+    { validateStatus: () => true, meta: { passThrough: true } } as WithMeta<FormData>
+  );
+  if (res.status < 400) return res.data?.result ?? res.data;
+
+  // 4) 파일이 없으면 application/json
+  if (!files || files.length === 0) {
+    const resJson = await axiosInstance.patch(
+      `/posts/communities/${postId}`,
+      stablePayload(req),
+      {
+        headers: { "Content-Type": "application/json" },
+        validateStatus: () => true,
+        meta: { passThrough: true },
+      } as WithMeta
+    );
+    if (resJson.status < 400) return resJson.data?.result ?? resJson.data;
+    throw makeErr(resJson, "잘못된 요청입니다");
+  }
+
+  throw makeErr(res, "잘못된 요청입니다");
+}
+
+/* -------------------- 삭제 -------------------- */
+export async function deleteCommunityPost(postId: number) {
+  const res = await axiosInstance.delete(
+    `/posts/communities/${postId}`,
+    { validateStatus: () => true, meta: { passThrough: true } } as WithMeta
+  );
+  if (res.status >= 400) throw makeErr(res, "삭제에 실패했습니다");
+  return res.data?.result ?? res.data;
+}

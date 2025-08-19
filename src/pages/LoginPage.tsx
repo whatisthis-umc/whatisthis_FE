@@ -1,3 +1,4 @@
+////src/pages/LoginPage.tsx
 import kakaoIcon from '/src/assets/kakao.png';
 import naverIcon from '/src/assets/naver.png';
 import googleIcon from '/src/assets/google.png';
@@ -9,13 +10,13 @@ import { login } from '../api/auth/login';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  // 로컬 기본값 폴백
-  const API = import.meta.env.VITE_API_URL ;
+  // 배포주소로 
+  const API = import.meta.env.VITE_API_BASE_URL ;
 
   const goSocial = (provider: 'kakao' | 'google' | 'naver') => {
-    // 백엔드에서 안내한 URL로 이동
+    // 
     window.location.href = `${API}/oauth2/authorization/${provider}`;
-  };
+  }
 
   const [memberId, setMemberId] = useState('');
   const [password, setPassword] = useState('');
