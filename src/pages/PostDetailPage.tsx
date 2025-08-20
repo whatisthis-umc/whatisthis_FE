@@ -922,9 +922,9 @@ const PostDetailPage = () => {
     return <div className="p-8">게시글을 불러오지 못했습니다.</div>;
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-6 sm:py-8 font-[Pretendard]">
       {/* 작성자/메타 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
         <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80 flex items-center justify-center overflow-hidden">
           {/* 게시글 작성자의 프로필 사진 표시 */}
           {(() => {
@@ -963,9 +963,9 @@ const PostDetailPage = () => {
         </span>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-[60px]">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-[60px]">
         {/* 이미지 */}
-        <div className="bg-[#D9D9D9] rounded-[32px] w-full lg:w-1/2 h-[300px] sm:h-[500px] lg:h-[680px] overflow-hidden flex items-center justify-center">
+        <div className="bg-[#D9D9D9] rounded-[20px] sm:rounded-[24px] lg:rounded-[32px] w-full lg:w-1/2 h-[250px] sm:h-[400px] lg:h-[680px] overflow-hidden flex items-center justify-center">
           {imageUrls.length ? (
             <img
               src={imageUrls[0]}
@@ -978,18 +978,18 @@ const PostDetailPage = () => {
         </div>
 
         {/* 본문 */}
-        <div className="flex flex-col gap-6 flex-1">
-          <h1 className="text-[20px] sm:text-[24px] font-bold leading-snug">
+        <div className="flex flex-col gap-4 sm:gap-6 flex-1">
+          <h1 className="text-[18px] sm:text-[20px] lg:text-[24px] font-bold leading-tight">
             {(detail.title as string) ?? ((detail.result as Record<string, unknown>)?.title as string)}
           </h1>
 
-          <p className="text-gray-700 text-[15px] sm:text-[16px] font-medium leading-relaxed whitespace-pre-wrap">
+          <p className="text-gray-700 text-[14px] sm:text-[15px] lg:text-[16px] font-medium leading-relaxed whitespace-pre-wrap">
             {displayContent as string}
           </p>
 
           {/* 주요 특징 */}
           {(features as string[]).length > 0 && (
-            <div className="border border-[#E6E6E6] rounded-[32px] px-[24px] py-[24px] text-[#333] text-[16px] leading-[2] whitespace-pre-wrap">
+            <div className="border border-[#E6E6E6] rounded-[20px] sm:rounded-[24px] lg:rounded-[32px] px-[20px] sm:px-[24px] py-[20px] sm:py-[24px] text-[#333] text-[14px] sm:text-[15px] lg:text-[16px] leading-[2] whitespace-pre-wrap">
               <div className="font-bold mb-2">주요 특징</div>
               {(features as string[]).map((f, i) => (
                 <div key={i}>
@@ -1001,11 +1001,11 @@ const PostDetailPage = () => {
 
           {/* 출처 */}
           {source && (
-            <div className="border border-[#E6E6E6] rounded-[32px] px-[24px] py-[24px] h-[72px] flex items-center">
-              <label className="text-[#333] font-medium mr-4 min-w-[40px]">
+            <div className="border border-[#E6E6E6] rounded-[20px] sm:rounded-[24px] lg:rounded-[32px] px-[20px] sm:px-[24px] py-[20px] sm:py-[24px] h-[60px] sm:h-[72px] flex items-center">
+              <label className="text-[#333] font-medium mr-3 sm:mr-4 min-w-[35px] sm:min-w-[40px] text-[14px] sm:text-[15px] lg:text-[16px]">
                 출처
               </label>
-              <div className="w-full text-[16px] break-all">{source}</div>
+              <div className="w-full text-[14px] sm:text-[15px] lg:text-[16px] break-all">{source}</div>
             </div>
           )}
 
@@ -1025,7 +1025,7 @@ const PostDetailPage = () => {
           <div className="flex justify-between mt-4 flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <button
-                className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+                className="flex items-center gap-2 bg-[#0080FF] text-white font-normal text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                 onClick={handleToggleLike}
               >
                  <img src={liked ? whiteHeart : likes} alt="like" className="w-4 h-4" />
@@ -1038,14 +1038,14 @@ const PostDetailPage = () => {
                 <>
                   <button
                     onClick={handleEditPost}
-                    className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+                    className="flex items-center gap-2 bg-[#0080FF] text-white font-normal text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                     title="게시글 수정"
                   >
                     수정
                   </button>
                   <button
                     onClick={handleDeletePost}
-                    className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+                    className="flex items-center gap-2 bg-[#0080FF] text-white font-normal text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                     title="게시글 삭제"
                   >
                     삭제
@@ -1058,7 +1058,7 @@ const PostDetailPage = () => {
                 setSelectedTarget("게시물");
                 setShowReportModal(true);
               }}
-              className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+              className="flex items-center gap-2 bg-[#0080FF] text-white font-normal text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
             >
               <img src={reportIcon} alt="report" className="w-4 h-4" />
               신고하기
@@ -1123,7 +1123,7 @@ const PostDetailPage = () => {
             }
             className="justify-self-end w-[84px] h-[44px] rounded-[28px] px-3 py-2 text-[16px]
                        sm:w-[98px] sm:h-[54px] sm:rounded-[32px] sm:px-4 sm:py-3 sm:text-[20px]
-                       bg-[#0080FF] text-white font-medium leading-[150%] tracking-[-0.02em]
+                       bg-[#0080FF] text-white font-normal leading-[150%] tracking-[-0.02em]
                        whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmittingTop || createCommentM.isPending ? "등록중…" : "입력"}
@@ -1160,7 +1160,7 @@ const PostDetailPage = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[16px] font-medium">
+                        <span className="text-[16px] font-bold">
                           {c.nickname}
                         </span>
                         {c.isAuthor && (
@@ -1192,14 +1192,14 @@ const PostDetailPage = () => {
                               type="button"
                               onClick={() => saveEdit(c.id)}
                                disabled={!editInputs[c.id]?.trim()}
-                               className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
+                               className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-normal disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
                             >
                               저장
                             </button>
                             <button
                               type="button"
                               onClick={() => cancelEdit(c.id)}
-                               className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-medium hover:bg-[#F5F5F5]"
+                               className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-normal hover:bg-[#F5F5F5]"
                             >
                               취소
                             </button>
@@ -1300,7 +1300,7 @@ const PostDetailPage = () => {
                             }
                             className="justify-self-end w-[84px] h-[44px] rounded-[28px] px-3 py-2 text-[16px]
                                        sm:w-[98px] sm:h-[54px] sm:rounded-[32px] sm:px-4 sm:py-3 sm:text-[20px]
-                                       bg-[#0080FF] text-white font-medium leading-[150%] tracking-[-0.02em]
+                                       bg-[#0080FF] text-white font-normal leading-[150%] tracking-[-0.02em]
                                        whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             입력
@@ -1351,7 +1351,7 @@ const PostDetailPage = () => {
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[15px] font-medium">
+                                <span className="text-[15px] font-bold">
                                   {r.nickname}
                                 </span>
                                 {r.isAuthor && (
@@ -1383,14 +1383,14 @@ const PostDetailPage = () => {
                                       type="button"
                                       onClick={() => saveEdit(r.id)}
                                        disabled={!editInputs[r.id]?.trim()}
-                                       className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
+                                       className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-normal disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
                                     >
                                       저장
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => cancelEdit(r.id)}
-                                       className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-medium hover:bg-[#F5F5F5]"
+                                       className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-normal hover:bg-[#F5F5F5]"
                                     >
                                       취소
                                     </button>

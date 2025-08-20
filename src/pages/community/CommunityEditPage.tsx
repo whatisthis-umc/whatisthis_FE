@@ -347,7 +347,7 @@ export default function CommunityEditPage() {
 
           <label
             htmlFor="editFileInput"
-            className="w-full h-[54px] bg-[#0080FF] text-white rounded-[32px] px-[32px] flex items-center justify-center gap-2 cursor-pointer text-[16px] font-medium hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#99CCFF]"
+            className="w-full h-[54px] bg-[#0080FF] text-white rounded-[32px] px-[32px] flex items-center justify-center gap-2 cursor-pointer text-[16px] font-normal hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#99CCFF]"
           >
             <img src={addPhotoIcon} alt="add" className="w-5 h-5" />새 이미지
             업로드
@@ -465,7 +465,7 @@ export default function CommunityEditPage() {
                   <button
                     type="button"
                     onClick={addTag}
-                    className="text-[#0080FF] text-sm font-medium px-3 py-1 border border-[#0080FF] rounded-full cursor-pointer hover:opacity-90"
+                    className="text-[#0080FF] text-sm font-normal px-3 py-1 border border-[#0080FF] rounded-full cursor-pointer hover:opacity-90"
                   >
                     +
                   </button>
@@ -478,7 +478,7 @@ export default function CommunityEditPage() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center justify-center w-[160px] h-[54px] rounded-[32px] px-[16px] py-[12px] text-[16px] font-medium bg-[#0080FF] text-white cursor-pointer hover:opacity-90"
+              className="inline-flex items-center justify-center w-[160px] h-[54px] rounded-[32px] px-[16px] py-[12px] text-[16px] font-normal bg-[#0080FF] text-white cursor-pointer hover:opacity-90"
             >
               취소
             </button>
@@ -486,7 +486,7 @@ export default function CommunityEditPage() {
               type="button"
               onClick={handleSubmit}
               disabled={isSaveDisabled}
-              className="inline-flex items-center justify-center w-[160px] h-[54px] rounded-[32px] px-[16px] py-[12px] text-[16px] font-medium bg-[#0080FF] text-white cursor-pointer hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center justify-center w-[160px] h-[54px] rounded-[32px] px-[16px] py-[12px] text-[16px] font-normal bg-[#0080FF] text-white cursor-pointer hover:opacity-90 disabled:opacity-50"
             >
               수정
             </button>
