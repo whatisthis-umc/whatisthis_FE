@@ -61,29 +61,56 @@ export const createCommunityPostV2 = async (
     throw new Error("필수 필드 누락: category, title");
   }
 
+  // content가 undefined인 경우 빈 문자열로 설정
+  const requestData = {
+    ...request,
+    content: request.content || "",
+    hashtags: request.hashtags || []
+  };
+
   const fd = new FormData();
-  const requestFile = new File([JSON.stringify(request)], "request.json", {
+  
+  // request를 JSON 파일로 추가
+  const requestFile = new File([JSON.stringify(requestData)], "request.json", {
     type: "application/json",
   });
   fd.append("request", requestFile);
-  images.forEach((f) => fd.append("images", f));
+  
+  // 이미지가 있는 경우에만 추가
+  if (images.length > 0) {
+    images.forEach((f) => fd.append("images", f));
+  }
 
   try {
+    console.log("📤 요청 데이터:", requestData);
+    console.log("📤 이미지 개수:", images.length);
+    console.log("📤 FormData 내용:");
+    for (const [key, value] of fd.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}:`, value);
+      }
+    }
+    
     const res = await axiosInstance.post("/posts/communities", fd);
     const r = res.data?.result ?? res.data?.data ?? res.data;
     return { id: r.id, createdAt: r.createdAt, authorId: r.authorId };
   } catch (e: any) {
     console.error("❌ createCommunityPostV2 error", e?.response?.data ?? e);
+    console.error("❌ 요청 데이터:", requestData);
+    console.error("❌ 응답 상태:", e?.response?.status);
+    console.error("❌ 응답 헤더:", e?.response?.headers);
     throw e;
   }
 };
 
-/** ✅ 커뮤니티 목록 조회 (페이지당 6개, BEST/LATEST) */
+/** ✅ 커뮤니티 목록 조회 (카테고리별 엔드포인트) */
 export type CommunityListItem = {
   id: number;
   title: string;
   content: string;
-  category: "TIP" | "ITEM" | "SHOULD_I_BUY" | "CURIOUS";
+  category: "LIFE_TIP" | "ITEM_RECOMMEND" | "BUY_OR_NOT" | "QUESTION";
   nickname: string;
   createdAt: string; // ISO
   isBestUser: boolean;
@@ -102,18 +129,51 @@ export type CommunityPageResult = {
   isLast: boolean;
 };
 
-export type CommunitySort = "BEST" | "LATEST";
+export type CommunitySort = "LATEST" | "BEST" | "AI";
+
+// 카테고리별 엔드포인트 매핑
+const getCategoryEndpoint = (category: string): string => {
+  switch (category) {
+    case "생활꿀팁":
+    case "LIFE_TIP":
+      return "/posts/communities/tips";
+    case "꿀템 추천":
+    case "ITEM_RECOMMEND":
+      return "/posts/communities/items";
+    case "살까말까?":
+    case "BUY_OR_NOT":
+      return "/posts/communities/should-i-buy";
+    case "궁금해요!":
+    case "QUESTION":
+      return "/posts/communities/curious";
+    case "인기글":
+    case "BEST":
+      return "/posts/communities/popular";
+    default:
+      return "/posts/communities/tips";
+  }
+};
 
 export async function getCommunities(params: {
-  page: number;         // 서버 스웨거 예시 page=6 → 0-based로 보이는 값 그대로 전달
-  size?: number;        // 기본 6
-  sort?: CommunitySort; // 기본 LATEST
+  page: number;
+  size?: number;
+  sort?: CommunitySort;
+  category?: string;
 }) {
-  const { page, size = 6, sort = "LATEST" } = params;
-  const res = await axiosInstance.get("/posts/communities", {
-    params: { page, size, sort },
+  const { page, size = 6, sort = "LATEST", category = "생활꿀팁" } = params;
+  
+  const endpoint = getCategoryEndpoint(category);
+  const requestParams: any = { page, size };
+  
+  // 인기글 카테고리는 sort 파라미터가 없음
+  if (category !== "인기글" && category !== "BEST") {
+    requestParams.sort = sort;
+  }
+  
+  const res = await axiosInstance.get(endpoint, {
+    params: requestParams,
   });
+  
   const r = (res.data?.result ?? res.data?.data ?? res.data) as CommunityPageResult;
-  // 무한스크롤 편의를 위해 현재 page도 함께 반환
   return { ...r, page };
 }

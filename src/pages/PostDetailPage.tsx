@@ -15,6 +15,7 @@ import { darkHeart } from "../assets"; // 채워진 하트
 
 import ReportModal from "../components/modals/ReportModal";
 import SortDropdown from "../components/common/SortDropdown";
+import InformationModal from "../components/modals/InformationModal";
 
 import useGetCommunityDetail from "../hooks/queries/useGetCommunityDetail";
 import useCreateComment from "../hooks/queries/useCreateComment";
@@ -253,6 +254,10 @@ const PostDetailPage = () => {
   const [reportedComments, setReportedComments] = useState<Set<number>>(
     new Set()
   );
+  
+  // 자신의 게시글/댓글 좋아요 모달
+  const [showLikeErrorModal, setShowLikeErrorModal] = useState(false);
+  const [likeErrorMessage, setLikeErrorMessage] = useState("");
 
   const [sortType, setSortType] = useState<UISort>("인기순");
   const [currentPage, setCurrentPage] = useState(1);
@@ -352,6 +357,14 @@ const PostDetailPage = () => {
   /* 게시물 좋아요 */
   const handleToggleLike = () => {
     if (safePostId <= 0) return;
+    
+    // 자신의 게시글인지 확인
+    if (isMyPost) {
+      setLikeErrorMessage("자신의 게시글은 좋아요할 수 없습니다.");
+      setShowLikeErrorModal(true);
+      return;
+    }
+    
     const opId = ++likeOpRef.current;
     const nextLiked = !liked;
     setLiked(nextLiked);
@@ -368,10 +381,16 @@ const PostDetailPage = () => {
         if (typeof serverCount === "number")
           setLikeCount(Math.max(0, serverCount));
       },
-      onError: () => {
+      onError: (error: any) => {
         if (likeOpRef.current !== opId) return;
         setLiked(!nextLiked);
         setLikeCount((c) => Math.max(0, c + (nextLiked ? -1 : 1)));
+        
+        // 403 Forbidden 오류 처리 (자신의 게시글 좋아요 시도)
+        if (error?.response?.status === 403) {
+          setLikeErrorMessage("자신의 게시글은 좋아요할 수 없습니다.");
+          setShowLikeErrorModal(true);
+        }
       },
     });
   };
@@ -424,14 +443,95 @@ const PostDetailPage = () => {
   const [commentLikeOps, setCommentLikeOps] = useState<Record<number, boolean>>(
     {}
   );
-  const toggleCommentLike = (c: RawComment, isCurrentlyLiked: boolean) => {
+  const [commentLikeLoading, setCommentLikeLoading] = useState<Record<number, boolean>>(
+    {}
+  );
+  // 댓글 좋아요 상태를 로컬에서 관리
+  const [commentLikedStates, setCommentLikedStates] = useState<Record<number, boolean>>(
+    {}
+  );
+  const toggleCommentLike = (c: RawComment) => {
     if (safePostId <= 0) return;
-    setCommentLikeOps((m) => ({ ...m, [c.id]: !isCurrentlyLiked }));
-    (isCurrentlyLiked ? unlikeCommentM : likeCommentM).mutate(c.id, {
-      onSuccess: () => invalidateAll(),
-      onError: () =>
-        setCommentLikeOps((m) => ({ ...m, [c.id]: isCurrentlyLiked })),
+    
+    // 디버깅: 댓글 상태 로그
+    console.log(`댓글 ${c.id} 상태:`, {
+      nickname: c.nickname,
+      myNickname,
+      isMine: c.isMine,
+      liked: c.liked,
+      likeCount: c.likeCount,
+      localLiked: commentLikedStates[c.id]
     });
+    
+    // 이미 처리 중인 댓글은 중복 클릭 방지
+    if (commentLikeLoading[c.id]) return;
+    
+    // 자신의 댓글인지 확인 (닉네임 비교로 재확인)
+    const isMyComment = myNickname && c.nickname === myNickname;
+    if (isMyComment) {
+      setLikeErrorMessage("자신의 댓글은 좋아요할 수 없습니다.");
+      setShowLikeErrorModal(true);
+      return;
+    }
+    
+    setCommentLikeLoading((m) => ({ ...m, [c.id]: true }));
+    
+    // 현재 로컬 좋아요 상태 확인
+    const currentLiked = commentLikedStates[c.id] ?? c.liked ?? false;
+    
+    if (currentLiked) {
+      // 현재 좋아요 상태이므로 좋아요 취소
+      console.log(`댓글 ${c.id} 좋아요 취소 시도`);
+      unlikeCommentM.mutate(c.id, {
+        onSuccess: () => {
+          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+          setCommentLikedStates((prev) => ({ ...prev, [c.id]: false }));
+          invalidateAll();
+        },
+        onError: (error: any) => {
+          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+          
+          if (error?.response?.status === 409) {
+            console.log("댓글 좋아요 취소 상태 충돌 - 서버 상태로 동기화");
+            invalidateAll();
+          } else if (error?.response?.status === 403) {
+            setLikeErrorMessage("자신의 댓글은 좋아요할 수 없습니다.");
+            setShowLikeErrorModal(true);
+          } else {
+            console.error("댓글 좋아요 취소 오류:", error);
+          }
+        },
+      });
+    } else {
+      // 현재 좋아요하지 않은 상태이므로 좋아요 추가
+      console.log(`댓글 ${c.id} 좋아요 추가 시도`);
+      likeCommentM.mutate(c.id, {
+        onSuccess: () => {
+          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+          setCommentLikedStates((prev) => ({ ...prev, [c.id]: true }));
+          invalidateAll();
+        },
+        onError: (error: any) => {
+          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+          
+          if (error?.response?.status === 409) {
+            // 이미 좋아요를 누른 상태이므로 로컬 상태를 true로 설정
+            console.log(`댓글 ${c.id} 이미 좋아요 상태 - 로컬 상태 업데이트`);
+            setCommentLikedStates((prev) => ({ ...prev, [c.id]: true }));
+            invalidateAll();
+          } else if (error?.response?.status === 403) {
+            setLikeErrorMessage("자신의 댓글은 좋아요할 수 없습니다.");
+            setShowLikeErrorModal(true);
+          } else if (error?.response?.status === 400) {
+            console.error("댓글 좋아요 오류 (400):", error);
+            // 400 오류는 삭제된 댓글이거나 다른 문제이므로 서버 상태 동기화
+            invalidateAll();
+          } else {
+            console.error("댓글 좋아요 오류:", error);
+          }
+        },
+      });
+    }
   };
 
   const [editing, setEditing] = useState<Record<number, boolean>>({});
@@ -659,10 +759,10 @@ const PostDetailPage = () => {
 
         {/* 댓글 트리 */}
         <div className="w-full flex flex-col gap-10">
-          {tree.map((c) => {
-            const isLiked = (commentLikeOps[c.id] ?? c.liked) === true;
-            const displayLikeCount =
-              c.likeCount + (isLiked ? 1 : 0) - (c.liked ? 1 : 0);
+                                           {tree.map((c) => {
+              // 로컬 상태를 우선하고, 없으면 서버 상태 사용
+              const isLiked = commentLikedStates[c.id] ?? c.liked ?? false;
+              const displayLikeCount = c.likeCount;
 
             return (
               <div key={c.id} className="flex flex-col gap-2">
@@ -720,16 +820,17 @@ const PostDetailPage = () => {
                       <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                         <span>{formatKST(c.createdAt)}</span>
 
-                        <button
-                          type="button"
-                          onClick={() => toggleCommentLike(c, isLiked)}
-                          className="flex text-[14px] items-center gap-1"
-                          title={isLiked ? "좋아요 취소" : "좋아요"}
-                        >
+                                                 <button
+                           type="button"
+                           onClick={() => toggleCommentLike(c)}
+                           disabled={commentLikeLoading[c.id]}
+                           className="flex text-[14px] items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                           title={isLiked ? "좋아요 취소" : "좋아요"}
+                         >
                           <img
                             src={isLiked ? darkHeart : heartIcon}
                             alt="comment-like"
-                            className="w-4 h-4"
+                            className={`${isLiked ? 'w-3 h-3' : 'w-4 h-4'} ${commentLikeLoading[c.id] ? 'animate-pulse' : ''}`}
                           />
                           {displayLikeCount}
                         </button>
@@ -749,26 +850,26 @@ const PostDetailPage = () => {
                           {c.replies?.length ?? 0}
                         </button>
 
-                        {c.isMine && !editing[c.id] && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => beginEdit(c)}
-                              className="text-[13px] underline"
-                              title="댓글 수정"
-                            >
-                              수정
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteComment(c.id)}
-                              className="text-[13px] underline text-red-500"
-                              title="댓글 삭제"
-                            >
-                              삭제
-                            </button>
-                          </>
-                        )}
+                                                 {(c.isMine || (myNickname && c.nickname === myNickname)) && !editing[c.id] && (
+                           <>
+                             <button
+                               type="button"
+                               onClick={() => beginEdit(c)}
+                               className="text-[13px] underline"
+                               title="댓글 수정"
+                             >
+                               수정
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => handleDeleteComment(c.id)}
+                               className="text-[13px] underline text-red-500"
+                               title="댓글 삭제"
+                             >
+                               삭제
+                             </button>
+                           </>
+                         )}
                       </div>
 
                       {/* 대댓글 입력칸 */}
@@ -821,11 +922,10 @@ const PostDetailPage = () => {
                 {/* 대댓글 리스트 */}
                 {c.replies.length > 0 && (
                   <div className="mt-3 ml-12 flex flex-col gap-4">
-                    {c.replies.map((r) => {
-                      const rIsLiked =
-                        (commentLikeOps[r.id] ?? r.liked) === true;
-                      const rDisplayLikeCount =
-                        r.likeCount + (rIsLiked ? 1 : 0) - (r.liked ? 1 : 0);
+                                                                                                                             {c.replies.map((r) => {
+                         // 로컬 상태를 우선하고, 없으면 서버 상태 사용
+                         const rIsLiked = commentLikedStates[r.id] ?? r.liked ?? false;
+                         const rDisplayLikeCount = r.likeCount;
 
                       return (
                         <div key={r.id} className="flex justify-between">
@@ -881,40 +981,41 @@ const PostDetailPage = () => {
                               <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                                 <span>{formatKST(r.createdAt)}</span>
 
-                                <button
-                                  type="button"
-                                  onClick={() => toggleCommentLike(r, rIsLiked)}
-                                  className="flex text-[14px] items-center gap-1"
-                                  title={rIsLiked ? "좋아요 취소" : "좋아요"}
-                                >
-                                  <img
-                                    src={rIsLiked ? darkHeart : heartIcon}
-                                    alt="comment-like"
-                                    className="w-4 h-4"
-                                  />
-                                  {rDisplayLikeCount}
-                                </button>
+                                                                                                                                   <button
+                                    type="button"
+                                    onClick={() => toggleCommentLike(r)}
+                                    disabled={commentLikeLoading[r.id]}
+                                    className="flex text-[14px] items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={rIsLiked ? "좋아요 취소" : "좋아요"}
+                                  >
+                                   <img
+                                     src={rIsLiked ? darkHeart : heartIcon}
+                                     alt="comment-like"
+                                     className={`${rIsLiked ? 'w-3 h-3' : 'w-4 h-4'} ${commentLikeLoading[r.id] ? 'animate-pulse' : ''}`}
+                                   />
+                                   {rDisplayLikeCount}
+                                 </button>
 
-                                {r.isMine && !editing[r.id] && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => beginEdit(r)}
-                                      className="text-[13px] underline"
-                                      title="댓글 수정"
-                                    >
-                                      수정
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteComment(r.id)}
-                                      className="text-[13px] underline text-red-500"
-                                      title="댓글 삭제"
-                                    >
-                                      삭제
-                                    </button>
-                                  </>
-                                )}
+                                                                 {(r.isMine || (myNickname && r.nickname === myNickname)) && !editing[r.id] && (
+                                   <>
+                                     <button
+                                       type="button"
+                                       onClick={() => beginEdit(r)}
+                                       className="text-[13px] underline"
+                                       title="댓글 수정"
+                                     >
+                                       수정
+                                     </button>
+                                     <button
+                                       type="button"
+                                       onClick={() => handleDeleteComment(r.id)}
+                                       className="text-[13px] underline text-red-500"
+                                       title="댓글 삭제"
+                                     >
+                                       삭제
+                                     </button>
+                                   </>
+                                 )}
                               </div>
                             </div>
                           </div>
@@ -1004,6 +1105,13 @@ const PostDetailPage = () => {
           }}
         />
       )}
+
+      {/* 자신의 게시글/댓글 좋아요 오류 모달 */}
+      <InformationModal
+        isOpen={showLikeErrorModal}
+        message={likeErrorMessage}
+        onClose={() => setShowLikeErrorModal(false)}
+      />
     </div>
   );
 };

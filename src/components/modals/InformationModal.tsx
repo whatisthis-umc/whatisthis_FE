@@ -9,7 +9,7 @@ const InformationModal = ({ isOpen, message, onClose }: InformationModalProps) =
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50"
+      className="fixed inset-0 flex items-center justify-center z-[9999]"
       style={{
         background: "var(--WIT-opacity, rgba(102, 102, 102, 0.50))",
       }}
