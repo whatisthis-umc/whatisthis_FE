@@ -7,9 +7,9 @@ type WithMeta<D = any> = AxiosRequestConfig<D> & {
 };
 
 export type UpdateCategory =
-  | "LIFE_TIP"
-  | "LIFE_ITEM"
-  | "BUY_OR_NOT"
+  | "TIP"
+  | "ITEM"
+  | "SHOULD_I_BUY"
   | "CURIOUS";
 
 export type UpdateCommunityRequest = {
@@ -118,16 +118,44 @@ export async function updateCommunityPost(
   req: UpdateCommunityRequest,
   files?: File[]
 ) {
+  console.log("=== updateCommunityPost 시작 ===");
+  console.log("postId:", postId);
+  console.log("req:", req);
+  console.log("files:", files);
+  console.log("files count:", files?.length ?? 0);
+
   // 1) request + Blob(JSON) + images
+  console.log("시도 1: request + Blob(JSON) + images");
+  const formData1 = buildFD(req, files, {
+    jsonFieldName: "request",
+    jsonAsString: false,
+    imageFieldName: "images",
+  });
+  
+  // FormData 내용 로깅
+  console.log("FormData 1 내용:");
+  for (let [key, value] of formData1.entries()) {
+    if (typeof File !== 'undefined' && value instanceof File) {
+      console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+    } else if (typeof Blob !== 'undefined' && value instanceof Blob) {
+      console.log(`${key}: Blob(${value.size} bytes, ${value.type})`);
+    } else {
+      console.log(`${key}:`, String(value));
+    }
+  }
+
   let res = await axiosInstance.patch(
     `/posts/communities/${postId}`,
-    buildFD(req, files, {
-      jsonFieldName: "request",
-      jsonAsString: false,
-      imageFieldName: "images",
-    }),
+    formData1,
     { validateStatus: () => true, meta: { passThrough: true } } as WithMeta<FormData>
   );
+  
+  console.log("시도 1 응답:", {
+    status: res.status,
+    statusText: res.statusText,
+    data: res.data,
+  });
+  
   if (res.status < 400) return res.data?.result ?? res.data;
 
   // 2) request + String(JSON) + images
@@ -154,8 +182,9 @@ export async function updateCommunityPost(
   );
   if (res.status < 400) return res.data?.result ?? res.data;
 
-  // 4) 파일이 없으면 application/json
+  // 4) 파일이 없으면 application/json (기존 이미지 유지)
   if (!files || files.length === 0) {
+    console.log("파일이 없음 - application/json으로 요청 (기존 이미지 유지)");
     const resJson = await axiosInstance.patch(
       `/posts/communities/${postId}`,
       stablePayload(req),
@@ -165,10 +194,16 @@ export async function updateCommunityPost(
         meta: { passThrough: true },
       } as WithMeta
     );
+    console.log("JSON 요청 응답:", {
+      status: resJson.status,
+      statusText: resJson.statusText,
+      data: resJson.data,
+    });
     if (resJson.status < 400) return resJson.data?.result ?? resJson.data;
     throw makeErr(resJson, "잘못된 요청입니다");
   }
 
+  console.log("모든 multipart 시도 실패 - 에러 반환");
   throw makeErr(res, "잘못된 요청입니다");
 }
 
