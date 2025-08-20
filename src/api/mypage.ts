@@ -10,14 +10,59 @@ export type MyAccount = {
 };
 
 export async function getMyAccount(): Promise<MyAccount> {
-  const res = await axiosInstance.get("/my-page/account");
-  const data = res.data?.result ?? res.data;
-  return {
-    id: data?.id,
-    nickname: data?.nickname ?? "",
-    email: data?.email ?? "",
-    profileImage: data?.profileImage ?? null,
-  };
+  try {
+    const res = await axiosInstance.get("/my-page/account");
+    const data = res.data?.result ?? res.data;
+    return {
+      id: Number(data?.id ?? 0),
+      nickname: String(data?.nickname ?? ""),
+      email: String(data?.email ?? ""),
+      profileImage: (data?.profileImage ?? data?.profileImageUrl ?? null) as string | null,
+    };
+  } catch (e) {
+    if (!isAxios404(e)) throw e;
+
+    // 폴백 1: 작성내역 메타에서 닉네임/이메일/프로필 유추
+    try {
+      const postsRes = await axiosInstance.get("/my-page/posts", {
+        params: { page: 1, size: 1 },
+      });
+      const r = postsRes.data?.result ?? postsRes.data ?? {};
+      return {
+        id: 0,
+        nickname: String(r?.nickname ?? ""),
+        email: String(r?.email ?? ""),
+        profileImage: (r?.profileImageUrl ?? null) as string | null,
+      };
+    } catch (e2) {
+      // 폴백 2: 문의내역 메타에서 유추
+      try {
+        const inqRes = await axiosInstance.get("/my-page/inquiries", {
+          params: { page: 1, size: 1 },
+        });
+        const r = inqRes.data?.result ?? inqRes.data ?? {};
+        return {
+          id: 0,
+          nickname: String(r?.nickname ?? ""),
+          email: String(r?.email ?? ""),
+          profileImage: (r?.profileImageUrl ?? null) as string | null,
+        };
+      } catch {
+        // 최종 기본값: 로컬 저장소에 저장된 값으로라도 채움
+        const lsNickname =
+          localStorage.getItem("nickname") ||
+          localStorage.getItem("userNickname") ||
+          localStorage.getItem("memberNickname") ||
+          "";
+        const lsEmail =
+          localStorage.getItem("email") ||
+          localStorage.getItem("userEmail") ||
+          localStorage.getItem("memberEmail") ||
+          "";
+        return { id: 0, nickname: lsNickname, email: lsEmail, profileImage: null };
+      }
+    }
+  }
 }
 
 /**
@@ -30,12 +75,14 @@ export async function patchMyAccount(payload: {
   nickname: string | null;
   email: string | null;
   image?: File | null;
+  modifyProfileImage: boolean;
 }): Promise<MyAccount> {
   const form = new FormData();
   const request = {
     id: payload.id,
     nickname: payload.nickname,
     email: payload.email,
+    modifyProfileImage: payload.modifyProfileImage,
   };
   form.append("request", new Blob([JSON.stringify(request)], { type: "application/json" }));
   if (payload.image) form.append("image", payload.image, payload.image.name);
@@ -75,7 +122,7 @@ export type MyPostsResponse = {
 
 export async function getMyPosts(params: { page: number; size: number }): Promise<MyPostsResponse> {
   try {
-    const res = await axiosInstance.get("/my-page/posts", { params });
+    const res = await axiosInstance.get("/my-page/posts", { params, skipTokenRefresh: true } as any);
     const r = res.data?.result ?? res.data;
     return {
       nickname: r?.nickname ?? "",
@@ -120,7 +167,7 @@ export type MyInquiriesResponse = {
 
 export async function getMyInquiries(params: { page: number; size: number }): Promise<MyInquiriesResponse> {
   try {
-    const res = await axiosInstance.get("/my-page/inquiries", { params });
+    const res = await axiosInstance.get("/my-page/inquiries", { params, skipTokenRefresh: true } as any);
     const r = res.data?.result ?? res.data;
     return {
       nickname: r?.nickname ?? "",
