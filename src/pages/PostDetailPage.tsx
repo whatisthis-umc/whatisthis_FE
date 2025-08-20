@@ -796,7 +796,20 @@ const PostDetailPage = () => {
     <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
       {/* 작성자/메타 */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-        <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80" />
+        <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80 flex items-center justify-center overflow-hidden">
+          {/* 프로필 사진이 있으면 표시, 없으면 기본 아바타 */}
+          {(detail.profileImageUrl as string) || (detail.profileImage as string) ? (
+            <img
+              src={toAbs((detail.profileImageUrl as string) || (detail.profileImage as string))}
+              alt="profile"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-pink-300 to-gray-400 flex items-center justify-center text-white font-bold text-lg">
+              {(detail.nickname as string)?.charAt(0) || "U"}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           {(detail.isBestUser as boolean) && (
             <img
@@ -882,37 +895,39 @@ const PostDetailPage = () => {
                 <img src={likes} alt="like" className="w-4 h-4" />
                 좋아요 {likeCount}
               </button>
+            </div>
 
+            <div className="flex items-center gap-3">
               {isMyPost && (
                 <>
                   <button
                     onClick={handleEditPost}
-                    className="flex items-center gap-2 border border-[#0080FF] text-[#0080FF] font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+                    className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                     title="게시글 수정"
                   >
                     수정
                   </button>
                   <button
                     onClick={handleDeletePost}
-                    className="flex items-center gap-2 border border-red-400 text-red-500 font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+                    className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                     title="게시글 삭제"
                   >
                     삭제
                   </button>
                 </>
               )}
-            </div>
 
-            <button
-              onClick={() => {
-                setSelectedTarget("게시물");
-                setShowReportModal(true);
-              }}
-              className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
-            >
-              <img src={reportIcon} alt="report" className="w-4 h-4" />
-              신고하기
-            </button>
+              <button
+                onClick={() => {
+                  setSelectedTarget("게시물");
+                  setShowReportModal(true);
+                }}
+                className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+              >
+                <img src={reportIcon} alt="report" className="w-4 h-4" />
+                신고하기
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -993,7 +1008,20 @@ const PostDetailPage = () => {
                 {/* 최상위 댓글 */}
                 <div className="flex justify-between">
                   <div className="flex gap-4 items-start">
-                    <div className="w-[40px] h-[40px] rounded-full bg-[#D9D9D9] flex-shrink-0" />
+                    <div className="w-[40px] h-[40px] rounded-full bg-[#D9D9D9] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                      {/* 댓글 작성자 프로필 사진 */}
+                      {c.profileImageUrl ? (
+                        <img
+                          src={toAbs(c.profileImageUrl)}
+                          alt="profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-pink-300 to-gray-400 flex items-center justify-center text-white font-bold text-sm">
+                          {c.nickname?.charAt(0) || "U"}
+                        </div>
+                      )}
+                    </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[16px] font-medium">
@@ -1089,25 +1117,25 @@ const PostDetailPage = () => {
                                                                                                       });
                                                                                                       return isMyComment && !editing[c.id];
                                                                                                     })() && (
-                            <>
-                                                            <button
-                                type="button"
-                                onClick={() => beginEdit(c)}
-                                className="text-[13px] text-gray-500 hover:text-gray-700"
-                                title="댓글 수정"
-                              >
-                                수정
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteComment(c.id)}
-                                disabled={commentDeleteLoading[c.id]}
-                                className="text-[13px] text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="댓글 삭제"
-                              >
-                                {commentDeleteLoading[c.id] ? "삭제 중..." : "삭제"}
-                              </button>
-                            </>
+                                                         <div className="flex gap-2">
+                               <button
+                                 type="button"
+                                 onClick={() => beginEdit(c)}
+                                 className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded"
+                                 title="댓글 수정"
+                               >
+                                 수정
+                               </button>
+                               <button
+                                 type="button"
+                                 onClick={() => handleDeleteComment(c.id)}
+                                 disabled={commentDeleteLoading[c.id]}
+                                 className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                 title="댓글 삭제"
+                               >
+                                 {commentDeleteLoading[c.id] ? "삭제 중..." : "삭제"}
+                               </button>
+                             </div>
                           )}
                       </div>
 
@@ -1171,7 +1199,20 @@ const PostDetailPage = () => {
                       return (
                         <div key={r.id} className="flex justify-between">
                           <div className="flex gap-4 items-start">
-                            <div className="w-[32px] h-[32px] rounded-full bg-[#D9D9D9] flex-shrink-0" />
+                            <div className="w-[32px] h-[32px] rounded-full bg-[#D9D9D9] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                              {/* 대댓글 작성자 프로필 사진 */}
+                              {r.profileImageUrl ? (
+                                <img
+                                  src={toAbs(r.profileImageUrl)}
+                                  alt="profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-pink-300 to-gray-400 flex items-center justify-center text-white font-bold text-xs">
+                                  {r.nickname?.charAt(0) || "U"}
+                                </div>
+                              )}
+                            </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[15px] font-medium">
@@ -1252,25 +1293,25 @@ const PostDetailPage = () => {
                                                                                                                                       });
                                                                                                                                       return isMyReply && !editing[r.id];
                                                                                                                                     })() && (
-                                    <>
-                                                                <button
-                                  type="button"
-                                  onClick={() => beginEdit(r)}
-                                  className="text-[13px] text-gray-500 hover:text-gray-700"
-                                  title="댓글 수정"
-                                >
-                                  수정
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteComment(r.id)}
-                                  disabled={commentDeleteLoading[r.id]}
-                                  className="text-[13px] text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="댓글 삭제"
-                                >
-                                  {commentDeleteLoading[r.id] ? "삭제 중..." : "삭제"}
-                                </button>
-                                    </>
+                                                                         <div className="flex gap-2">
+                                       <button
+                                         type="button"
+                                         onClick={() => beginEdit(r)}
+                                         className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded"
+                                         title="댓글 수정"
+                                       >
+                                         수정
+                                       </button>
+                                       <button
+                                         type="button"
+                                         onClick={() => handleDeleteComment(r.id)}
+                                         disabled={commentDeleteLoading[r.id]}
+                                         className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                         title="댓글 삭제"
+                                       >
+                                         {commentDeleteLoading[r.id] ? "삭제 중..." : "삭제"}
+                                       </button>
+                                     </div>
                             )}
                           </div>
                             </div>

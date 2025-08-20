@@ -26,15 +26,15 @@ type CommunityCategoryUpdate = UpdateCategory;
 const mapToCategoryEnumForUpdate = (kor: string): CommunityCategoryUpdate => {
   switch (kor) {
     case "생활꿀팁":
-      return "LIFE_TIP";
+      return "TIP";
     case "꿀템 추천":
-      return "LIFE_ITEM";
+      return "ITEM";
     case "살까말까?":
-      return "BUY_OR_NOT";
+      return "SHOULD_I_BUY";
     case "궁금해요!":
       return "CURIOUS";
     default:
-      return "LIFE_TIP";
+      return "TIP";
   }
 };
 
@@ -153,18 +153,19 @@ export default function CommunityEditPage() {
   // 상세 로드 → 폼 채우기
   useEffect(() => {
     if (!detail) return;
-    setTitle((detail as any).title ?? "");
+    const detailData = detail as Record<string, unknown>;
+    setTitle((detailData.title as string) ?? "");
     const {
       content: pure,
       features,
       source,
-    } = unpackExtraFromContent((detail as any).content ?? "");
+    } = unpackExtraFromContent((detailData.content as string) ?? "");
     setContent(pure);
     setFeatures(features);
     setSource(source);
-    setCategory(apiToKorCategory((detail as any).category));
+    setCategory(apiToKorCategory(detailData.category as string));
     setTags(extractHashtags(detail as CommunityDetailLike));
-    setExistingImages((detail as any).postImageUrls ?? []);
+    setExistingImages((detailData.postImageUrls as string[]) ?? []);
   }, [detail]);
 
   const isSaveDisabled = !title.trim() || !category || isPending;
@@ -212,8 +213,21 @@ export default function CommunityEditPage() {
       hashtags: tags,
     };
 
-    // 파일이 없으면 보내지 않음(서버가 기존 이미지 유지)
-    const filesToSend = images;
+    // 원래 방식: 새 이미지가 있으면 전송, 없으면 undefined
+    const filesToSend = images.length > 0 ? images : undefined;
+
+    // 디버깅 로그 추가
+    console.log("=== 커뮤니티 게시글 수정 요청 ===");
+    console.log("postId:", pid);
+    console.log("req:", req);
+    console.log("이미지 상태 분석:", {
+      "기존 이미지 개수": existingImages.length,
+      "새 이미지 개수": images.length,
+      filesToSend: filesToSend ? `${filesToSend.length}개 파일` : "undefined",
+    });
+    console.log("req.title length:", req.title.length);
+    console.log("req.content length:", req.content.length);
+    console.log("req.hashtags:", req.hashtags);
 
     patchMutate(
       { postId: pid, req, files: filesToSend },
@@ -222,13 +236,25 @@ export default function CommunityEditPage() {
           alert("게시글이 수정되었습니다.");
           navigate(`/post/${pid}`);
         },
-        onError: (e: any) => {
+        onError: (e: unknown) => {
+          const error = e as Record<string, unknown>;
           console.error("PATCH failed:", {
-            status: e?.status,
-            data: e?.data,
-            msg: e?.message,
+            status: error?.status,
+            data: error?.data,
+            msg: error?.message,
+            response: error?.response,
           });
-          alert(e?.message ?? "수정 중 오류가 발생했습니다.");
+          // 더 자세한 에러 정보 로깅
+          if (error?.response) {
+            const response = error.response as Record<string, unknown>;
+            console.error("Error response:", {
+              status: response.status,
+              statusText: response.statusText,
+              data: response.data,
+              headers: response.headers,
+            });
+          }
+          alert((error?.message as string) ?? "수정 중 오류가 발생했습니다.");
         },
       }
     );
@@ -261,11 +287,17 @@ export default function CommunityEditPage() {
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-[80px]">
-        {/* 이미지 영역 */}
-        <div className="flex flex-col items-center gap-4 w-full max-w-[681.76px]">
-          {/* 기존 이미지 미리보기(서버는 파일 미전송 시 기존 유지 가정) */}
-          {existingImages.length > 0 && (
-            <div className="w-full grid grid-cols-2 gap-3">
+                 {/* 이미지 영역 */}
+         <div className="flex flex-col items-center gap-4 w-full max-w-[681.76px]">
+                      {/* 기존 이미지 미리보기 */}
+           {existingImages.length > 0 && (
+             <>
+               <div className="w-full text-center mb-2">
+                 <p className="text-[14px] text-[#FF6B6B] font-medium">
+                   📸 현재 게시글의 이미지 (수정 시 다시 첨부 필요)
+                 </p>
+               </div>
+               <div className="w-full grid grid-cols-2 gap-3">
               {existingImages.map((url) => (
                 <div
                   key={url}
@@ -282,10 +314,11 @@ export default function CommunityEditPage() {
                     className="absolute top-2 right-2 bg-white/80 rounded-full px-2 py-1 text-[12px]"
                   >
                     숨기기
-                  </button>
-                </div>
-              ))}
-            </div>
+                                     </button>
+                 </div>
+               ))}
+               </div>
+             </>
           )}
 
           <div className="w-full h-[260px] lg:h-[400px] bg-[#E6E6E6] rounded-[32px] flex justify-center items-center relative overflow-hidden">
@@ -326,9 +359,9 @@ export default function CommunityEditPage() {
             onChange={handleFilesChange}
             className="hidden"
           />
-          <p className="text-[12px] text-[#666]">
-            새 이미지를 올리지 않으면 서버가 기존 이미지를 유지합니다.
-          </p>
+                     <p className="text-[12px] text-[#666]">
+             ⚠️ 수정 시에는 이미지를 다시 첨부해야 합니다. 새 이미지를 올리지 않으면 기존 이미지가 삭제됩니다.
+           </p>
         </div>
 
         {/* 입력 영역 */}
