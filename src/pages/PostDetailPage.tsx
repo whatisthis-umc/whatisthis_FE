@@ -70,20 +70,19 @@ function parseExtraFromContent(raw?: string): { content: string; features: strin
       const features: string[] = Array.isArray(extra?.features) ? extra.features.filter(Boolean) : [];
       const source: string = typeof extra?.source === "string" ? extra.source : "";
       return { content: cleaned, features, source };
-    } catch {}
+    } catch {
+      // ignore parse error, fallback below
+    }
   }
   // 후방: 본문 내 '출처:' 라인 파싱
-  const srcLine = text
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .reverse()
-    .find((s) => /^출처\s*[:：]/.test(s));
+  const lines = text.split(/\n+/).map((s) => s.trim());
+  const srcLine = [...lines].reverse().find((s) => /^출처\s*[:：]/.test(s));
   const src = srcLine ? srcLine.replace(/^출처\s*[:：]\s*/, "").trim() : "";
   return { content: text.replace(srcLine ?? "", "").trim(), features: [], source: src };
 }
 
 /* 이미지/해시태그/댓글 안전 추출 */
-const pickFirstArray = (...xs: any[]) => xs.find((v) => Array.isArray(v) && v.length > 0) ?? [];
+const pickFirstArray = (...xs: unknown[]) => xs.find((v) => Array.isArray(v) && (v as unknown[]).length > 0) ?? [];
 
 const extractImages = (detail: any): string[] => {
   const rawList = pickFirstArray(
@@ -97,7 +96,7 @@ const extractImages = (detail: any): string[] => {
     detail?.result?.images,
     detail?.result?.imageList,
     detail?.result?.imageListDto?.imageList
-  );
+  ) as any[];
   const urls = (Array.isArray(rawList) ? rawList : [rawList])
     .map((it: any) => (typeof it === "string" ? it : it?.url ?? it?.path ?? it?.src))
     .filter(Boolean)
@@ -135,7 +134,8 @@ const extractCommentsFlat = (detail: any, postNickname: string, myNickname: stri
   const vOld = detail?.commentPage?.list;
   const base: any[] = Array.isArray(vNew) ? vNew : Array.isArray(vOld) ? vOld : [];
   return base.map((c) => {
-    const parentRaw = c?.parentId ?? c?.parentCommentId ?? c?.parent?.id ?? c?.parent_id ?? c?.parent_comment_id ?? null;
+    const parentRaw =
+      c?.parentId ?? c?.parentCommentId ?? c?.parent?.id ?? c?.parent_id ?? c?.parent_comment_id ?? null;
     const parentId = parentRaw == null || Number(parentRaw) <= 0 ? null : Number(parentRaw);
     const nickname = c?.nickname ?? "";
     const isAuthor = c?.isAuthor ?? nickname === postNickname;
@@ -164,7 +164,10 @@ const buildTree = (flat: RawComment[]): CommentTree[] => {
     (byParent[key] ??= []).push(c);
   }
   const top = (byParent["root"] ?? []).sort((a, b) => a.id - b.id);
-  return top.map((t) => ({ ...t, replies: (byParent[String(t.id)] ?? []).sort((a, b) => a.id - b.id) }));
+  return top.map((t) => ({
+    ...t,
+    replies: (byParent[String(t.id)] ?? []).sort((a, b) => a.id - b.id),
+  }));
 };
 
 /* ============ 컴포넌트 ============ */
@@ -178,22 +181,22 @@ const PostDetailPage = () => {
 
   const queryClient = useQueryClient();
 
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">("게시물");
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
-  const [reportedPost, setReportedPost] = useState(false);
-  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
+  const [reportedPost, setReportedPost] = useState<boolean>(false);
+  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set<number>());
 
   // ⬇️ 신고 아이콘 아래 ‘수정/삭제’ 버튼 노출 제어
   const [openActionsId, setOpenActionsId] = useState<number | null>(null);
 
   const [sortType, setSortType] = useState<UISort>("인기순");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-  const [newComment, setNewComment] = useState("");
-  const [isSubmittingTop, setIsSubmittingTop] = useState(false);
-  const [openReplyBoxes, setOpenReplyBoxes] = useState<Set<number>>(new Set());
+  const [newComment, setNewComment] = useState<string>("");
+  const [isSubmittingTop, setIsSubmittingTop] = useState<boolean>(false);
+  const [openReplyBoxes, setOpenReplyBoxes] = useState<Set<number>>(new Set<number>());
   const [replyInputs, setReplyInputs] = useState<Record<number, string>>({});
 
   const apiSort = uiToApi(sortType);
@@ -226,18 +229,21 @@ const PostDetailPage = () => {
     setLikeCount(likeCountFromServer);
   }, [likedFromServer, likeCountFromServer]);
 
-  const likeOpRef = useRef(0);
+  const likeOpRef = useRef<number>(0);
 
   const detail: any = data ?? {};
-  const postNickname = detail.nickname ?? detail.result?.nickname ?? "";
-  const myNickname = localStorage.getItem("nickname") || localStorage.getItem("userNickname") || "";
+  const postNickname: string = detail.nickname ?? detail.result?.nickname ?? "";
+  const myNickname: string = localStorage.getItem("nickname") || localStorage.getItem("userNickname") || "";
   const isMyPost = !!myNickname && myNickname === postNickname;
 
   // 본문/EXTRA
-  const rawContent = detail.content ?? detail.result?.content ?? "";
-  const { content: displayContent, features, source: srcFromExtra } = useMemo(() => parseExtraFromContent(rawContent), [rawContent]);
+  const rawContent: string = detail.content ?? detail.result?.content ?? "";
+  const { content: displayContent, features, source: srcFromExtra } = useMemo(
+    () => parseExtraFromContent(rawContent),
+    [rawContent]
+  );
 
-  const source =
+  const source: string =
     srcFromExtra ||
     detail?.source ||
     detail?.result?.source ||
@@ -251,7 +257,10 @@ const PostDetailPage = () => {
   const hashtags = useMemo(() => extractHashtags(detail), [detail]);
 
   // 댓글 트리
-  const flatComments = useMemo(() => extractCommentsFlat(detail, postNickname, myNickname), [detail, postNickname, myNickname]);
+  const flatComments = useMemo(
+    () => extractCommentsFlat(detail, postNickname, myNickname),
+    [detail, postNickname, myNickname]
+  );
   const tree = useMemo(() => buildTree(flatComments), [flatComments]);
 
   const totalPages = useMemo(() => {
@@ -299,7 +308,7 @@ const PostDetailPage = () => {
     if (!content || isSubmittingTop) return;
     try {
       setIsSubmittingTop(true);
-      await createCommentM.mutateAsync({ content });
+      await createCommentM.mutateAsync({ content, parentCommentId: null });
       if (sortType !== "최신순") {
         setSortType("최신순");
         setCurrentPage(1);
@@ -338,7 +347,7 @@ const PostDetailPage = () => {
     if (safePostId <= 0) return;
     setCommentLikeOps((m) => ({ ...m, [c.id]: !isCurrentlyLiked }));
     (isCurrentlyLiked ? unlikeCommentM : likeCommentM).mutate(c.id, {
-      onSuccess: () => invalidateAll(),
+      onSuccess: () => void invalidateAll(),
       onError: () => setCommentLikeOps((m) => ({ ...m, [c.id]: isCurrentlyLiked })),
     });
   };
@@ -353,7 +362,7 @@ const PostDetailPage = () => {
   };
   const cancelEdit = (commentId: number) => {
     setEditing((m) => ({ ...m, [commentId]: false }));
-    setEditInputs(({ [commentId]: _, ...rest }) => rest);
+    setEditInputs(({ [commentId]: _drop, ...rest }) => rest);
   };
   const saveEdit = async (commentId: number) => {
     if (safePostId <= 0) return;
@@ -403,7 +412,9 @@ const PostDetailPage = () => {
         <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80" />
         <div className="flex items-center gap-1">
           {detail.isBestUser && <img src={bestBadge} alt="best badge" className="w-4 h-4 sm:w-5 sm:h-5" />}
-          <span className="text-gray-800 font-medium text-sm sm:text-base">{detail.nickname ?? detail.result?.nickname}</span>
+          <span className="text-gray-800 font-medium text-sm sm:text-base">
+            {detail.nickname ?? detail.result?.nickname}
+          </span>
         </div>
         <span className="text-gray-500 text-sm">{formatKST(detail.createdAt ?? detail.result?.createdAt)}</span>
       </div>
@@ -420,16 +431,22 @@ const PostDetailPage = () => {
 
         {/* 본문 */}
         <div className="flex flex-col gap-6 flex-1">
-          <h1 className="text-[20px] sm:text-[24px] font-bold leading-snug">{detail.title ?? detail.result?.title}</h1>
+          <h1 className="text-[20px] sm:text-[24px] font-bold leading-snug">
+            {detail.title ?? detail.result?.title}
+          </h1>
 
-          <p className="text-gray-700 text-[15px] sm:text-[16px] font-medium leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+          <p className="text-gray-700 text-[15px] sm:text-[16px] font-medium leading-relaxed whitespace-pre-wrap">
+            {displayContent}
+          </p>
 
           {/* 주요 특징 */}
           {features.length > 0 && (
             <div className="border border-[#E6E6E6] rounded-[32px] px-[24px] py-[24px] text-[#333] text-[16px] leading-[2] whitespace-pre-wrap">
               <div className="font-bold mb-2">주요 특징</div>
               {features.map((f, i) => (
-                <div key={i}>특징 {i + 1}. {f}</div>
+                <div key={i}>
+                  특징 {i + 1}. {f}
+                </div>
               ))}
             </div>
           )}
@@ -445,7 +462,12 @@ const PostDetailPage = () => {
           {/* 해시태그 */}
           <div className="flex flex-wrap gap-2">
             {hashtags.map((tag, i) => (
-              <span key={`${tag}-${i}`} className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1">#{tag}</span>
+              <span
+                key={`${tag}-${i}`}
+                className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1"
+              >
+                #{tag}
+              </span>
             ))}
           </div>
 
@@ -502,7 +524,7 @@ const PostDetailPage = () => {
             <img src={commentsIconB} alt="comments" className="w-5 h-5" />
             댓글 {detail.comments ?? detail.commentCount ?? detail.result?.commentCount ?? 0}
           </div>
-          <div className="justify-self-end">
+        <div className="justify-self-end">
             <SortDropdown
               defaultValue={uiToApi(sortType)}
               onChange={(apiVal: CommunitySortType) => {
@@ -521,7 +543,7 @@ const PostDetailPage = () => {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="댓글을 입력해주세요."
-              className="w/full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
+              className="w-full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
               aria-label="댓글 입력"
             />
           </div>
@@ -552,7 +574,9 @@ const PostDetailPage = () => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[16px] font-medium">{c.nickname}</span>
-                        {c.isAuthor && <span className="px-2 py-[2px] text-[12px] border border-[#ccc] rounded-full">작성자</span>}
+                        {c.isAuthor && (
+                          <span className="px-2 py-[2px] text-[12px] border border-[#ccc] rounded-full">작성자</span>
+                        )}
                       </div>
 
                       {!editing[c.id] ? (
@@ -690,7 +714,9 @@ const PostDetailPage = () => {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[15px] font-medium">{r.nickname}</span>
                                 {r.isAuthor && (
-                                  <span className="px-2 py-[2px] text-[11px] border border-[#ccc] rounded-full">작성자</span>
+                                  <span className="px-2 py-[2px] text-[11px] border border-[#ccc] rounded-full">
+                                    작성자
+                                  </span>
                                 )}
                               </div>
 
@@ -814,7 +840,10 @@ const PostDetailPage = () => {
           targetType={selectedTarget}
           onSubmit={(form: ReportPayload) => {
             if (selectedTarget === "게시물") {
-              if (reportedPost) return alert("이미 신고하셨습니다.");
+              if (reportedPost) {
+                alert("이미 신고하셨습니다.");
+                return;
+              }
               reportPostM.mutate(
                 { content: form.content, description: form.description },
                 {
@@ -825,14 +854,21 @@ const PostDetailPage = () => {
                   },
                 }
               );
-            } else if (selectedCommentId) {
-              if (reportedComments.has(selectedCommentId)) return alert("이미 신고한 댓글입니다.");
+            } else if (selectedCommentId != null) {
+              if (reportedComments.has(selectedCommentId)) {
+                alert("이미 신고한 댓글입니다.");
+                return;
+              }
               reportCommentM.mutate(
                 { commentId: selectedCommentId, payload: form },
                 {
                   onSuccess: () => {
                     alert("신고가 완료되었습니다.");
-                    setReportedComments((s) => new Set(s).add(selectedCommentId));
+                    setReportedComments((s) => {
+                      const ns = new Set(s);
+                      ns.add(selectedCommentId);
+                      return ns;
+                    });
                     setShowReportModal(false);
                   },
                 }
