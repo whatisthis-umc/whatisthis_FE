@@ -198,17 +198,22 @@ const MyPage = () => {
   const { data: account } = useMyAccount();
 
   // 데이터
+  const hasAccount = Boolean(account && (account.nickname || account.email));
+
+  // 계정 정보가 있을 때만 API 호출
+  const enablePosts = hasAccount && tab === "나의 작성내역";
   const {
     data: postData,
     isLoading: loadingPosts,
     isError: errorPosts,
-  } = useMyPosts(postPage, pageSize);
+  } = useMyPosts(postPage, pageSize, enablePosts);
 
+  const enableInq = hasAccount && tab === "나의 문의내역";
   const {
     data: inqData,
     isLoading: loadingInq,
     isError: errorInq,
-  } = useMyInquiries(inqPage, pageSize);
+  } = useMyInquiries(inqPage, pageSize, enableInq);
   const posts: MyPostItem[] = Array.isArray(postData?.posts)
     ? postData!.posts
     : [];
@@ -247,8 +252,20 @@ const MyPage = () => {
     }
   };
 
-  // 프로필(현재 탭 기준 우선)
+  // 프로필: 계정 정보 우선, 없으면 현재 탭 데이터로 폴백
   const profile = useMemo(() => {
+    const fromAccount = account
+      ? {
+          nickname: account.nickname ?? "",
+          email: account.email ?? "",
+          profileImageUrl: (account.profileImage ?? null) as string | null,
+        }
+      : null;
+
+    if (fromAccount && (fromAccount.nickname || fromAccount.email || fromAccount.profileImageUrl)) {
+      return fromAccount;
+    }
+
     if (tab === "나의 작성내역" && postData) {
       return {
         nickname: postData.nickname,
@@ -264,7 +281,7 @@ const MyPage = () => {
       };
     }
     return { nickname: "", email: "", profileImageUrl: null as string | null };
-  }, [tab, postData, inqData]);
+  }, [account, tab, postData, inqData]);
 
   // 다음 페이지 존재 여부(총 개수 없음 → size 기준)
   const hasNextPosts = !!postData && postData.posts.length === pageSize;
