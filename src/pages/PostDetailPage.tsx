@@ -22,10 +22,12 @@ import { useLikePost, useUnlikePost } from "../hooks/mutations/usePostLike";
 import useReportPost from "../hooks/mutations/useReportPost";
 import useReportComment from "../hooks/mutations/useReportComment";
 import { useLikeComment, useUnlikeComment } from "../hooks/mutations/useCommentLike";
+import { useUpdateComment, useDeleteComment } from "../hooks/mutations/useCommentEditDelete";
 import { useEditPost, useDeletePost } from "../hooks/mutations/usePostEditDelete";
+
 import type { CommunitySortType } from "../types/community";
 
-/* ================= 공용 ================= */
+/* ============ 공용 유틸 ============ */
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
 const toAbs = (u?: string) => {
@@ -56,56 +58,8 @@ const formatKST = (isoLike?: string) => {
   return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
 };
 
-/* ====== 스웨거 기반 API: 댓글 수정/삭제 ======
-PATCH /posts/{post-id}/comments/{comment-id}  body: { content }
-DELETE /posts/{post-id}/comments/{comment-id}
-*/
-const authHeaders = () => {
-  const token =
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("Authorization");
-  return token ? { Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}` } : {};
-};
-
-async function apiUpdateComment(postId: number, commentId: number, content: string) {
-  const res = await fetch(`${API_BASE}/posts/${postId}/comments/${commentId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({ content }),
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`댓글 수정 실패 (${res.status}) ${t}`);
-  }
-  return res.json();
-}
-
-async function apiDeleteComment(postId: number, commentId: number) {
-  const res = await fetch(`${API_BASE}/posts/${postId}/comments/${commentId}`, {
-    method: "DELETE",
-    headers: {
-      ...authHeaders(),
-    },
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`댓글 삭제 실패 (${res.status}) ${t}`);
-  }
-  return res.json();
-}
-
-/* ========== 보조 파서들 ========== */
-function parseExtraFromContent(raw?: string): {
-  content: string;
-  features: string[];
-  source: string;
-} {
+/* content 내 <!--EXTRA:{...}--> 및 우회 파서(출처 라인) */
+function parseExtraFromContent(raw?: string): { content: string; features: string[]; source: string } {
   const text = String(raw ?? "");
   const m = text.match(/<!--EXTRA:(\{[\s\S]*?\})-->/);
   if (m) {
@@ -115,18 +69,19 @@ function parseExtraFromContent(raw?: string): {
       const features: string[] = Array.isArray(extra?.features) ? extra.features.filter(Boolean) : [];
       const source: string = typeof extra?.source === "string" ? extra.source : "";
       return { content: cleaned, features, source };
-    } catch {}
+    } catch {
+      // ignore parse error, fallback below
+    }
   }
-  const srcLine = text
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .reverse()
-    .find((s) => /^출처\s*[:：]/.test(s));
+  // 후방: 본문 내 '출처:' 라인 파싱
+  const lines = text.split(/\n+/).map((s) => s.trim());
+  const srcLine = [...lines].reverse().find((s) => /^출처\s*[:：]/.test(s));
   const src = srcLine ? srcLine.replace(/^출처\s*[:：]\s*/, "").trim() : "";
   return { content: text.replace(srcLine ?? "", "").trim(), features: [], source: src };
 }
 
-const pickFirstArray = (...xs: any[]) => xs.find((v) => Array.isArray(v) && v.length > 0) ?? [];
+/* 이미지/해시태그/댓글 안전 추출 */
+const pickFirstArray = (...xs: unknown[]) => xs.find((v) => Array.isArray(v) && (v as unknown[]).length > 0) ?? [];
 
 const extractImages = (detail: any): string[] => {
   const rawList = pickFirstArray(
@@ -140,7 +95,7 @@ const extractImages = (detail: any): string[] => {
     detail?.result?.images,
     detail?.result?.imageList,
     detail?.result?.imageListDto?.imageList
-  );
+  ) as any[];
   const urls = (Array.isArray(rawList) ? rawList : [rawList])
     .map((it: any) => (typeof it === "string" ? it : it?.url ?? it?.path ?? it?.src))
     .filter(Boolean)
@@ -156,7 +111,7 @@ const extractHashtags = (detail: any): string[] => {
   const fromList = Array.isArray(detail?.hashtagList)
     ? detail.hashtagList.map((h: any) => h?.content ?? h).filter(Boolean)
     : [];
-  return Array.from(new Set<string>>([ ...fromTop, ...fromResult, ...fromDto, ...fromDto2, ...fromList ]));
+  return Array.from(new Set<string>([...fromTop, ...fromResult, ...fromDto, ...fromDto2, ...fromList]));
 };
 
 type RawComment = {
@@ -178,7 +133,8 @@ const extractCommentsFlat = (detail: any, postNickname: string, myNickname: stri
   const vOld = detail?.commentPage?.list;
   const base: any[] = Array.isArray(vNew) ? vNew : Array.isArray(vOld) ? vOld : [];
   return base.map((c) => {
-    const parentRaw = c?.parentId ?? c?.parentCommentId ?? c?.parent?.id ?? c?.parent_id ?? c?.parent_comment_id ?? null;
+    const parentRaw =
+      c?.parentId ?? c?.parentCommentId ?? c?.parent?.id ?? c?.parent_id ?? c?.parent_comment_id ?? null;
     const parentId = parentRaw == null || Number(parentRaw) <= 0 ? null : Number(parentRaw);
     const nickname = c?.nickname ?? "";
     const isAuthor = c?.isAuthor ?? nickname === postNickname;
@@ -207,85 +163,47 @@ const buildTree = (flat: RawComment[]): CommentTree[] => {
     (byParent[key] ??= []).push(c);
   }
   const top = (byParent["root"] ?? []).sort((a, b) => a.id - b.id);
-  return top.map((t) => ({ ...t, replies: (byParent[String(t.id)] ?? []).sort((a, b) => a.id - b.id) }));
+  return top.map((t) => ({
+    ...t,
+    replies: (byParent[String(t.id)] ?? []).sort((a, b) => a.id - b.id),
+  }));
 };
 
-/* ========== 확인 모달 ========== */
-function ConfirmModal({
-  open,
-  title = "확인",
-  message,
-  confirmText = "확인",
-  cancelText = "취소",
-  onConfirm,
-  onClose,
-}: {
-  open: boolean;
-  title?: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onClose: () => void;
-}) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl w-[92%] max-w-[420px] p-6 shadow-xl">
-        <div className="text-lg font-semibold mb-2">{title}</div>
-        <div className="text-sm text-gray-600 mb-5 whitespace-pre-wrap">{message}</div>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-full border text-sm"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm"
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============ 페이지 ============ */
-export default function PostDetailPage() {
+/* ============ 컴포넌트 ============ */
+const PostDetailPage = () => {
   const navigate = useNavigate();
+
+  // ✅ 라우트 파라미터 이름을 postId로 통일 (/post/:postId)
   const { postId: postIdParam } = useParams<{ postId: string }>();
   const postIdNum = Number(postIdParam);
   const safePostId = Number.isFinite(postIdNum) && postIdNum > 0 ? postIdNum : -1;
 
   const queryClient = useQueryClient();
 
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [selectedTarget, setSelectedTarget] = useState<"댓글" | "게시물">("게시물");
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
-  const [reportedPost, setReportedPost] = useState(false);
-  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set());
+  const [reportedPost, setReportedPost] = useState<boolean>(false);
+  const [reportedComments, setReportedComments] = useState<Set<number>>(new Set<number>());
 
-  // 삭제 확인 모달
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  // ⬇️ 신고 아이콘 아래 ‘수정/삭제’ 버튼 노출 제어
+  const [openActionsId, setOpenActionsId] = useState<number | null>(null);
 
   const [sortType, setSortType] = useState<UISort>("인기순");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
-  const [newComment, setNewComment] = useState("");
-  const [isSubmittingTop, setIsSubmittingTop] = useState(false);
-  const [openReplyBoxes, setOpenReplyBoxes] = useState<Set<number>>(new Set());
+  const [newComment, setNewComment] = useState<string>("");
+  const [isSubmittingTop, setIsSubmittingTop] = useState<boolean>(false);
+  const [openReplyBoxes, setOpenReplyBoxes] = useState<Set<number>>(new Set<number>());
   const [replyInputs, setReplyInputs] = useState<Record<number, string>>({});
 
+  const apiSort = uiToApi(sortType);
   const { data, isLoading, isError } = useGetCommunityDetail({
     postId: safePostId,
     page: currentPage,
     size: pageSize,
-    sort: uiToApi(sortType),
+    sort: apiSort,
   });
 
   const createCommentM = useCreateComment(safePostId);
@@ -295,6 +213,8 @@ export default function PostDetailPage() {
   const reportCommentM = useReportComment(safePostId);
   const likeCommentM = useLikeComment(safePostId);
   const unlikeCommentM = useUnlikeComment(safePostId);
+  const updateCommentM = useUpdateComment(safePostId);
+  const deleteCommentM = useDeleteComment(safePostId);
   const editPostM = useEditPost(safePostId);
   const deletePostM = useDeletePost(safePostId);
 
@@ -302,22 +222,27 @@ export default function PostDetailPage() {
   const likeCountFromServer = Number((data as any)?.likes ?? (data as any)?.likeCount ?? 0);
   const [liked, setLiked] = useState<boolean>(likedFromServer);
   const [likeCount, setLikeCount] = useState<number>(likeCountFromServer);
+
   useEffect(() => {
     setLiked(likedFromServer);
     setLikeCount(likeCountFromServer);
   }, [likedFromServer, likeCountFromServer]);
 
-  const likeOpRef = useRef(0);
+  const likeOpRef = useRef<number>(0);
 
   const detail: any = data ?? {};
-  const postNickname = detail.nickname ?? detail.result?.nickname ?? "";
-  const myNickname = localStorage.getItem("nickname") || localStorage.getItem("userNickname") || "";
+  const postNickname: string = detail.nickname ?? detail.result?.nickname ?? "";
+  const myNickname: string = localStorage.getItem("nickname") || localStorage.getItem("userNickname") || "";
   const isMyPost = !!myNickname && myNickname === postNickname;
 
-  // 본문 & 파생
-  const rawContent = detail.content ?? detail.result?.content ?? "";
-  const { content: displayContent, features, source: srcFromExtra } = useMemo(() => parseExtraFromContent(rawContent), [rawContent]);
-  const source =
+  // 본문/EXTRA
+  const rawContent: string = detail.content ?? detail.result?.content ?? "";
+  const { content: displayContent, features, source: srcFromExtra } = useMemo(
+    () => parseExtraFromContent(rawContent),
+    [rawContent]
+  );
+
+  const source: string =
     srcFromExtra ||
     detail?.source ||
     detail?.result?.source ||
@@ -330,8 +255,11 @@ export default function PostDetailPage() {
   const imageUrls = useMemo(() => extractImages(detail), [detail]);
   const hashtags = useMemo(() => extractHashtags(detail), [detail]);
 
-  // 댓글
-  const flatComments = useMemo(() => extractCommentsFlat(detail, postNickname, myNickname), [detail, postNickname, myNickname]);
+  // 댓글 트리
+  const flatComments = useMemo(
+    () => extractCommentsFlat(detail, postNickname, myNickname),
+    [detail, postNickname, myNickname]
+  );
   const tree = useMemo(() => buildTree(flatComments), [flatComments]);
 
   const totalPages = useMemo(() => {
@@ -347,7 +275,7 @@ export default function PostDetailPage() {
     });
   };
 
-  /* ===== 게시물 좋아요 ===== */
+  /* 게시물 좋아요 */
   const handleToggleLike = () => {
     if (safePostId <= 0) return;
     const opId = ++likeOpRef.current;
@@ -371,7 +299,7 @@ export default function PostDetailPage() {
     });
   };
 
-  /* ===== 댓글 작성/대댓글 ===== */
+  /* 댓글 작성/대댓글 */
   const handleSubmitTopComment = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (safePostId <= 0) return;
@@ -412,13 +340,13 @@ export default function PostDetailPage() {
     await invalidateAll();
   };
 
-  /* ===== 댓글 좋아요/수정/삭제 ===== */
+  /* 댓글 좋아요/수정/삭제 */
   const [commentLikeOps, setCommentLikeOps] = useState<Record<number, boolean>>({});
   const toggleCommentLike = (c: RawComment, isCurrentlyLiked: boolean) => {
     if (safePostId <= 0) return;
     setCommentLikeOps((m) => ({ ...m, [c.id]: !isCurrentlyLiked }));
     (isCurrentlyLiked ? unlikeCommentM : likeCommentM).mutate(c.id, {
-      onSuccess: () => invalidateAll(),
+      onSuccess: () => void invalidateAll(),
       onError: () => setCommentLikeOps((m) => ({ ...m, [c.id]: isCurrentlyLiked })),
     });
   };
@@ -428,43 +356,37 @@ export default function PostDetailPage() {
   const beginEdit = (c: RawComment) => {
     setEditing((m) => ({ ...m, [c.id]: true }));
     setEditInputs((m) => ({ ...m, [c.id]: c.content }));
+    // 액션 패널 닫기
+    setOpenActionsId(null);
   };
   const cancelEdit = (commentId: number) => {
     setEditing((m) => ({ ...m, [commentId]: false }));
-    setEditInputs(({ [commentId]: _, ...rest }) => rest);
+    setEditInputs(({ [commentId]: _drop, ...rest }) => rest);
   };
   const saveEdit = async (commentId: number) => {
     if (safePostId <= 0) return;
     const content = (editInputs[commentId] ?? "").trim();
     if (!content) return;
-
-    await apiUpdateComment(safePostId, commentId, content);
+    await updateCommentM.mutateAsync({ commentId, content });
     cancelEdit(commentId);
     await invalidateAll();
   };
-
-  // 삭제 모달 오픈
-  const askDelete = (commentId: number) => {
-    setDeletingId(commentId);
-    setConfirmOpen(true);
-  };
-  // 실제 삭제
-  const confirmDelete = async () => {
-    if (safePostId <= 0 || deletingId == null) return;
-    await apiDeleteComment(safePostId, deletingId);
-    setConfirmOpen(false);
-    setDeletingId(null);
+  const handleDeleteComment = async (commentId: number) => {
+    if (safePostId <= 0) return;
+    if (!confirm("이 댓글을 삭제할까요?")) return;
+    await deleteCommentM.mutateAsync(commentId);
     await invalidateAll();
+    setOpenActionsId(null);
   };
 
-  /* ===== 게시물 수정/삭제 ===== */
+  /* 게시물 수정/삭제 */
   const handleEditPost = () => {
     if (safePostId <= 0) return;
     navigate(`/post/${safePostId}/edit`);
   };
   const handleDeletePost = async () => {
     if (safePostId <= 0) return;
-    if (!window.confirm("게시글을 삭제할까요?")) return;
+    if (!confirm("게시글을 삭제할까요?")) return;
     await deletePostM.mutateAsync();
     alert("삭제되었습니다.");
     navigate("/community");
@@ -474,6 +396,13 @@ export default function PostDetailPage() {
   if (safePostId <= 0) return <div className="p-8">잘못된 게시글 ID입니다.</div>;
   if (isLoading) return <div className="p-8">로딩 중…</div>;
   if (isError || !data) return <div className="p-8">게시글을 불러오지 못했습니다.</div>;
+
+  // ===== 유틸: 선택된 댓글이 내 댓글인지 확인 =====
+  const isMineOf = (id?: number | null) => {
+    if (!id) return false;
+    const target = flatComments.find((c) => c.id === id);
+    return Boolean(target?.isMine);
+  };
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
@@ -514,7 +443,9 @@ export default function PostDetailPage() {
             <div className="border border-[#E6E6E6] rounded-[32px] px-[24px] py-[24px] text-[#333] text-[16px] leading-[2] whitespace-pre-wrap">
               <div className="font-bold mb-2">주요 특징</div>
               {features.map((f, i) => (
-                <div key={i}>특징 {i + 1}. {f}</div>
+                <div key={i}>
+                  특징 {i + 1}. {f}
+                </div>
               ))}
             </div>
           )}
@@ -530,7 +461,10 @@ export default function PostDetailPage() {
           {/* 해시태그 */}
           <div className="flex flex-wrap gap-2">
             {hashtags.map((tag, i) => (
-              <span key={`${tag}-${i}`} className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1">
+              <span
+                key={`${tag}-${i}`}
+                className="bg-[#CCE5FF] text-[#000] text-xs sm:text-sm rounded-full px-3 py-1"
+              >
                 #{tag}
               </span>
             ))}
@@ -589,7 +523,7 @@ export default function PostDetailPage() {
             <img src={commentsIconB} alt="comments" className="w-5 h-5" />
             댓글 {detail.comments ?? detail.commentCount ?? detail.result?.commentCount ?? 0}
           </div>
-          <div className="justify-self-end">
+        <div className="justify-self-end">
             <SortDropdown
               defaultValue={uiToApi(sortType)}
               onChange={(apiVal: CommunitySortType) => {
@@ -608,7 +542,7 @@ export default function PostDetailPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="댓글을 입력해주세요."
-              className="w/full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
+              className="w-full bg-transparent outline-none text-[16px] sm:text-[20px] leading-[150%] tracking-[-0.02em] placeholder:text-[#6B7280]"
               aria-label="댓글 입력"
             />
           </div>
@@ -639,7 +573,9 @@ export default function PostDetailPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[16px] font-medium">{c.nickname}</span>
-                        {c.isAuthor && <span className="px-2 py-[2px] text-[12px] border border-[#ccc] rounded-full">작성자</span>}
+                        {c.isAuthor && (
+                          <span className="px-2 py-[2px] text-[12px] border border-[#ccc] rounded-full">작성자</span>
+                        )}
                       </div>
 
                       {!editing[c.id] ? (
@@ -722,21 +658,24 @@ export default function PostDetailPage() {
                     </div>
                   </div>
 
-                  {/* 오른쪽: 신고 + 내 댓글이면 항상 수정/삭제 버튼 */}
+                  {/* 오른쪽: 신고 + (내 댓글이면) 그 아래 수정/삭제 */}
                   <div className="flex flex-col items-end gap-2">
                     <img
                       src={reportGrayIcon}
                       alt="report"
                       className="w-4 h-4 cursor-pointer"
                       onClick={() => {
+                        // 신고 모달 열기
                         setSelectedTarget("댓글");
                         setSelectedCommentId(c.id);
                         setShowReportModal(true);
+                        // 액션 패널 토글 (신고 아래에 보여주려면 keep open)
+                        setOpenActionsId((prev) => (prev === c.id ? null : c.id));
                       }}
                       title="신고하기"
                     />
 
-                    {c.isMine && !editing[c.id] && (
+                    {c.isMine && openActionsId === c.id && !editing[c.id] && (
                       <div className="flex flex-col items-end gap-1">
                         <button
                           type="button"
@@ -748,7 +687,7 @@ export default function PostDetailPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => askDelete(c.id)}
+                          onClick={() => handleDeleteComment(c.id)}
                           className="text-[12px] px-2 py-[2px] rounded-full border border-red-300 text-red-500"
                           title="댓글 삭제"
                         >
@@ -774,7 +713,9 @@ export default function PostDetailPage() {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[15px] font-medium">{r.nickname}</span>
                                 {r.isAuthor && (
-                                  <span className="px-2 py-[2px] text-[11px] border border-[#ccc] rounded-full">작성자</span>
+                                  <span className="px-2 py-[2px] text-[11px] border border-[#ccc] rounded-full">
+                                    작성자
+                                  </span>
                                 )}
                               </div>
 
@@ -822,7 +763,7 @@ export default function PostDetailPage() {
                             </div>
                           </div>
 
-                          {/* 오른쪽: 신고 + (내 대댓글이면) 항상 수정/삭제 */}
+                          {/* 오른쪽: 신고 + (내 대댓글이면) 아래 수정/삭제 */}
                           <div className="flex flex-col items-end gap-2">
                             <img
                               src={reportGrayIcon}
@@ -832,11 +773,12 @@ export default function PostDetailPage() {
                                 setSelectedTarget("댓글");
                                 setSelectedCommentId(r.id);
                                 setShowReportModal(true);
+                                setOpenActionsId((prev) => (prev === r.id ? null : r.id));
                               }}
                               title="신고하기"
                             />
 
-                            {r.isMine && !editing[r.id] && (
+                            {r.isMine && openActionsId === r.id && !editing[r.id] && (
                               <div className="flex flex-col items-end gap-1">
                                 <button
                                   type="button"
@@ -848,7 +790,7 @@ export default function PostDetailPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => askDelete(r.id)}
+                                  onClick={() => handleDeleteComment(r.id)}
                                   className="text-[12px] px-2 py-[2px] rounded-full border border-red-300 text-red-500"
                                   title="댓글 삭제"
                                 >
@@ -888,14 +830,19 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {/* 신고 모달 */}
       {showReportModal && (
         <ReportModal
-          onClose={() => setShowReportModal(false)}
+          onClose={() => {
+            setShowReportModal(false);
+            // 모달 닫아도 액션 패널은 유지(요구사항 “모달 밑에”를 시각적으로 만족)
+          }}
           targetType={selectedTarget}
-          onSubmit={(form) => {
+          onSubmit={(form: { content?: string; description?: string }) => {
             if (selectedTarget === "게시물") {
-              if (reportedPost) return alert("이미 신고하셨습니다.");
+              if (reportedPost) {
+                alert("이미 신고하셨습니다.");
+                return;
+              }
               reportPostM.mutate(
                 { content: form.content, description: form.description },
                 {
@@ -906,14 +853,21 @@ export default function PostDetailPage() {
                   },
                 }
               );
-            } else if (selectedCommentId) {
-              if (reportedComments.has(selectedCommentId)) return alert("이미 신고한 댓글입니다.");
+            } else if (selectedCommentId != null) {
+              if (reportedComments.has(selectedCommentId)) {
+                alert("이미 신고한 댓글입니다.");
+                return;
+              }
               reportCommentM.mutate(
                 { commentId: selectedCommentId, payload: form },
                 {
                   onSuccess: () => {
                     alert("신고가 완료되었습니다.");
-                    setReportedComments((s) => new Set(s).add(selectedCommentId));
+                    setReportedComments((s) => {
+                      const ns = new Set(s);
+                      ns.add(selectedCommentId);
+                      return ns;
+                    });
                     setShowReportModal(false);
                   },
                 }
@@ -922,20 +876,8 @@ export default function PostDetailPage() {
           }}
         />
       )}
-
-      {/* 삭제 확인 모달 */}
-      <ConfirmModal
-        open={confirmOpen}
-        title="삭제 확인"
-        message="댓글을 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="취소"
-        onConfirm={confirmDelete}
-        onClose={() => {
-          setConfirmOpen(false);
-          setDeletingId(null);
-        }}
-      />
     </div>
   );
-}
+};
+
+export default PostDetailPage;
