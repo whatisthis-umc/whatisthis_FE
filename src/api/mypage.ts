@@ -75,12 +75,14 @@ export async function patchMyAccount(payload: {
   nickname: string | null;
   email: string | null;
   image?: File | null;
+  modifyProfileImage: boolean;
 }): Promise<MyAccount> {
   const form = new FormData();
   const request = {
     id: payload.id,
     nickname: payload.nickname,
     email: payload.email,
+    modifyProfileImage: payload.modifyProfileImage,
   };
   form.append("request", new Blob([JSON.stringify(request)], { type: "application/json" }));
   if (payload.image) form.append("image", payload.image, payload.image.name);

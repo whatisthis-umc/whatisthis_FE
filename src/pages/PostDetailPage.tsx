@@ -785,6 +785,28 @@ const PostDetailPage = () => {
     navigate("/community");
   };
 
+  // 디버깅: API 응답에서 프로필 사진 필드 확인
+  console.log("게시글 상세 API 응답:", data);
+  console.log("detail 객체:", detail);
+  console.log("프로필 사진 관련 필드들:", {
+    profileImageUrl: detail.profileImageUrl,
+    profileImage: detail.profileImage,
+    authorProfileImage: (detail as any)?.authorProfileImage,
+    memberProfileImage: (detail as any)?.memberProfileImage,
+    author: (detail as any)?.author,
+    member: (detail as any)?.member,
+    // 추가 필드들 확인
+    memberProfileImageUrl: (detail as any)?.memberProfileImageUrl,
+    authorProfileImageUrl: (detail as any)?.authorProfileImageUrl,
+    userProfileImage: (detail as any)?.userProfileImage,
+    userProfileImageUrl: (detail as any)?.userProfileImageUrl,
+    // result 내부 필드들도 확인
+    resultProfileImageUrl: (detail.result as any)?.profileImageUrl,
+    resultProfileImage: (detail.result as any)?.profileImage,
+    resultAuthorProfileImage: (detail.result as any)?.authorProfileImage,
+    resultMemberProfileImage: (detail.result as any)?.memberProfileImage,
+  });
+
   // ===== 가드 =====
   if (safePostId <= 0)
     return <div className="p-8">잘못된 게시글 ID입니다.</div>;
@@ -797,18 +819,25 @@ const PostDetailPage = () => {
       {/* 작성자/메타 */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80 flex items-center justify-center overflow-hidden">
-          {/* 프로필 사진이 있으면 표시, 없으면 기본 아바타 */}
-          {(detail.profileImageUrl as string) || (detail.profileImage as string) ? (
-            <img
-              src={toAbs((detail.profileImageUrl as string) || (detail.profileImage as string))}
-              alt="profile"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-pink-300 to-gray-400 flex items-center justify-center text-white font-bold text-lg">
-              {(detail.nickname as string)?.charAt(0) || "U"}
-            </div>
-          )}
+          {/* 게시글 작성자의 프로필 사진 표시 */}
+          {(() => {
+            // 댓글과 동일한 방식으로 프로필 사진 URL 찾기
+            const detailObj = detail as Record<string, unknown>;
+            const profileImageUrl = 
+              (detailObj.profileImageUrl ?? detailObj.profileimageUrl ?? detailObj.profileimageurl) as string;
+            
+            return profileImageUrl ? (
+              <img
+                src={toAbs(profileImageUrl)}
+                alt="profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-pink-300 to-gray-400 flex items-center justify-center text-white font-bold text-lg">
+                {(detail.nickname as string)?.charAt(0) || "U"}
+              </div>
+            );
+          })()}
         </div>
         <div className="flex items-center gap-1">
           {(detail.isBestUser as boolean) && (

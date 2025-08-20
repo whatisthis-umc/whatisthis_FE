@@ -62,7 +62,10 @@ const MyInfoEditPage = () => {
     const emailToSend =
       composedEmail && composedEmail !== data.email ? composedEmail : null;
 
-    if (!nicknameToSend && !emailToSend && !imageFile) {
+    // 이미지가 변경되었는지 확인
+    const hasImageChanged = imageFile !== null || (imagePreview !== data.profileImage);
+    
+    if (!nicknameToSend && !emailToSend && !hasImageChanged) {
       alert("변경된 내용이 없습니다.");
       return;
     }
@@ -73,6 +76,7 @@ const MyInfoEditPage = () => {
         nickname: nicknameToSend,
         email: emailToSend,
         image: imageFile ?? undefined,
+        modifyProfileImage: hasImageChanged,
       },
       {
         onSuccess: () => {
