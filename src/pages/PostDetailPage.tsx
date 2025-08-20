@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import bestBadge from "../assets/best.png";
-import { likes } from "../assets"; // 흰 하트
+import { likes, whiteHeart } from "../assets"; // 흰 하트, 하얀 하트
 import heartIcon from "../assets/emptyHeart.png"; // 빈 하트
 import reportIcon from "../assets/report.png";
 import commentsIcon from "../assets/comments.png";
@@ -31,7 +31,6 @@ import {
   useDeleteComment,
 } from "../hooks/mutations/useCommentEditDelete";
 import {
-  useEditPost,
   useDeletePost,
 } from "../hooks/mutations/usePostEditDelete";
 
@@ -291,20 +290,40 @@ const PostDetailPage = () => {
   const unlikeCommentM = useUnlikeComment(safePostId);
   const updateCommentM = useUpdateComment(safePostId);
   const deleteCommentM = useDeleteComment(safePostId);
-  const editPostM = useEditPost(safePostId);
   const deletePostM = useDeletePost(safePostId);
 
-  const likedFromServer = Boolean((data as Record<string, unknown>)?.liked);
+  // 서버는 liked 상태를 제공하지 않음 (스웨거 문서 확인)
+  // 따라서 localStorage 기반으로 상태 관리
   const likeCountFromServer = Number(
-    (data as Record<string, unknown>)?.likes ?? (data as Record<string, unknown>)?.likeCount ?? 0
+    (data as Record<string, unknown>)?.likeCount ?? 
+    ((data as Record<string, unknown>)?.result as Record<string, unknown>)?.likeCount ?? 
+    0
   );
-  const [liked, setLiked] = useState<boolean>(likedFromServer);
+  
+  // 게시글 좋아요 상태 관리 - localStorage 기반 (서버는 liked 상태 제공 안함)
+  const [liked, setLiked] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(`postLiked_${safePostId}`);
+      if (saved !== null) {
+        const parsedLiked = JSON.parse(saved);
+        console.log(`localStorage에서 게시글 ${safePostId} 좋아요 상태 복원:`, parsedLiked);
+        return parsedLiked;
+      }
+    } catch (e) {
+      console.warn("localStorage 좋아요 상태 파싱 실패:", e);
+    }
+    // localStorage에 없으면 기본값은 false (좋아요 안한 상태)
+    return false;
+  });
+
+  // 무한 루프 방지를 위해 서버 상태 확인 로직 제거
+  // localStorage 기반으로만 상태 관리
   const [likeCount, setLikeCount] = useState<number>(likeCountFromServer);
 
   useEffect(() => {
-    setLiked(likedFromServer);
+    // 좋아요 개수만 서버 상태로 업데이트 (liked 상태는 localStorage로 관리)
     setLikeCount(likeCountFromServer);
-  }, [likedFromServer, likeCountFromServer]);
+  }, [likeCountFromServer]);
 
   const likeOpRef = useRef(0);
 
@@ -350,6 +369,22 @@ const PostDetailPage = () => {
   console.log("localStorage 모든 값:", Object.fromEntries(
     Object.keys(localStorage).map(key => [key, localStorage.getItem(key)])
   ));
+
+  console.log("🔍 좋아요 상태 최종 확인:", {
+    postId: safePostId,
+    localStorage값: localStorage.getItem(`postLiked_${safePostId}`),
+    localStorage파싱값: (() => {
+      try {
+        const saved = localStorage.getItem(`postLiked_${safePostId}`);
+        return saved !== null ? JSON.parse(saved) : "null";
+      } catch (e) {
+        return "파싱에러";
+      }
+    })(),
+    컴포넌트liked상태: liked,
+    현재표시할아이콘: liked ? "whiteHeart.png" : "likes.png",
+    예상하트아이콘: localStorage.getItem(`postLiked_${safePostId}`) === "true" ? "whiteHeart.png" : "likes.png"
+  });
   const isMyPost = !!myNickname && myNickname === postNickname;
 
   // 본문/EXTRA
@@ -398,6 +433,7 @@ const PostDetailPage = () => {
 
   /* 게시물 좋아요 */
   const handleToggleLike = () => {
+    console.log("🔥 하트 버튼 클릭됨!");
     if (safePostId <= 0) return;
     
     // 자신의 게시글인지 확인
@@ -407,32 +443,106 @@ const PostDetailPage = () => {
       return;
     }
     
-    const opId = ++likeOpRef.current;
-    const nextLiked = !liked;
+    // 현재 상태를 다시 확인 (localStorage에서 최신값 가져오기)
+    const currentLikedFromStorage = (() => {
+      try {
+        const saved = localStorage.getItem(`postLiked_${safePostId}`);
+        return saved !== null ? JSON.parse(saved) : false;
+      } catch (e) {
+        console.warn("localStorage 파싱 실패:", e);
+        return false;
+      }
+    })();
+    
+    console.log("좋아요 토글 시작 - 상세 디버깅:", {
+      컴포넌트상태_liked: liked,
+      localStorage_최신값: currentLikedFromStorage,
+      localStorage_원시값: localStorage.getItem(`postLiked_${safePostId}`),
+      다음상태: !currentLikedFromStorage,
+      액션: !currentLikedFromStorage ? "좋아요 등록" : "좋아요 해제",
+      API호출: !currentLikedFromStorage ? "POST /posts/likes" : "DELETE /posts/likes"
+    });
+    
+    // localStorage의 최신값을 기준으로 상태 업데이트
+    const nextLiked = !currentLikedFromStorage;
     setLiked(nextLiked);
     setLikeCount((c) => Math.max(0, c + (nextLiked ? 1 : -1)));
+    
+    const opId = ++likeOpRef.current;
 
     (nextLiked ? likePostM : unlikePostM).mutate(undefined, {
       onSuccess: (res: Record<string, unknown>) => {
         if (likeOpRef.current !== opId) return;
-        const serverLiked =
-          typeof res?.liked === "boolean" ? res.liked : nextLiked;
-        const serverCount =
-          typeof res?.likeCount === "number" ? res.likeCount : undefined;
-        setLiked(serverLiked);
-        if (typeof serverCount === "number")
-          setLikeCount(Math.max(0, serverCount));
+        console.log("좋아요 API 성공 응답:", res);
+        
+        // 서버는 liked 상태를 주지 않으므로 클라이언트에서 관리
+        setLiked(nextLiked);
+        localStorage.setItem(`postLiked_${safePostId}`, JSON.stringify(nextLiked));
+        
+        // 서버 응답은 참고용으로만 로깅하고, 클라이언트 로직으로 업데이트
+        const serverCount = typeof res?.likeCount === "number" ? res.likeCount : undefined;
+        console.log("서버 likeCount 정보 (참고용):", {
+          serverCount,
+          currentLikeCount: likeCount,
+          nextLiked,
+          action: nextLiked ? "좋아요 등록" : "좋아요 해제",
+          note: "서버 값 대신 클라이언트 로직 사용"
+        });
+        // 서버 응답 대신 클라이언트 로직만 사용 (이미 optimistic update 완료)
       },
       onError: (error: unknown) => {
         if (likeOpRef.current !== opId) return;
+        
+        const errorObj = error as Record<string, unknown>;
+        const status = (errorObj?.response as Record<string, unknown>)?.status;
+        
+        if (status === 403) {
+          // 403 Forbidden 오류 처리 (자신의 게시글 좋아요 시도)
         setLiked(!nextLiked);
         setLikeCount((c) => Math.max(0, c + (nextLiked ? -1 : 1)));
-        
-        // 403 Forbidden 오류 처리 (자신의 게시글 좋아요 시도)
-        const errorObj = error as Record<string, unknown>;
-        if ((errorObj?.response as Record<string, unknown>)?.status === 403) {
           setLikeErrorMessage("자신의 게시글은 좋아요할 수 없습니다.");
           setShowLikeErrorModal(true);
+        } else if (status === 409) {
+                    // 409 Conflict 오류 처리 - 상태 동기화
+                    const errorMessage = (errorObj as Record<string, unknown>)?.message as string;
+                    const responseData = (errorObj?.response as Record<string, unknown>)?.data as Record<string, unknown>;
+                    const responseMessage = responseData?.message as string;
+                    
+                    console.log("게시글 좋아요 상태 충돌:", {
+                      errorMessage,
+                      responseMessage,
+                      nextLiked,
+                      currentLikedFromStorage: !nextLiked,
+                      fullError: errorObj
+                    });
+                    
+                    // 실제 오류 메시지는 response.data.message에 있음
+                    const actualMessage = responseMessage || errorMessage || "";
+                    
+                    if (actualMessage.includes("이미 좋아요")) {
+                      // POST 요청인데 이미 좋아요된 상태 - 좋아요된 상태로 고정
+                      console.log("서버: 이미 좋아요됨 - localStorage를 true로 동기화");
+                      setLiked(true);
+                      localStorage.setItem(`postLiked_${safePostId}`, JSON.stringify(true));
+                    } else if (actualMessage.includes("좋아요하지 않은")) {
+                      // DELETE 요청인데 좋아요하지 않은 상태 - 좋아요 안된 상태로 고정
+                      console.log("서버: 좋아요하지 않음 - localStorage를 false로 동기화");
+                      setLiked(false);
+                      localStorage.setItem(`postLiked_${safePostId}`, JSON.stringify(false));
+                    } else {
+                      // 메시지를 찾지 못한 경우, POST 요청이면 이미 좋아요된 것으로 간주
+                      console.log("메시지를 찾지 못함 - POST 요청이므로 이미 좋아요된 것으로 간주");
+                      if (nextLiked) {
+                        setLiked(true);
+                        localStorage.setItem(`postLiked_${safePostId}`, JSON.stringify(true));
+                      }
+                    }
+                    // 데이터 새로고침하지 않음 (무한 루프 방지)
+        } else {
+          // 일반 오류의 경우 상태 되돌리기
+          setLiked(!nextLiked);
+          setLikeCount((c) => Math.max(0, c + (nextLiked ? -1 : 1)));
+          console.error("게시글 좋아요 오류:", error);
         }
       },
     });
@@ -483,9 +593,6 @@ const PostDetailPage = () => {
   };
 
   /* 댓글 좋아요/수정/삭제 */
-  const [commentLikeOps, setCommentLikeOps] = useState<Record<number, boolean>>(
-    {}
-  );
   const [commentLikeLoading, setCommentLikeLoading] = useState<Record<number, boolean>>(
     {}
   );
@@ -650,9 +757,9 @@ const PostDetailPage = () => {
     });
     
     try {
-      await updateCommentM.mutateAsync({ commentId, content });
-      cancelEdit(commentId);
-      await invalidateAll();
+    await updateCommentM.mutateAsync({ commentId, content });
+    cancelEdit(commentId);
+    await invalidateAll();
     } catch (error) {
       console.error("댓글 수정 오류:", error);
       console.error("오류 상세:", {
@@ -724,7 +831,7 @@ const PostDetailPage = () => {
     setCommentDeleteLoading((prev) => ({ ...prev, [commentId]: true }));
     
     try {
-      await deleteCommentM.mutateAsync(commentId);
+    await deleteCommentM.mutateAsync(commentId);
       
       // 성공 시 즉시 UI에서 댓글 제거 (낙관적 업데이트)
       console.log("댓글 삭제 성공:", commentId);
@@ -738,7 +845,7 @@ const PostDetailPage = () => {
       setCommentDeleteLoading((prev) => ({ ...prev, [commentId]: false }));
       
       // 서버 상태 동기화
-      await invalidateAll();
+    await invalidateAll();
       
     } catch (error) {
       // 실패 시에도 로딩 상태 해제
@@ -921,7 +1028,7 @@ const PostDetailPage = () => {
                 className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                 onClick={handleToggleLike}
               >
-                <img src={likes} alt="like" className="w-4 h-4" />
+                 <img src={liked ? whiteHeart : likes} alt="like" className="w-4 h-4" />
                 좋아요 {likeCount}
               </button>
             </div>
@@ -946,16 +1053,16 @@ const PostDetailPage = () => {
                 </>
               )}
 
-              <button
-                onClick={() => {
-                  setSelectedTarget("게시물");
-                  setShowReportModal(true);
-                }}
-                className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
-              >
-                <img src={reportIcon} alt="report" className="w-4 h-4" />
-                신고하기
-              </button>
+            <button
+              onClick={() => {
+                setSelectedTarget("게시물");
+                setShowReportModal(true);
+              }}
+              className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
+            >
+              <img src={reportIcon} alt="report" className="w-4 h-4" />
+              신고하기
+            </button>
             </div>
           </div>
         </div>
@@ -1024,7 +1131,7 @@ const PostDetailPage = () => {
         </form>
 
         {/* 댓글 트리 */}
-                  <div className="w-full flex flex-col gap-10">
+        <div className="w-full flex flex-col gap-10">
             {tree
               .filter((c) => !deletedCommentIds.has(c.id)) // 삭제된 댓글 필터링
               .map((c) => {
@@ -1163,7 +1270,7 @@ const PostDetailPage = () => {
                                  title="댓글 삭제"
                                >
                                  {commentDeleteLoading[c.id] ? "삭제 중..." : "삭제"}
-                               </button>
+                        </button>
                              </div>
                           )}
                       </div>
@@ -1217,7 +1324,7 @@ const PostDetailPage = () => {
 
                 {/* 대댓글 리스트 */}
                 {c.replies.length > 0 && (
-                                      <div className="mt-3 ml-12 flex flex-col gap-4">
+                  <div className="mt-3 ml-12 flex flex-col gap-4">
                       {c.replies
                         .filter((r) => !deletedCommentIds.has(r.id)) // 삭제된 대댓글 필터링
                         .map((r) => {
@@ -1323,24 +1430,24 @@ const PostDetailPage = () => {
                                                                                                                                       return isMyReply && !editing[r.id];
                                                                                                                                     })() && (
                                                                          <div className="flex gap-2">
-                                       <button
-                                         type="button"
-                                         onClick={() => beginEdit(r)}
+                                <button
+                                  type="button"
+                                  onClick={() => beginEdit(r)}
                                          className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded"
-                                         title="댓글 수정"
-                                       >
-                                         수정
-                                       </button>
-                                       <button
-                                         type="button"
-                                         onClick={() => handleDeleteComment(r.id)}
+                                  title="댓글 수정"
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(r.id)}
                                          disabled={commentDeleteLoading[r.id]}
                                          className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                                         title="댓글 삭제"
-                                       >
+                                  title="댓글 삭제"
+                                >
                                          {commentDeleteLoading[r.id] ? "삭제 중..." : "삭제"}
-                                       </button>
-                                     </div>
+                                </button>
+                              </div>
                             )}
                           </div>
                             </div>
