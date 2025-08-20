@@ -37,3 +37,12 @@ export async function unlikePost(postId: number): Promise<LikeResult> {
     throw err;
   }
 }
+
+// 게시글 수정/삭제 API (필요 최소한)
+export async function deletePost(postId: number): Promise<void> {
+  await axiosInstance.delete(`/posts/${postId}`);
+}
+
+export async function editPost(postId: number, payload: { title?: string; content?: string }): Promise<void> {
+  await axiosInstance.patch(`/posts/${postId}` , payload);
+}

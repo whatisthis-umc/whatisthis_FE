@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import bestBadge from "../assets/best.png";
-import { likes } from "../assets"; // 흰 하트
+import { like } from "../assets"; // 흰 하트
 import heartIcon from "../assets/emptyHeart.png"; // 빈 하트
 import reportIcon from "../assets/report.png";
 import commentsIcon from "../assets/comments.png";
@@ -26,6 +26,7 @@ import { useUpdateComment, useDeleteComment } from "../hooks/mutations/useCommen
 import { useEditPost, useDeletePost } from "../hooks/mutations/usePostEditDelete";
 
 import type { CommunitySortType } from "../types/community";
+import type { ReportPayload } from "../api/report";
 
 /* ============ 공용 유틸 ============ */
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
@@ -298,7 +299,7 @@ const PostDetailPage = () => {
     if (!content || isSubmittingTop) return;
     try {
       setIsSubmittingTop(true);
-      await createCommentM.mutateAsync({ content, parentCommentId: null });
+      await createCommentM.mutateAsync({ content });
       if (sortType !== "최신순") {
         setSortType("최신순");
         setCurrentPage(1);
@@ -455,7 +456,7 @@ const PostDetailPage = () => {
                 className="flex items-center gap-2 bg-[#0080FF] text-white font-medium text-sm sm:text-base lg:text-lg px-4 py-2 rounded-full"
                 onClick={handleToggleLike}
               >
-                <img src={likes} alt="like" className="w-4 h-4" />
+                <img src={like} alt="like" className="w-4 h-4" />
                 좋아요 {likeCount}
               </button>
 
@@ -811,7 +812,7 @@ const PostDetailPage = () => {
             // 모달 닫아도 액션 패널은 유지(요구사항 “모달 밑에”를 시각적으로 만족)
           }}
           targetType={selectedTarget}
-          onSubmit={(form) => {
+          onSubmit={(form: ReportPayload) => {
             if (selectedTarget === "게시물") {
               if (reportedPost) return alert("이미 신고하셨습니다.");
               reportPostM.mutate(

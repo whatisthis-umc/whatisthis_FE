@@ -36,3 +36,21 @@ export async function createComment(
   const res = await axiosInstance.post(path, payload);
   return res.data.result as CommentRes;
 }
+
+// ====== 추가: 댓글 좋아요/해제, 수정, 삭제 ======
+
+export async function likeComment(postId: number, commentId: number): Promise<void> {
+  await axiosInstance.post(`/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}/likes`);
+}
+
+export async function unlikeComment(postId: number, commentId: number): Promise<void> {
+  await axiosInstance.delete(`/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}/likes`);
+}
+
+export async function updateComment(postId: number, commentId: number, content: string): Promise<void> {
+  await axiosInstance.patch(`/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}` , { content });
+}
+
+export async function deleteComment(postId: number, commentId: number): Promise<void> {
+  await axiosInstance.delete(`/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`);
+}
