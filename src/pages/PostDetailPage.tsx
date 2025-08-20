@@ -107,46 +107,50 @@ function parseExtraFromContent(raw?: string): {
 }
 
 /* 이미지/해시태그/댓글 안전 추출 */
-const pickFirstArray = (...xs: any[]) =>
+const pickFirstArray = (...xs: unknown[]) =>
   xs.find((v) => Array.isArray(v) && v.length > 0) ?? [];
 
-const extractImages = (detail: any): string[] => {
+const extractImages = (detail: unknown): string[] => {
+  const detailObj = detail as Record<string, unknown>;
   const rawList = pickFirstArray(
-    detail?.imageUrls,
-    detail?.imageUrl,
-    detail?.images,
-    detail?.imageList,
-    detail?.imageListDto?.imageList,
-    detail?.result?.imageUrls,
-    detail?.result?.imageUrl,
-    detail?.result?.images,
-    detail?.result?.imageList,
-    detail?.result?.imageListDto?.imageList
+    detailObj?.imageUrls,
+    detailObj?.imageUrl,
+    detailObj?.images,
+    detailObj?.imageList,
+    (detailObj?.imageListDto as Record<string, unknown>)?.imageList,
+    (detailObj?.result as Record<string, unknown>)?.imageUrls,
+    (detailObj?.result as Record<string, unknown>)?.imageUrl,
+    (detailObj?.result as Record<string, unknown>)?.images,
+    (detailObj?.result as Record<string, unknown>)?.imageList,
+    ((detailObj?.result as Record<string, unknown>)?.imageListDto as Record<string, unknown>)?.imageList
   );
   const urls = (Array.isArray(rawList) ? rawList : [rawList])
-    .map((it: any) =>
-      typeof it === "string" ? it : (it?.url ?? it?.path ?? it?.src)
-    )
+    .map((it: unknown) => {
+      if (typeof it === "string") return it;
+      const item = it as Record<string, unknown>;
+      return (item?.url ?? item?.path ?? item?.src) as string;
+    })
     .filter(Boolean)
     .map(toAbs);
   return Array.from(new Set(urls));
 };
 
-const extractHashtags = (detail: any): string[] => {
-  const fromTop = Array.isArray(detail?.hashtags) ? detail.hashtags : [];
-  const fromResult = Array.isArray(detail?.result?.hashtags)
-    ? detail.result.hashtags
+const extractHashtags = (detail: unknown): string[] => {
+  const detailObj = detail as Record<string, unknown>;
+  const fromTop = Array.isArray(detailObj?.hashtags) ? detailObj.hashtags as string[] : [];
+  const fromResult = Array.isArray((detailObj?.result as Record<string, unknown>)?.hashtags)
+    ? (detailObj.result as Record<string, unknown>).hashtags as string[]
     : [];
   const fromDto =
-    detail?.result?.hashtagListDto?.hashtagList
-      ?.map((h: any) => h?.content)
+    (((detailObj?.result as Record<string, unknown>)?.hashtagListDto as Record<string, unknown>)?.hashtagList as unknown[])
+      ?.map((h: unknown) => (h as Record<string, unknown>)?.content as string)
       .filter(Boolean) ?? [];
   const fromDto2 =
-    detail?.hashtagListDto?.hashtagList
-      ?.map((h: any) => h?.content)
+    ((detailObj?.hashtagListDto as Record<string, unknown>)?.hashtagList as unknown[])
+      ?.map((h: unknown) => (h as Record<string, unknown>)?.content as string)
       .filter(Boolean) ?? [];
-  const fromList = Array.isArray(detail?.hashtagList)
-    ? detail.hashtagList.map((h: any) => h?.content ?? h).filter(Boolean)
+  const fromList = Array.isArray(detailObj?.hashtagList)
+    ? (detailObj.hashtagList as unknown[]).map((h: unknown) => (h as Record<string, unknown>)?.content ?? h as string).filter(Boolean)
     : [];
   return Array.from(
     new Set<string>([
@@ -155,7 +159,7 @@ const extractHashtags = (detail: any): string[] => {
       ...fromDto,
       ...fromDto2,
       ...fromList,
-    ])
+    ].filter((item): item is string => typeof item === 'string'))
   );
 };
 
@@ -174,45 +178,47 @@ type RawComment = {
 };
 
 const extractCommentsFlat = (
-  detail: any,
+  detail: unknown,
   postNickname: string,
   myNickname: string
 ): RawComment[] => {
+  const detailObj = detail as Record<string, unknown>;
   const vNew =
-    detail?.commentListDto?.commentList ??
-    detail?.result?.commentListDto?.commentList;
-  const vOld = detail?.commentPage?.list;
-  const base: any[] = Array.isArray(vNew)
+    (detailObj?.commentListDto as Record<string, unknown>)?.commentList ??
+    ((detailObj?.result as Record<string, unknown>)?.commentListDto as Record<string, unknown>)?.commentList;
+  const vOld = (detailObj?.commentPage as Record<string, unknown>)?.list;
+  const base: unknown[] = Array.isArray(vNew)
     ? vNew
     : Array.isArray(vOld)
       ? vOld
       : [];
   return base.map((c) => {
+    const commentObj = c as Record<string, unknown>;
     const parentRaw =
-      c?.parentId ??
-      c?.parentCommentId ??
-      c?.parent?.id ??
-      c?.parent_id ??
-      c?.parent_comment_id ??
+      commentObj?.parentId ??
+      commentObj?.parentCommentId ??
+      (commentObj?.parent as Record<string, unknown>)?.id ??
+      commentObj?.parent_id ??
+      commentObj?.parent_comment_id ??
       null;
     const parentId =
       parentRaw == null || Number(parentRaw) <= 0 ? null : Number(parentRaw);
-    const nickname = c?.nickname ?? "";
-    const isAuthor = c?.isAuthor ?? nickname === postNickname;
-    const isMine = c?.isMine ?? (myNickname && nickname === myNickname);
+    const nickname = (commentObj?.nickname as string) ?? "";
+    const isAuthor = (commentObj?.isAuthor as boolean) ?? nickname === postNickname;
+    const isMine = (commentObj?.isMine as boolean) ?? (myNickname && nickname === myNickname);
     return {
-      id: Number(c?.id),
-      content: c?.content ?? "",
+      id: Number(commentObj?.id),
+      content: (commentObj?.content as string) ?? "",
       nickname,
       profileImageUrl:
-        c?.profileImageUrl ?? c?.profileimageUrl ?? c?.profileimageurl,
-      createdAt: c?.createdAt ?? "",
-      likeCount: Number(c?.likeCount ?? 0),
-      commentCount: Number(c?.commentCount ?? 0),
+        (commentObj?.profileImageUrl ?? commentObj?.profileimageUrl ?? commentObj?.profileimageurl) as string,
+      createdAt: (commentObj?.createdAt as string) ?? "",
+      likeCount: Number(commentObj?.likeCount ?? 0),
+      commentCount: Number(commentObj?.commentCount ?? 0),
       isAuthor,
       isMine,
       parentId,
-      liked: Boolean(c?.liked ?? false),
+      liked: Boolean(commentObj?.liked ?? false),
     } as RawComment;
   });
 };
@@ -254,7 +260,7 @@ const PostDetailPage = () => {
   const [reportedComments, setReportedComments] = useState<Set<number>>(
     new Set()
   );
-  
+
   // 자신의 게시글/댓글 좋아요 모달
   const [showLikeErrorModal, setShowLikeErrorModal] = useState(false);
   const [likeErrorMessage, setLikeErrorMessage] = useState("");
@@ -288,9 +294,9 @@ const PostDetailPage = () => {
   const editPostM = useEditPost(safePostId);
   const deletePostM = useDeletePost(safePostId);
 
-  const likedFromServer = Boolean((data as any)?.liked);
+  const likedFromServer = Boolean((data as Record<string, unknown>)?.liked);
   const likeCountFromServer = Number(
-    (data as any)?.likes ?? (data as any)?.likeCount ?? 0
+    (data as Record<string, unknown>)?.likes ?? (data as Record<string, unknown>)?.likeCount ?? 0
   );
   const [liked, setLiked] = useState<boolean>(likedFromServer);
   const [likeCount, setLikeCount] = useState<number>(likeCountFromServer);
@@ -302,16 +308,52 @@ const PostDetailPage = () => {
 
   const likeOpRef = useRef(0);
 
-  const detail: any = data ?? {};
-  const postNickname = detail.nickname ?? detail.result?.nickname ?? "";
-  const myNickname =
-    localStorage.getItem("nickname") ||
-    localStorage.getItem("userNickname") ||
-    "";
+  const detail: Record<string, unknown> = (data as Record<string, unknown>) ?? {};
+  const postNickname = (detail.nickname as string) ?? ((detail.result as Record<string, unknown>)?.nickname as string) ?? "";
+  const myNickname = (() => {
+    // 기본 키들 확인
+    const basic = localStorage.getItem("nickname") ||
+                 localStorage.getItem("userNickname") ||
+                 localStorage.getItem("memberNickname");
+    if (basic) return basic;
+    
+    // USER_INFO에서 추출 (이중 JSON 인코딩된 문자열)
+    try {
+      const userInfoStr = localStorage.getItem("USER_INFO");
+      if (userInfoStr) {
+        // 첫 번째 JSON.parse로 문자열 추출
+        const innerJsonStr = JSON.parse(userInfoStr);
+        // 두 번째 JSON.parse로 객체 추출
+        const userInfo = JSON.parse(innerJsonStr);
+        if (userInfo.name) return userInfo.name;
+      }
+    } catch (e) {
+      console.warn("USER_INFO 파싱 실패:", e);
+    }
+    
+    return "";
+  })();
+  
+  // 디버깅: 현재 사용자 정보 출력
+  console.log("현재 사용자 정보:", {
+    myNickname,
+    localStorage: {
+      nickname: localStorage.getItem("nickname"),
+      userNickname: localStorage.getItem("userNickname"),
+      memberNickname: localStorage.getItem("memberNickname"),
+      accessToken: localStorage.getItem("accessToken")?.substring(0, 20) + "...",
+    }
+  });
+  
+  // localStorage의 모든 키 확인
+  console.log("localStorage 모든 키:", Object.keys(localStorage));
+  console.log("localStorage 모든 값:", Object.fromEntries(
+    Object.keys(localStorage).map(key => [key, localStorage.getItem(key)])
+  ));
   const isMyPost = !!myNickname && myNickname === postNickname;
 
   // 본문/EXTRA
-  const rawContent = detail.content ?? detail.result?.content ?? "";
+  const rawContent = (detail.content as string) ?? ((detail.result as Record<string, unknown>)?.content as string) ?? "";
   const {
     content: displayContent,
     features,
@@ -321,12 +363,12 @@ const PostDetailPage = () => {
   // 출처 필드도 탐색
   const source =
     srcFromExtra ||
-    detail?.source ||
-    detail?.result?.source ||
-    detail?.reference ||
-    detail?.result?.reference ||
-    detail?.origin ||
-    detail?.result?.origin ||
+    (detail?.source as string) ||
+    ((detail?.result as Record<string, unknown>)?.source as string) ||
+    (detail?.reference as string) ||
+    ((detail?.result as Record<string, unknown>)?.reference as string) ||
+    (detail?.origin as string) ||
+    ((detail?.result as Record<string, unknown>)?.origin as string) ||
     "";
 
   const imageUrls = useMemo(() => extractImages(detail), [detail]);
@@ -340,9 +382,9 @@ const PostDetailPage = () => {
   const tree = useMemo(() => buildTree(flatComments), [flatComments]);
 
   const totalPages = useMemo(() => {
-    const r = detail?.result ?? detail;
+    const r = (detail?.result as Record<string, unknown>) ?? detail;
     const total =
-      r?.commentListDto?.totalPage ?? r?.commentPage?.totalPage ?? 1;
+      (r?.commentListDto as Record<string, unknown>)?.totalPage ?? (r?.commentPage as Record<string, unknown>)?.totalPage ?? 1;
     return Math.max(1, Number(total) || 1);
   }, [detail]);
 
@@ -371,7 +413,7 @@ const PostDetailPage = () => {
     setLikeCount((c) => Math.max(0, c + (nextLiked ? 1 : -1)));
 
     (nextLiked ? likePostM : unlikePostM).mutate(undefined, {
-      onSuccess: (res: any) => {
+      onSuccess: (res: Record<string, unknown>) => {
         if (likeOpRef.current !== opId) return;
         const serverLiked =
           typeof res?.liked === "boolean" ? res.liked : nextLiked;
@@ -381,13 +423,14 @@ const PostDetailPage = () => {
         if (typeof serverCount === "number")
           setLikeCount(Math.max(0, serverCount));
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         if (likeOpRef.current !== opId) return;
         setLiked(!nextLiked);
         setLikeCount((c) => Math.max(0, c + (nextLiked ? -1 : 1)));
         
         // 403 Forbidden 오류 처리 (자신의 게시글 좋아요 시도)
-        if (error?.response?.status === 403) {
+        const errorObj = error as Record<string, unknown>;
+        if ((errorObj?.response as Record<string, unknown>)?.status === 403) {
           setLikeErrorMessage("자신의 게시글은 좋아요할 수 없습니다.");
           setShowLikeErrorModal(true);
         }
@@ -446,10 +489,25 @@ const PostDetailPage = () => {
   const [commentLikeLoading, setCommentLikeLoading] = useState<Record<number, boolean>>(
     {}
   );
-  // 댓글 좋아요 상태를 로컬에서 관리
-  const [commentLikedStates, setCommentLikedStates] = useState<Record<number, boolean>>(
-    {}
-  );
+  const [commentDeleteLoading, setCommentDeleteLoading] = useState<Record<number, boolean>>({});
+  // 댓글 좋아요 상태를 로컬에서 관리 (localStorage에서 복원)
+  const [commentLikedStates, setCommentLikedStates] = useState<Record<number, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem(`commentLikedStates_${safePostId}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  // 삭제된 댓글 ID들을 추적 (localStorage에서 복원)
+  const [deletedCommentIds, setDeletedCommentIds] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem(`deletedComments_${safePostId}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
   const toggleCommentLike = (c: RawComment) => {
     if (safePostId <= 0) return;
     
@@ -483,11 +541,15 @@ const PostDetailPage = () => {
       // 현재 좋아요 상태이므로 좋아요 취소
       console.log(`댓글 ${c.id} 좋아요 취소 시도`);
       unlikeCommentM.mutate(c.id, {
-        onSuccess: () => {
-          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
-          setCommentLikedStates((prev) => ({ ...prev, [c.id]: false }));
-          invalidateAll();
-        },
+                 onSuccess: () => {
+           setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+           setCommentLikedStates((prev) => {
+             const newState = { ...prev, [c.id]: false };
+             localStorage.setItem(`commentLikedStates_${safePostId}`, JSON.stringify(newState));
+             return newState;
+           });
+           invalidateAll();
+         },
         onError: (error: any) => {
           setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
           
@@ -506,20 +568,28 @@ const PostDetailPage = () => {
       // 현재 좋아요하지 않은 상태이므로 좋아요 추가
       console.log(`댓글 ${c.id} 좋아요 추가 시도`);
       likeCommentM.mutate(c.id, {
-        onSuccess: () => {
-          setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
-          setCommentLikedStates((prev) => ({ ...prev, [c.id]: true }));
-          invalidateAll();
-        },
+                 onSuccess: () => {
+           setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
+           setCommentLikedStates((prev) => {
+             const newState = { ...prev, [c.id]: true };
+             localStorage.setItem(`commentLikedStates_${safePostId}`, JSON.stringify(newState));
+             return newState;
+           });
+           invalidateAll();
+         },
         onError: (error: any) => {
           setCommentLikeLoading((m) => ({ ...m, [c.id]: false }));
           
-          if (error?.response?.status === 409) {
-            // 이미 좋아요를 누른 상태이므로 로컬 상태를 true로 설정
-            console.log(`댓글 ${c.id} 이미 좋아요 상태 - 로컬 상태 업데이트`);
-            setCommentLikedStates((prev) => ({ ...prev, [c.id]: true }));
-            invalidateAll();
-          } else if (error?.response?.status === 403) {
+                     if (error?.response?.status === 409) {
+             // 이미 좋아요를 누른 상태이므로 로컬 상태를 true로 설정
+             console.log(`댓글 ${c.id} 이미 좋아요 상태 - 로컬 상태 업데이트`);
+             setCommentLikedStates((prev) => {
+               const newState = { ...prev, [c.id]: true };
+               localStorage.setItem(`commentLikedStates_${safePostId}`, JSON.stringify(newState));
+               return newState;
+             });
+             invalidateAll();
+           } else if (error?.response?.status === 403) {
             setLikeErrorMessage("자신의 댓글은 좋아요할 수 없습니다.");
             setShowLikeErrorModal(true);
           } else if (error?.response?.status === 400) {
@@ -548,15 +618,157 @@ const PostDetailPage = () => {
     if (safePostId <= 0) return;
     const content = (editInputs[commentId] ?? "").trim();
     if (!content) return;
-    await updateCommentM.mutateAsync({ commentId, content });
-    cancelEdit(commentId);
-    await invalidateAll();
+    
+    const accessToken = localStorage.getItem("accessToken");
+    
+    // 토큰 만료 시간 확인
+    let tokenExp = null;
+    let tokenExpDate = null;
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        tokenExp = payload.exp;
+        tokenExpDate = new Date(tokenExp * 1000);
+      } catch (e) {
+        console.warn("토큰 파싱 실패:", e);
+      }
+    }
+    
+    console.log("댓글 수정 시도:", {
+      postId: safePostId,
+      commentId,
+      content,
+      myNickname,
+      accessToken: accessToken?.substring(0, 20) + "...",
+      tokenExists: !!accessToken,
+      tokenLength: accessToken?.length,
+      refreshToken: !!localStorage.getItem("refreshToken"),
+      tokenExp,
+      tokenExpDate,
+      now: new Date(),
+      isExpired: tokenExp ? Date.now() > tokenExp * 1000 : null
+    });
+    
+    try {
+      await updateCommentM.mutateAsync({ commentId, content });
+      cancelEdit(commentId);
+      await invalidateAll();
+    } catch (error) {
+      console.error("댓글 수정 오류:", error);
+      console.error("오류 상세:", {
+        status: (error as any)?.response?.status,
+        data: (error as any)?.response?.data,
+        message: (error as any)?.message
+      });
+      
+      // "이미 삭제된 댓글" 오류인 경우 UI에서도 제거
+      const errorMessage = (error as any)?.response?.data?.message || "";
+      if (errorMessage.includes("이미 삭제된 댓글") || (error as any)?.response?.status === 400) {
+        console.log("수정 시도 중 삭제된 댓글 발견 - UI에서 제거:", commentId);
+        
+        // UI에서 제거 및 localStorage 저장
+        const newDeletedIds = new Set([...deletedCommentIds, commentId]);
+        setDeletedCommentIds(newDeletedIds);
+        localStorage.setItem(`deletedComments_${safePostId}`, JSON.stringify([...newDeletedIds]));
+        
+        // 편집 모드 종료
+        cancelEdit(commentId);
+        
+        alert("이미 삭제된 댓글입니다.");
+      } else {
+        alert("댓글 수정에 실패했습니다.");
+      }
+    }
   };
   const handleDeleteComment = async (commentId: number) => {
     if (safePostId <= 0) return;
-    if (!confirm("이 댓글을 삭제할까요?")) return;
-    await deleteCommentM.mutateAsync(commentId);
-    await invalidateAll();
+    
+    // 이미 삭제 처리 중인 댓글은 중복 클릭 방지
+    if (commentDeleteLoading[commentId]) {
+      console.log("이미 삭제 처리 중:", commentId);
+      return;
+    }
+    
+    if (!confirm("이 댓글을 삭제하시겠습니까?")) return;
+    
+    const accessToken = localStorage.getItem("accessToken");
+    
+    // 토큰 만료 시간 확인
+    let tokenExp = null;
+    let tokenExpDate = null;
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        tokenExp = payload.exp;
+        tokenExpDate = new Date(tokenExp * 1000);
+      } catch (e) {
+        console.warn("토큰 파싱 실패:", e);
+      }
+    }
+    
+    console.log("댓글 삭제 시도:", {
+      postId: safePostId,
+      commentId,
+      myNickname,
+      accessToken: accessToken?.substring(0, 20) + "...",
+      tokenExists: !!accessToken,
+      tokenLength: accessToken?.length,
+      refreshToken: !!localStorage.getItem("refreshToken"),
+      tokenExp,
+      tokenExpDate,
+      now: new Date(),
+      isExpired: tokenExp ? Date.now() > tokenExp * 1000 : null
+    });
+    
+    // 삭제 로딩 상태 시작
+    setCommentDeleteLoading((prev) => ({ ...prev, [commentId]: true }));
+    
+    try {
+      await deleteCommentM.mutateAsync(commentId);
+      
+      // 성공 시 즉시 UI에서 댓글 제거 (낙관적 업데이트)
+      console.log("댓글 삭제 성공:", commentId);
+      
+      // 삭제된 댓글 ID에 추가 및 localStorage 저장
+      const newDeletedIds = new Set([...deletedCommentIds, commentId]);
+      setDeletedCommentIds(newDeletedIds);
+      localStorage.setItem(`deletedComments_${safePostId}`, JSON.stringify([...newDeletedIds]));
+      
+      // 로딩 상태 해제
+      setCommentDeleteLoading((prev) => ({ ...prev, [commentId]: false }));
+      
+      // 서버 상태 동기화
+      await invalidateAll();
+      
+    } catch (error) {
+      // 실패 시에도 로딩 상태 해제
+      setCommentDeleteLoading((prev) => ({ ...prev, [commentId]: false }));
+      
+      console.error("댓글 삭제 오류:", error);
+      console.error("오류 상세:", {
+        status: (error as any)?.response?.status,
+        data: (error as any)?.response?.data,
+        message: (error as any)?.message
+      });
+      
+      // "이미 삭제된 댓글" 오류인 경우 UI에서도 제거
+      const errorMessage = (error as any)?.response?.data?.message || "";
+      if (errorMessage.includes("이미 삭제된 댓글") || (error as any)?.response?.status === 400) {
+        console.log("이미 삭제된 댓글 - UI에서 제거:", commentId);
+        
+        // UI에서 제거 및 localStorage 저장
+        const newDeletedIds = new Set([...deletedCommentIds, commentId]);
+        setDeletedCommentIds(newDeletedIds);
+        localStorage.setItem(`deletedComments_${safePostId}`, JSON.stringify([...newDeletedIds]));
+        
+        alert("이미 삭제된 댓글입니다.");
+      } else {
+        alert(errorMessage || "댓글 삭제에 실패했습니다.");
+      }
+      
+      // 실패 시에도 서버 상태 동기화 (댓글이 실제로 삭제되었을 수 있음)
+      await invalidateAll();
+    }
   };
 
   /* 게시물 수정/삭제 */
@@ -586,7 +798,7 @@ const PostDetailPage = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] opacity-80" />
         <div className="flex items-center gap-1">
-          {detail.isBestUser && (
+          {(detail.isBestUser as boolean) && (
             <img
               src={bestBadge}
               alt="best badge"
@@ -594,11 +806,11 @@ const PostDetailPage = () => {
             />
           )}
           <span className="text-gray-800 font-medium text-sm sm:text-base">
-            {detail.nickname ?? detail.result?.nickname}
+            {(detail.nickname as string) ?? ((detail.result as Record<string, unknown>)?.nickname as string)}
           </span>
         </div>
         <span className="text-gray-500 text-sm">
-          {formatKST(detail.createdAt ?? detail.result?.createdAt)}
+          {formatKST((detail.createdAt as string) ?? ((detail.result as Record<string, unknown>)?.createdAt as string))}
         </span>
       </div>
 
@@ -619,18 +831,18 @@ const PostDetailPage = () => {
         {/* 본문 */}
         <div className="flex flex-col gap-6 flex-1">
           <h1 className="text-[20px] sm:text-[24px] font-bold leading-snug">
-            {detail.title ?? detail.result?.title}
+            {(detail.title as string) ?? ((detail.result as Record<string, unknown>)?.title as string)}
           </h1>
 
           <p className="text-gray-700 text-[15px] sm:text-[16px] font-medium leading-relaxed whitespace-pre-wrap">
-            {displayContent}
+            {displayContent as string}
           </p>
 
           {/* 주요 특징 */}
-          {features.length > 0 && (
+          {(features as string[]).length > 0 && (
             <div className="border border-[#E6E6E6] rounded-[32px] px-[24px] py-[24px] text-[#333] text-[16px] leading-[2] whitespace-pre-wrap">
               <div className="font-bold mb-2">주요 특징</div>
-              {features.map((f, i) => (
+              {(features as string[]).map((f, i) => (
                 <div key={i}>
                   특징 {i + 1}. {f}
                 </div>
@@ -712,10 +924,20 @@ const PostDetailPage = () => {
           <div className="flex items-center gap-2 text-[20px] font-bold">
             <img src={commentsIconB} alt="comments" className="w-5 h-5" />
             댓글{" "}
-            {detail.comments ??
-              detail.commentCount ??
-              detail.result?.commentCount ??
-              0}
+            {(() => {
+              // 현재 화면에 표시되는 실제 댓글 개수 계산
+              let visibleCommentCount = 0;
+              
+              // 필터링된 댓글 트리를 기반으로 실제 개수 계산
+              tree.filter((c) => !deletedCommentIds.has(c.id)).forEach((c) => {
+                // 최상위 댓글 1개 추가
+                visibleCommentCount += 1;
+                // 삭제되지 않은 대댓글 개수 추가
+                visibleCommentCount += c.replies.filter((r) => !deletedCommentIds.has(r.id)).length;
+              });
+              
+              return visibleCommentCount;
+            })()}
           </div>
           <div className="justify-self-end">
             <SortDropdown
@@ -758,8 +980,10 @@ const PostDetailPage = () => {
         </form>
 
         {/* 댓글 트리 */}
-        <div className="w-full flex flex-col gap-10">
-                                           {tree.map((c) => {
+                  <div className="w-full flex flex-col gap-10">
+            {tree
+              .filter((c) => !deletedCommentIds.has(c.id)) // 삭제된 댓글 필터링
+              .map((c) => {
               // 로컬 상태를 우선하고, 없으면 서버 상태 사용
               const isLiked = commentLikedStates[c.id] ?? c.liked ?? false;
               const displayLikeCount = c.likeCount;
@@ -790,26 +1014,28 @@ const PostDetailPage = () => {
                         <div className="mt-2">
                           <textarea
                             value={editInputs[c.id] ?? ""}
-                            onChange={(e) =>
-                              setEditInputs((m) => ({
-                                ...m,
-                                [c.id]: e.target.value,
-                              }))
-                            }
-                            className="w-full min-h-[80px] bg-transparent outline-none text-[14px] border border-[#E6E6E6] rounded-[16px] p-3"
+                             onChange={(e) =>
+                               setEditInputs((m) => ({
+                                 ...m,
+                                 [c.id]: e.target.value,
+                               }))
+                             }
+                             className="w-full min-h-[80px] bg-white outline-none text-[14px] border border-[#E6E6E6] rounded-[16px] p-3 focus:border-[#0080FF]"
+                             placeholder="댓글을 수정해주세요."
                           />
                           <div className="flex gap-2 mt-2">
                             <button
                               type="button"
                               onClick={() => saveEdit(c.id)}
-                              className="px-3 py-1 rounded-full bg-[#0080FF] text-white text-sm"
+                               disabled={!editInputs[c.id]?.trim()}
+                               className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
                             >
                               저장
                             </button>
                             <button
                               type="button"
                               onClick={() => cancelEdit(c.id)}
-                              className="px-3 py-1 rounded-full border text-sm"
+                               className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-medium hover:bg-[#F5F5F5]"
                             >
                               취소
                             </button>
@@ -820,17 +1046,17 @@ const PostDetailPage = () => {
                       <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                         <span>{formatKST(c.createdAt)}</span>
 
-                                                 <button
-                           type="button"
+                        <button
+                          type="button"
                            onClick={() => toggleCommentLike(c)}
                            disabled={commentLikeLoading[c.id]}
                            className="flex text-[14px] items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                           title={isLiked ? "좋아요 취소" : "좋아요"}
-                         >
+                          title={isLiked ? "좋아요 취소" : "좋아요"}
+                        >
                           <img
                             src={isLiked ? darkHeart : heartIcon}
                             alt="comment-like"
-                            className={`${isLiked ? 'w-3 h-3' : 'w-4 h-4'} ${commentLikeLoading[c.id] ? 'animate-pulse' : ''}`}
+                            className={`w-4 h-4 ${commentLikeLoading[c.id] ? 'animate-pulse' : ''}`}
                           />
                           {displayLikeCount}
                         </button>
@@ -847,29 +1073,42 @@ const PostDetailPage = () => {
                             alt="reply"
                             className="w-4 h-4"
                           />
-                          {c.replies?.length ?? 0}
+                          {c.replies.filter((r) => !deletedCommentIds.has(r.id)).length}
                         </button>
 
-                                                 {(c.isMine || (myNickname && c.nickname === myNickname)) && !editing[c.id] && (
-                           <>
-                             <button
-                               type="button"
-                               onClick={() => beginEdit(c)}
-                               className="text-[13px] underline"
-                               title="댓글 수정"
-                             >
-                               수정
-                             </button>
-                             <button
-                               type="button"
-                               onClick={() => handleDeleteComment(c.id)}
-                               className="text-[13px] underline text-red-500"
-                               title="댓글 삭제"
-                             >
-                               삭제
-                             </button>
-                           </>
-                         )}
+                                                                                                                                                                                                       {/* 자신의 댓글에만 수정/삭제 버튼 표시 + 디버깅 */}
+                                                                                                    {(() => {
+                                                                                                      const isMyComment = c.isMine || (myNickname && c.nickname === myNickname);
+                                                                                                      console.log(`댓글 ${c.id} 버튼 표시 조건:`, {
+                                                                                                        nickname: c.nickname,
+                                                                                                        myNickname,
+                                                                                                        isMine: c.isMine,
+                                                                                                        isMyComment,
+                                                                                                        editing: editing[c.id],
+                                                                                                        showButtons: isMyComment && !editing[c.id]
+                                                                                                      });
+                                                                                                      return isMyComment && !editing[c.id];
+                                                                                                    })() && (
+                            <>
+                                                            <button
+                                type="button"
+                                onClick={() => beginEdit(c)}
+                                className="text-[13px] text-gray-500 hover:text-gray-700"
+                                title="댓글 수정"
+                              >
+                                수정
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteComment(c.id)}
+                                disabled={commentDeleteLoading[c.id]}
+                                className="text-[13px] text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="댓글 삭제"
+                              >
+                                {commentDeleteLoading[c.id] ? "삭제 중..." : "삭제"}
+                              </button>
+                            </>
+                          )}
                       </div>
 
                       {/* 대댓글 입력칸 */}
@@ -907,25 +1146,27 @@ const PostDetailPage = () => {
                     </div>
                   </div>
 
-                  <img
-                    src={reportGrayIcon}
-                    alt="report"
-                    className="w-4 h-4 cursor-pointer"
-                    onClick={() => {
-                      setSelectedTarget("댓글");
-                      setSelectedCommentId(c.id);
-                      setShowReportModal(true);
+                    <img
+                      src={reportGrayIcon}
+                      alt="report"
+                      className="w-4 h-4 cursor-pointer"
+                      onClick={() => {
+                        setSelectedTarget("댓글");
+                        setSelectedCommentId(c.id);
+                        setShowReportModal(true);
                     }}
                   />
                 </div>
 
                 {/* 대댓글 리스트 */}
                 {c.replies.length > 0 && (
-                  <div className="mt-3 ml-12 flex flex-col gap-4">
-                                                                                                                             {c.replies.map((r) => {
-                         // 로컬 상태를 우선하고, 없으면 서버 상태 사용
-                         const rIsLiked = commentLikedStates[r.id] ?? r.liked ?? false;
-                         const rDisplayLikeCount = r.likeCount;
+                                      <div className="mt-3 ml-12 flex flex-col gap-4">
+                      {c.replies
+                        .filter((r) => !deletedCommentIds.has(r.id)) // 삭제된 대댓글 필터링
+                        .map((r) => {
+                          // 로컬 상태를 우선하고, 없으면 서버 상태 사용
+                          const rIsLiked = commentLikedStates[r.id] ?? r.liked ?? false;
+                          const rDisplayLikeCount = r.likeCount;
 
                       return (
                         <div key={r.id} className="flex justify-between">
@@ -951,26 +1192,28 @@ const PostDetailPage = () => {
                                 <div className="mt-2">
                                   <textarea
                                     value={editInputs[r.id] ?? ""}
-                                    onChange={(e) =>
-                                      setEditInputs((m) => ({
-                                        ...m,
-                                        [r.id]: e.target.value,
-                                      }))
-                                    }
-                                    className="w-full min-h-[80px] bg-transparent outline-none text-[14px] border border-[#E6E6E6] rounded-[16px] p-3"
+                                     onChange={(e) =>
+                                       setEditInputs((m) => ({
+                                         ...m,
+                                         [r.id]: e.target.value,
+                                       }))
+                                     }
+                                     className="w-full min-h-[80px] bg-white outline-none text-[14px] border border-[#E6E6E6] rounded-[16px] p-3 focus:border-[#0080FF]"
+                                     placeholder="댓글을 수정해주세요."
                                   />
                                   <div className="flex gap-2 mt-2">
                                     <button
                                       type="button"
                                       onClick={() => saveEdit(r.id)}
-                                      className="px-3 py-1 rounded-full bg-[#0080FF] text-white text-sm"
+                                       disabled={!editInputs[r.id]?.trim()}
+                                       className="px-4 py-2 rounded-full bg-[#0080FF] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0066CC]"
                                     >
                                       저장
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => cancelEdit(r.id)}
-                                      className="px-3 py-1 rounded-full border text-sm"
+                                       className="px-4 py-2 rounded-full border border-[#E6E6E6] text-[#666] text-sm font-medium hover:bg-[#F5F5F5]"
                                     >
                                       취소
                                     </button>
@@ -981,42 +1224,55 @@ const PostDetailPage = () => {
                               <div className="flex items-center gap-4 mt-1 text-sm text-[#999]">
                                 <span>{formatKST(r.createdAt)}</span>
 
-                                                                                                                                   <button
-                                    type="button"
+                                <button
+                                  type="button"
                                     onClick={() => toggleCommentLike(r)}
                                     disabled={commentLikeLoading[r.id]}
                                     className="flex text-[14px] items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={rIsLiked ? "좋아요 취소" : "좋아요"}
-                                  >
+                                  title={rIsLiked ? "좋아요 취소" : "좋아요"}
+                                >
                                    <img
                                      src={rIsLiked ? darkHeart : heartIcon}
                                      alt="comment-like"
-                                     className={`${rIsLiked ? 'w-3 h-3' : 'w-4 h-4'} ${commentLikeLoading[r.id] ? 'animate-pulse' : ''}`}
+                                     className={`w-4 h-4 ${commentLikeLoading[r.id] ? 'animate-pulse' : ''}`}
                                    />
-                                   {rDisplayLikeCount}
-                                 </button>
+                                  {rDisplayLikeCount}
+                                </button>
 
-                                                                 {(r.isMine || (myNickname && r.nickname === myNickname)) && !editing[r.id] && (
-                                   <>
-                                     <button
-                                       type="button"
-                                       onClick={() => beginEdit(r)}
-                                       className="text-[13px] underline"
-                                       title="댓글 수정"
-                                     >
-                                       수정
-                                     </button>
-                                     <button
-                                       type="button"
-                                       onClick={() => handleDeleteComment(r.id)}
-                                       className="text-[13px] underline text-red-500"
-                                       title="댓글 삭제"
-                                     >
-                                       삭제
-                                     </button>
-                                   </>
-                                 )}
-                              </div>
+                                                                                                                                                                                                                                                                       {/* 자신의 대댓글에만 수정/삭제 버튼 표시 + 디버깅 */}
+                                                                                                                                    {(() => {
+                                                                                                                                      const isMyReply = r.isMine || (myNickname && r.nickname === myNickname);
+                                                                                                                                      console.log(`대댓글 ${r.id} 버튼 표시 조건:`, {
+                                                                                                                                        nickname: r.nickname,
+                                                                                                                                        myNickname,
+                                                                                                                                        isMine: r.isMine,
+                                                                                                                                        isMyReply,
+                                                                                                                                        editing: editing[r.id],
+                                                                                                                                        showButtons: isMyReply && !editing[r.id]
+                                                                                                                                      });
+                                                                                                                                      return isMyReply && !editing[r.id];
+                                                                                                                                    })() && (
+                                    <>
+                                                                <button
+                                  type="button"
+                                  onClick={() => beginEdit(r)}
+                                  className="text-[13px] text-gray-500 hover:text-gray-700"
+                                  title="댓글 수정"
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(r.id)}
+                                  disabled={commentDeleteLoading[r.id]}
+                                  className="text-[13px] text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="댓글 삭제"
+                                >
+                                  {commentDeleteLoading[r.id] ? "삭제 중..." : "삭제"}
+                                </button>
+                                    </>
+                            )}
+                          </div>
                             </div>
                           </div>
 
