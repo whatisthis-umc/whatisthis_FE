@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logo } from "../assets";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,13 +11,13 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
 
   // 로그인 상태 확인
   useEffect(() => {
     const checkLoginStatus = () => {
       const accessToken = localStorage.getItem("accessToken");
-      setIsLoggedIn(!!accessToken);
+      // useAuth에서 관리하므로 제거
     };
 
     checkLoginStatus();
@@ -52,12 +53,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   };
   
   // 로그아웃
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await logout(); // useAuth의 logout 함수 사용 (API 호출 + localStorage 삭제)
     onClose();
-
     // 홈페이지로 이동
     navigate("/");
   };

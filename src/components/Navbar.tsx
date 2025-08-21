@@ -3,18 +3,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { profile, favorite, bookmark, logo, logo2, menu } from "../assets";
 import Searchbar from "./Searchbar";
 import Sidebar from "./Sidebar";
+import { useAuth } from "../hooks/useAuth";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
 
   // 로그인
   useEffect(() => {
     const checkLoginStatus = () => {
       const accessToken = localStorage.getItem("accessToken");
-      setIsLoggedIn(!!accessToken);
+      // useAuth에서 관리하므로 제거
     };
 
     checkLoginStatus();
@@ -48,11 +49,9 @@ const Navbar = () => {
     navigate(`/search?keyword=${encodeURIComponent(input)}`);
   };
 
-  const handleLoginLogout = () => {
+  const handleLoginLogout = async () => {
     if (isLoggedIn) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      setIsLoggedIn(false);
+      await logout(); // useAuth의 logout 함수 사용 (API 호출 + localStorage 삭제)
       navigate("/");
     } else {
       navigate("/login");
