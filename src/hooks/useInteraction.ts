@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { axiosInstance } from '../api/axiosInstance';
 
 interface InteractionConfig {
@@ -33,6 +33,52 @@ export const useInteraction = (
     isLoading: false,
     scrapId: initialState.scrapId,
   });
+
+  // 컴포넌트 마운트 시 localStorage에서 최신 상태로 동기화 (스크랩만)
+  useEffect(() => {
+    if (config.type === 'scrap' && postId !== 0) {
+      try {
+        const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
+        const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
+        const isScrapped = Array.isArray(scrappedPostIds) && scrappedPostIds.includes(postId);
+        const scrapId = scrappedPostData[postId]?.scrapId;
+        
+        // 초기 상태를 localStorage 상태로 강제 동기화
+        setState(prev => ({
+          ...prev,
+          isActive: isScrapped,
+          scrapId: scrapId,
+        }));
+      } catch (error) {
+        console.error('localStorage 동기화 오류:', error);
+      }
+
+      const handleStorageChange = () => {
+        try {
+          const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
+          const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
+          const isScrapped = Array.isArray(scrappedPostIds) && scrappedPostIds.includes(postId);
+          const scrapId = scrappedPostData[postId]?.scrapId;
+          
+          setState(prev => ({
+            ...prev,
+            isActive: isScrapped,
+            scrapId: scrapId,
+          }));
+        } catch (error) {
+          console.error('localStorage 동기화 오류:', error);
+        }
+      };
+
+      // storage 이벤트 리스너 등록
+      window.addEventListener('storage', handleStorageChange);
+      
+      // 컴포넌트 언마운트 시 리스너 제거
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+  }, [postId, config.type]);
 
   const toggle = useCallback(async () => {
     if (config.requiresAuth) {
@@ -113,36 +159,45 @@ export const useInteraction = (
         }));
 
         // 스크랩의 경우 로컬 스토리지 업데이트
-        if (config.type === 'scrap') {
-          const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
-          const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
-          
-          if (newIsActive) {
-            // 스크랩 추가
-            if (!scrappedPostIds.includes(postId)) {
-              scrappedPostIds.push(postId);
-              scrappedPostData[postId] = {
-                scrapId: response.data.result?.scrapId,
-                timestamp: Date.now()
-              };
-              localStorage.setItem("scrappedPosts", JSON.stringify(scrappedPostIds));
-              localStorage.setItem("scrappedPostData", JSON.stringify(scrappedPostData));
+        if (config.type === 'scrap' && postId !== 0) {
+          try {
+            const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
+            const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
+            
+            // 배열이 아닌 경우 초기화
+            const validScrappedPostIds = Array.isArray(scrappedPostIds) ? scrappedPostIds : [];
+            const validScrappedPostData = typeof scrappedPostData === 'object' && scrappedPostData !== null ? scrappedPostData : {};
+            
+            if (newIsActive) {
+              // 스크랩 추가 - 중복 체크
+              if (!validScrappedPostIds.includes(postId)) {
+                validScrappedPostIds.push(postId);
+                validScrappedPostData[postId] = {
+                  scrapId: response.data.result?.scrapId,
+                  timestamp: Date.now()
+                };
+                localStorage.setItem("scrappedPosts", JSON.stringify(validScrappedPostIds));
+                localStorage.setItem("scrappedPostData", JSON.stringify(validScrappedPostData));
+              }
+            } else {
+              // 스크랩 제거 - 해당 postId만 제거
+              const updatedIds = validScrappedPostIds.filter((id: number) => id !== postId);
+              const updatedData = { ...validScrappedPostData };
+              delete updatedData[postId];
+              localStorage.setItem("scrappedPosts", JSON.stringify(updatedIds));
+              localStorage.setItem("scrappedPostData", JSON.stringify(updatedData));
             }
-          } else {
-            // 스크랩 제거
-            const updatedIds = scrappedPostIds.filter((id: number) => id !== postId);
-            delete scrappedPostData[postId];
-            localStorage.setItem("scrappedPosts", JSON.stringify(updatedIds));
-            localStorage.setItem("scrappedPostData", JSON.stringify(scrappedPostData));
+            
+
+          } catch (error) {
+            console.error('localStorage 업데이트 중 오류:', error);
+            // localStorage 오류 시 초기화
+            localStorage.setItem("scrappedPosts", "[]");
+            localStorage.setItem("scrappedPostData", "{}");
           }
-          
-          console.log(`스크랩 토글 - postId: ${postId}, newIsActive: ${newIsActive}, scrapId: ${response.data.result?.scrapId}`);
-          console.log(`전체 API 응답:`, response.data);
-          console.log(`업데이트된 로컬 스토리지:`, JSON.parse(localStorage.getItem("scrappedPosts") || "[]"));
-          console.log(`업데이트된 scrappedPostData:`, JSON.parse(localStorage.getItem("scrappedPostData") || "{}"));
         }
 
-        console.log(`${config.type} 성공:`, response.data.message);
+
       } else {
         throw new Error(response.data.message || `${config.type} 실패`);
       }
@@ -180,20 +235,34 @@ export const useInteraction = (
   };
 };
 
+
+
 // 스크랩 전용 Hook
 export const useScrap = (
   postId: number,
   initialState: { isActive: boolean; count: number }
 ) => {
-  // 로컬 스토리지에서 스크랩 상태 확인
-  const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
-  const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
-  const isScrapped = scrappedPostIds.includes(postId);
-  const scrapId = scrappedPostData[postId]?.scrapId;
+  // 로컬 스토리지에서 스크랩 상태 확인 (postId가 0이어도 안전하게 처리)
+  let isScrapped = false;
+  let scrapId = undefined;
   
-  console.log(`useScrap - postId: ${postId}, scrappedPostIds:`, scrappedPostIds, 'isScrapped:', isScrapped, 'scrapId:', scrapId);
-  console.log(`scrappedPostData for postId ${postId}:`, scrappedPostData[postId]);
-  console.log(`전체 scrappedPostData:`, scrappedPostData);
+  if (postId !== 0) {
+    try {
+      const scrappedPostIds = JSON.parse(localStorage.getItem("scrappedPosts") || "[]");
+      const scrappedPostData = JSON.parse(localStorage.getItem("scrappedPostData") || "{}");
+      
+      // 현재 postId가 스크랩된 게시물 목록에 있는지 정확히 확인
+      isScrapped = Array.isArray(scrappedPostIds) && scrappedPostIds.includes(postId);
+      scrapId = scrappedPostData[postId]?.scrapId;
+      
+
+    } catch (error) {
+      console.error('localStorage 읽기 오류:', error);
+      // localStorage 오류 시 초기화
+      localStorage.setItem("scrappedPosts", "[]");
+      localStorage.setItem("scrappedPostData", "{}");
+    }
+  }
   
   const actualInitialState = {
     isActive: isScrapped,
