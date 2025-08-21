@@ -76,54 +76,71 @@ export default function LinkSocialPage() {
   };
 
   return (
-  <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-    <div
-      className="
-        bg-white w-[686px] h-[249px] rounded-[40px] p-[40px]
-        shadow-[0_8px_24px_rgba(0,0,0,0.12)]
-        flex flex-col
-      "
-    >
-      {/* 메시지 */}
-      <p
+    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+      <div
         className="
-          font-[Pretendard] font-bold text-[24px]
-          leading-[150%] tracking-[-0.02em] text-[#333333]
-          text-left ml-[20px] mt-[20px]
+          bg-white w-[686px] h-[249px] rounded-[40px] p-[40px]
+          shadow-[0_8px_24px_rgba(0,0,0,0.12)]
+          flex flex-col
+          
+          /* 모바일 전용 */
+          max-md:w-[320px] max-md:h-[180px] max-md:p-4 max-md:rounded-[24px]
         "
       >
-        기존 계정과 연동하시겠습니까?
-      </p>
+        {/* 메시지 */}
+        <p
+          className="
+            font-[Pretendard] font-bold text-[24px]
+            leading-[150%] tracking-[-0.02em] text-[#333333]
+            text-left ml-[20px] mt-[20px]
+            
+            /* 모바일 전용 */
+            max-md:text-center max-md:text-[18px] max-md:ml-0 max-md:mt-5 max-md:mb-6
+          "
+        >
+          기존 계정과 연동하시겠습니까?
+        </p>
 
-      {/* 버튼 영역 */}
-      <div className="ml-[190px] mt-[50px] flex justify-center gap-[16px]">
-        <button
-          onClick={() => navigate('/login')}
-          className="
-            w-[160px] h-[54px] rounded-[32px]
-            bg-[#0080FF] text-white
-            font-[Pretendard] font-medium text-[20px]
-            leading-[150%] tracking-[-0.02em]
-            hover:brightness-95 active:brightness-90 transition
-          "
-        >
-          취소
-        </button>
-        <button
-          onClick={handleLink}
-          className="
-            w-[160px] h-[54px] rounded-[32px]
-            bg-[#0080FF] text-white
-            font-[Pretendard] font-medium text-[20px]
-            leading-[150%] tracking-[-0.02em]
-            hover:brightness-95 active:brightness-90 transition
-          "
-        >
-          연동하기
-        </button>
+        {/* 버튼 영역 */}
+        <div className="ml-[190px] mt-[50px] flex justify-center gap-[16px]
+          /* 모바일 전용 */
+          max-md:ml-0 max-md:mt-0 max-md:gap-2
+        ">
+          <button
+            onClick={() => navigate('/login')}
+            className="
+              w-[160px] h-[54px] rounded-[32px]
+              bg-[#0080FF] text-white
+              font-[Pretendard] font-medium text-[20px]
+              leading-[150%] tracking-[-0.02em]
+              hover:brightness-95 active:brightness-90 transition
+              
+              /* 모바일 전용 */
+              max-md:w-[110px] max-md:h-[40px]  max-md:text-[16px] max-md:rounded-[24px]
+            "
+          >
+            취소
+          </button>
+          <button
+            onClick={handleLink}
+            disabled={loading}
+            className="
+              w-[160px] h-[54px] rounded-[32px]
+              bg-[#0080FF] text-white
+              font-[Pretendard] font-medium text-[20px]
+              leading-[150%] tracking-[-0.02em]
+              hover:brightness-95 active:brightness-90 transition
+              disabled:opacity-50 disabled:cursor-not-allowed
+              
+              /* 모바일 전용 */
+              max-md:w-[110px] max-md:h-[40px] max-md:text-[16px] max-md:rounded-[24px]
+            "
+          >
+            {loading ? '연동 중...' : '연동하기'}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
