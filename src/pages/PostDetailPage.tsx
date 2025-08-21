@@ -321,7 +321,8 @@ const PostDetailPage = () => {
     // 기본 키들 확인
     const basic = localStorage.getItem("nickname") ||
                  localStorage.getItem("userNickname") ||
-                 localStorage.getItem("memberNickname");
+                 localStorage.getItem("memberNickname") ||
+                 localStorage.getItem("name");
     if (basic) return basic;
     
     // USER_INFO에서 추출 (이중 JSON 인코딩된 문자열)
@@ -333,9 +334,32 @@ const PostDetailPage = () => {
         // 두 번째 JSON.parse로 객체 추출
         const userInfo = JSON.parse(innerJsonStr);
         if (userInfo.name) return userInfo.name;
+        if (userInfo.nickname) return userInfo.nickname;
+        if (userInfo.userName) return userInfo.userName;
       }
     } catch (e) {
       console.warn("USER_INFO 파싱 실패:", e);
+    }
+    
+    // 추가: 다른 가능한 키들 확인
+    const allKeys = Object.keys(localStorage);
+    console.log("🔍 localStorage 모든 키:", allKeys);
+    
+    // 닉네임 관련 키 찾기
+    const nicknameKeys = allKeys.filter(key => 
+      key.toLowerCase().includes('nickname') || 
+      key.toLowerCase().includes('name') ||
+      key.toLowerCase().includes('user')
+    );
+    
+    console.log("🔍 닉네임 관련 키들:", nicknameKeys);
+    
+    for (const key of nicknameKeys) {
+      const value = localStorage.getItem(key);
+      if (value && value.trim()) {
+        console.log(`🔍 ${key}: ${value}`);
+        return value;
+      }
     }
     
     return "";
