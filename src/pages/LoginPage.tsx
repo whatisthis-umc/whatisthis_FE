@@ -212,6 +212,9 @@ export default function LoginPage() {
         bg-white w-[686px] h-[249px] rounded-[40px] p-[40px]
         shadow-[0_8px_24px_rgba(0,0,0,0.12)]
         flex flex-col
+        
+        /* 모바일 전용 */
+        max-md:w-[320px] max-md:h-[180px] max-md:p-4 max-md:rounded-[24px]
       "
     >
       {/* 메시지 */}
@@ -220,19 +223,28 @@ export default function LoginPage() {
           font-[Pretendard] font-bold text-[24px]
           leading-[150%] tracking-[-0.02em] text-[#333333]
           text-left whitespace-pre-line
+          
+          /* 모바일 전용 */
+          max-md:text-center max-md:text-[18px] max-md:mt-[20px] max-md:mb-[5px]
         "
       >
         {modalError}
       </p>
 
       
-      <div className="mt-[60px] flex justify-end">
+      <div className="mt-[60px] flex justify-end
+        /* 모바일 전용 */
+        max-md:mt-8 max-md:justify-center
+      ">
         <button
           onClick={() => setModalError('')}
           className="
             w-[160px] h-[54px] rounded-[32px] bg-[#0080FF] text-white
             font-[Pretendard] font-medium text-[20px] leading-[150%] tracking-[-0.02em]
             hover:brightness-95 active:brightness-90 transition
+            
+            /* 모바일 전용 */
+            max-md:w-[110px] max-md:h-[40px] max-md:text-[16px] max-md:rounded-[24px]
           "
         >
           확인
