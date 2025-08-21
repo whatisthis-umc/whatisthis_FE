@@ -52,7 +52,7 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
 
   return (
     <div className="relative w-[80px] md:w-[240px] ml-auto mt-4 md:sticky md:top-4 md:right-4 md:z-50 md:mt-0 md:float-right">
-      <div className="flex w-full h-[30px] md:h-[40px] border-b border-[#333333] relative">
+      <div className="flex items-center w-full h-[30px] md:h-[40px] border-b border-[#333333] relative">
         {/* 모바일 + 데스크톱 공통 검색창 */}
         <div className="flex-1 w-full text-start">
           <input
@@ -81,7 +81,7 @@ const Searchbar = ({}: { onSearch: (keyword: string) => void }) => {
           src={search}
           alt="검색"
           onClick={handleSearch}
-          className="w-6 md:w-[24px] h-6 md:h-[24px] ml-2 cursor-pointer z-30"
+          className="w-6 md:w-[32px] h-6 md:h-[32px] ml-2 cursor-pointer z-30"
         />
       </div>
       {/*인기검색어 목록*/}
