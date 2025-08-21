@@ -1,58 +1,83 @@
 ////src/pages/LoginPage.tsx
-import kakaoIcon from '/src/assets/kakao.png';
-import naverIcon from '/src/assets/naver.png';
-import googleIcon from '/src/assets/google.png';
-import errorIcon from '/src/assets/error.png';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { login } from '../api/auth/login';
+import kakaoIcon from "/src/assets/kakao.png";
+import naverIcon from "/src/assets/naver.png";
+import googleIcon from "/src/assets/google.png";
+import errorIcon from "/src/assets/error.png";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { login } from "../api/auth/login";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  // 배포주소로 
-  const API = import.meta.env.VITE_API_BASE_URL ;
+  // 배포주소로
+  const API = import.meta.env.VITE_API_BASE_URL;
 
-  const goSocial = (provider: 'kakao' | 'google' | 'naver') => {
-    // 
+  const goSocial = (provider: "kakao" | "google" | "naver") => {
+    //
     window.location.href = `${API}/oauth2/authorization/${provider}`;
-  }
+  };
 
-  const [memberId, setMemberId] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');  // 아이디/비밀번호 에러
-  const [modalError, setModalError] = useState('');  // 소셜 로그인 에러
+  const [memberId, setMemberId] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState(""); // 아이디/비밀번호 에러
+  const [modalError, setModalError] = useState(""); // 소셜 로그인 에러
   const [isLoading, setIsLoading] = useState(false);
-  const isLoginEnabled = memberId.trim() !== '' && password.trim() !== '';
+  const isLoginEnabled = memberId.trim() !== "" && password.trim() !== "";
+
+  // 사용자 정보 가져오기 함수 추가
+  const fetchUserInfo = async (accessToken: string) => {
+    try {
+      const response = await fetch("/api/my-page/account", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.isSuccess && data.result?.nickname) {
+        localStorage.setItem("nickname", data.result.nickname);
+        console.log("로그인 후 닉네임 저장됨:", data.result.nickname);
+      }
+    } catch (error) {
+      console.error("사용자 정보 가져오기 실패:", error);
+    }
+  };
 
   const handleLogin = async () => {
     setIsLoading(true);
-    setLoginError('');
-      
-  try {
-    const data = await login({ memberId, password }); // 
+    setLoginError("");
 
-    if (data.isSuccess) {
-      const { accessToken, refreshToken } = data.result;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      navigate('/community');
-    } else {
-      setLoginError(data.message);
-    }
-  } catch (e: any) {
-    // axios 에러 처리
-    if (e.response && e.response.data && e.response.data.message) {
-      setLoginError(e.response.data.message);
-    } else {
-      setLoginError('서버에 연결할 수 없습니다.');
-    }
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      const data = await login({ memberId, password }); //
 
-//  콜백에서 온 에러 state 수신 → 화면에 표시
+      if (data.isSuccess) {
+        const { accessToken, refreshToken } = data.result;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        // 로그인 성공 후 사용자 정보 가져오기
+        await fetchUserInfo(accessToken);
+
+        navigate("/community");
+      } else {
+        setLoginError(data.message);
+      }
+    } catch (e: any) {
+      // axios 에러 처리
+      if (e.response && e.response.data && e.response.data.message) {
+        setLoginError(e.response.data.message);
+      } else {
+        setLoginError("서버에 연결할 수 없습니다.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //  콜백에서 온 에러 state 수신 → 화면에 표시
   useEffect(() => {
     const incomingError = (location.state as any)?.error;
     if (incomingError) {
@@ -74,7 +99,9 @@ export default function LoginPage() {
         >
           {/* 아이디 */}
           <div className="flex flex-col">
-            <label className="text-[16px] text-[#333333] md:text-sm">아이디</label>
+            <label className="text-[16px] text-[#333333] md:text-sm">
+              아이디
+            </label>
             <input
               type="text"
               value={memberId}
@@ -90,47 +117,49 @@ export default function LoginPage() {
 
           {/* 비밀번호 */}
           <div className="flex flex-col relative">
-  <label className="text-[16px] text-[#333333] md:text-sm">비밀번호</label>
-  <div className="relative">
-    <input
-      type="password"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      placeholder="입력"
-      className={`
+            <label className="text-[16px] text-[#333333] md:text-sm">
+              비밀번호
+            </label>
+            <div className="relative">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="입력"
+                className={`
         w-full border-b focus:outline-none mt-[10px] text-[14px] py-2 pr-8
-        ${loginError ? 'border-[#FF0000]' : 'border-[#999999]'}
+        ${loginError ? "border-[#FF0000]" : "border-[#999999]"}
         md:mt-0 md:text-base
       `}
-    />
-    {loginError && (
-      <img
-        src={errorIcon}
-        alt="error icon"
-        className="w-[16px] h-[16px] absolute right-0 top-[18px] md:top-[16px]"
-      />
-    )}
-  </div>
-  {loginError && (
-    <p className="text-[#FF0000] text-[12px] mt-2 leading-tight">
-      일치하는 회원 정보가 없습니다.<br />
-      아이디와 비밀번호를 다시 확인해주세요.
-    </p>
-  )}
-</div>
-
+              />
+              {loginError && (
+                <img
+                  src={errorIcon}
+                  alt="error icon"
+                  className="w-[16px] h-[16px] absolute right-0 top-[18px] md:top-[16px]"
+                />
+              )}
+            </div>
+            {loginError && (
+              <p className="text-[#FF0000] text-[12px] mt-2 leading-tight">
+                일치하는 회원 정보가 없습니다.
+                <br />
+                아이디와 비밀번호를 다시 확인해주세요.
+              </p>
+            )}
+          </div>
 
           {/* 로그인 버튼 */}
           <button
             className={`
     w-[160px] h-[37px] text-[14px] leading-[37px] text-center rounded-[32px] self-center
-    ${loginError ? 'mt-[40px]' : 'mt-0'}
-    ${isLoginEnabled ? 'bg-[#007BFF] text-white font-semibold' : 'bg-[#E4E4E4] text-[#999999]'}
+    ${loginError ? "mt-[40px]" : "mt-0"}
+    ${isLoginEnabled ? "bg-[#007BFF] text-white font-semibold" : "bg-[#E4E4E4] text-[#999999]"}
     md:w-full md:h-[40px] md:text-base md:self-auto md:mt-2
   `}
-  onClick={handleLogin}
-  disabled={!isLoginEnabled}
->
+            onClick={handleLogin}
+            disabled={!isLoginEnabled}
+          >
             로그인
           </button>
 
@@ -141,7 +170,7 @@ export default function LoginPage() {
               w-[160px] h-[37px] leading-[37px] text-center  text-[14px] rounded-[32px] self-center
               md:w-full md:h-[40px] md:text-base
             "
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate("/signup")}
           >
             회원가입
           </button>
@@ -169,8 +198,8 @@ export default function LoginPage() {
               alt="kakao"
               role="button"
               tabIndex={0}
-              onClick={() => goSocial('kakao')}
-              onKeyDown={(e) => e.key === 'Enter' && goSocial('kakao')}
+              onClick={() => goSocial("kakao")}
+              onKeyDown={(e) => e.key === "Enter" && goSocial("kakao")}
               className="w-[24px] h-[24px] rounded-full cursor-pointer md:w-[28px] md:h-[28px]"
             />
             <img
@@ -178,8 +207,8 @@ export default function LoginPage() {
               alt="naver"
               role="button"
               tabIndex={0}
-              onClick={() => goSocial('naver')}
-              onKeyDown={(e) => e.key === 'Enter' && goSocial('naver')}
+              onClick={() => goSocial("naver")}
+              onKeyDown={(e) => e.key === "Enter" && goSocial("naver")}
               className="w-[24px] h-[24px] rounded-full cursor-pointer md:w-[28px] md:h-[28px]"
             />
             <img
@@ -187,64 +216,55 @@ export default function LoginPage() {
               alt="google"
               role="button"
               tabIndex={0}
-              onClick={() => goSocial('google')}
-              onKeyDown={(e) => e.key === 'Enter' && goSocial('google')}
+              onClick={() => goSocial("google")}
+              onKeyDown={(e) => e.key === "Enter" && goSocial("google")}
               className="w-[24px] h-[24px] rounded-full cursor-pointer md:w-[28px] md:h-[28px]"
             />
-            
           </div>
-
         </div>
-       
-
       </main>
       {isLoading && (
-  <div className="fixed inset-0 z-50 bg-white/50 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-[#007BFF] border-t-transparent rounded-full animate-spin" />
-  </div>
-)}
+        <div className="fixed inset-0 z-50 bg-white/50 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#007BFF] border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
 
-{/* 모달 렌더링 */}
-{modalError && (
-  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-    <div
-      className="
+      {/* 모달 렌더링 */}
+      {modalError && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+          <div
+            className="
         bg-white w-[686px] h-[249px] rounded-[40px] p-[40px]
         shadow-[0_8px_24px_rgba(0,0,0,0.12)]
         flex flex-col
       "
-    >
-      {/* 메시지 */}
-      <p
-        className="
+          >
+            {/* 메시지 */}
+            <p
+              className="
           font-[Pretendard] font-bold text-[24px]
           leading-[150%] tracking-[-0.02em] text-[#333333]
           text-left whitespace-pre-line
         "
-      >
-        {modalError}
-      </p>
+            >
+              {modalError}
+            </p>
 
-      
-      <div className="mt-[60px] flex justify-end">
-        <button
-          onClick={() => setModalError('')}
-          className="
+            <div className="mt-[60px] flex justify-end">
+              <button
+                onClick={() => setModalError("")}
+                className="
             w-[160px] h-[54px] rounded-[32px] bg-[#0080FF] text-white
             font-[Pretendard] font-medium text-[20px] leading-[150%] tracking-[-0.02em]
             hover:brightness-95 active:brightness-90 transition
           "
-        >
-          확인
-        </button>
-      </div>
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
-
-
-    </div>
-    
   );
 }
-
