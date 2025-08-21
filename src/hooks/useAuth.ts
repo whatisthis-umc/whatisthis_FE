@@ -7,6 +7,13 @@ export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 로그인 상태 체크 함수
+  const checkLoginStatus = () => {
+    const token = localStorage.getItem('accessToken');
+    setIsLoggedIn(!!token);
+    setIsLoading(false);
+  };
+
   // 로그인 함수
   const login = (accessToken: string, refreshToken?: string) => {
     localStorage.setItem('accessToken', accessToken);
@@ -14,6 +21,7 @@ export const useAuth = () => {
       localStorage.setItem('refreshToken', refreshToken);
     }
     setIsLoggedIn(true);
+    setIsLoading(false);
     console.log('✅ 로그인 상태 설정 완료');
   };
 
@@ -36,12 +44,6 @@ export const useAuth = () => {
   };
 
   useEffect(() => {
-    const checkLoginStatus = () => {
-      const token = localStorage.getItem('accessToken');
-      setIsLoggedIn(!!token);
-      setIsLoading(false);
-    };
-
     checkLoginStatus();
     
     // 로그인 상태 변경 감지를 위한 이벤트 리스너
