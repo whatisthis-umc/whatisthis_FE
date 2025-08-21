@@ -27,32 +27,40 @@ export default function LinkSocialPage() {
     setLoading(true);
     setErr(null);
     try {
-      // 1) 연동
-      await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
-
-      // 2) 로그인 상태 확인
-      const meRes = await axiosInstance.get('/members/me'); // 쿠키 포함
+      console.log('🔗 연동 시작...');
       
-      // 응답 구조 확인 (Swagger 문서 기준)
-      if (meRes.data?.isSuccess && meRes.data?.result) {
-        // 사용자 정보 저장 (자동 로그인을 위해)
-        const userInfo = meRes.data.result;
-        console.log('연동 성공, 사용자 정보:', userInfo);
-        
-        // 토큰이 있다면 저장 (쿠키 기반이지만 혹시 헤더에 토큰이 올 수도 있음)
-        const authHeader = meRes.headers?.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          const token = authHeader.substring(7);
-          localStorage.setItem('accessToken', token);
+      // 1) 연동 (서버에서 /auth/bootstrap 호출하여 토큰 발급)
+      const linkRes = await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
+      console.log('연동 API 응답:', linkRes.data);
+      
+      // 2) /auth/bootstrap 호출하여 토큰 발급
+      console.log(' 토큰 발급 중...');
+      const bootstrapRes = await axiosInstance.post('/auth/bootstrap');
+      console.log('/auth/bootstrap 응답:', bootstrapRes.data);
+      
+      if (bootstrapRes.data?.isSuccess && bootstrapRes.data?.result) {
+        // 토큰을 localStorage에 저장
+        const { accessToken, refreshToken } = bootstrapRes.data.result;
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+          console.log('accessToken 저장됨');
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+          console.log(' refreshToken 저장됨');
         }
         
+        console.log('연동 및 로그인 완료!');
         navigate('/community', { replace: true });
         return;
       }
 
-      // 응답 구조가 예상과 다른 경우
-      throw new Error('사용자 정보를 가져올 수 없습니다.');
+      // 토큰 발급 실패
+      throw new Error('토큰 발급에 실패했습니다.');
     } catch (err: any) {
+      console.error(' 연동 실패:', err);
+      console.error('에러 응답:', err?.response?.data);
+      
       const status = err?.response?.status;
       const msg = err?.response?.data?.message;
       
@@ -60,7 +68,6 @@ export default function LinkSocialPage() {
         alert('로그인 세션이 없습니다. 다시 시도해 주세요.');
         navigate('/login', { replace: true });
       } else {
-        console.error('연동 실패:', err);
         setErr(msg || '연동에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
     } finally {
