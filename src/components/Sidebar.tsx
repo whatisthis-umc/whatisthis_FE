@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logo } from "../assets";
@@ -12,30 +12,6 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-
-  // 로그인 상태 확인
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const accessToken = localStorage.getItem("accessToken");
-      // useAuth에서 관리하므로 제거
-    };
-
-    checkLoginStatus();
-
-    // 주기적으로 로그인 상태 확인 (0.5초마다)
-    const interval = setInterval(checkLoginStatus, 500);
-
-    const handleStorageChange = () => {
-      checkLoginStatus();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
 
   const handleClick = (path: string) => {
     navigate(path);
