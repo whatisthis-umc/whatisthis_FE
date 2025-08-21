@@ -7,6 +7,7 @@ import useDeleteMyPost from "../../hooks/mutations/useDeleteMyPost";
 import useDeleteMyInquiry from "../../hooks/mutations/useDeleteMyInquiry";
 import Pagination from "../../components/customer/Pagination";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 import type {
   InquiryStatus,
   MyPostItem,
@@ -15,22 +16,9 @@ import type {
 import useMyAccount from "../../hooks/queries/useMyAccount";
 
 /* ===== 시간 규칙 ===== */
-const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const formatKST = (isoLike?: string) => {
   if (!isoLike) return "";
-  const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) return isoLike;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}시간 전`;
-  if (diffHr < 48) return "1일 전";
-  const yy = d.getFullYear() % 100;
-  const mm = d.getMonth() + 1;
-  const dd = d.getDate();
-  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+  return formatTimeAgo(isoLike);
 };
 
 /* ===== 미리보기 정리(커뮤니티와 동일) ===== */
