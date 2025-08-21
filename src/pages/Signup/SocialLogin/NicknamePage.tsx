@@ -157,14 +157,18 @@ export default function SocialNickNamePage() {
 
 
         <button
-          className="
-            whitespace-nowrap text-[14px] text-[#A1A1A1] bg-[#E6E6E6] rounded-[32px] px-[12px] py-[4px]
-
+          className={`
+            whitespace-nowrap text-[14px] rounded-[32px] px-[12px] py-[4px] transition-colors duration-200
+            ${nickname.trim() 
+              ? 'text-white bg-[#007AFF] hover:bg-[#0056CC]' 
+              : 'text-[#A1A1A1] bg-[#E6E6E6] cursor-not-allowed'
+            }
             /* 모바일 전용 */
-            max-md:w-[62px] max-md:h-[25px] max-md:text-[11px] max-md:font-[500] max-md:text-[#999999] max-md:pr-[-20px]
-          "
+            max-md:w-[62px] max-md:h-[25px] max-md:text-[11px] max-md:font-[500] max-md:pr-[-20px]
+          `}
           style={{ fontWeight: 500 }}
-                     onClick={handleCheckNickname}
+          onClick={handleCheckNickname}
+          disabled={!nickname.trim()}
         >
           중복확인
         </button>
