@@ -35,6 +35,7 @@ import {
 } from "../hooks/mutations/usePostEditDelete";
 
 import type { CommunitySortType } from "../types/community";
+import { formatTimeAgo } from "../utils/timeFormatter";
 
 /* ============ 공용 유틸 ============ */
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
@@ -51,22 +52,9 @@ const uiToApi = (ui: UISort): CommunitySortType =>
 const apiToUi = (api: CommunitySortType): UISort =>
   api === "BEST" ? "인기순" : "최신순";
 
-const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const formatKST = (isoLike?: string) => {
   if (!isoLike) return "";
-  const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) return isoLike;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}시간 전`;
-  if (diffHr < 48) return "1일 전";
-  const yy = d.getFullYear() % 100;
-  const mm = d.getMonth() + 1;
-  const dd = d.getDate();
-  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+  return formatTimeAgo(isoLike);
 };
 
 /* content 내 <!--EXTRA:{...}--> 및 우회 파서(출처 라인) */
@@ -1257,7 +1245,7 @@ const PostDetailPage = () => {
                                <button
                                  type="button"
                                  onClick={() => beginEdit(c)}
-                                 className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded"
+                                 className="text-[#999] hover:text-[#666] text-xs px-1 py-1 rounded"
                                  title="댓글 수정"
                                >
                                  수정
@@ -1266,7 +1254,7 @@ const PostDetailPage = () => {
                                  type="button"
                                  onClick={() => handleDeleteComment(c.id)}
                                  disabled={commentDeleteLoading[c.id]}
-                                 className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                 className="text-[#999] hover:text-[#666] text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                  title="댓글 삭제"
                                >
                                  {commentDeleteLoading[c.id] ? "삭제 중..." : "삭제"}
@@ -1433,7 +1421,7 @@ const PostDetailPage = () => {
                                 <button
                                   type="button"
                                   onClick={() => beginEdit(r)}
-                                         className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded"
+                                         className="text-[#999] hover:text-[#666] text-xs px-1 py-1 rounded"
                                   title="댓글 수정"
                                 >
                                   수정
@@ -1442,7 +1430,7 @@ const PostDetailPage = () => {
                                   type="button"
                                   onClick={() => handleDeleteComment(r.id)}
                                          disabled={commentDeleteLoading[r.id]}
-                                         className="text-gray-500 hover:text-gray-700 text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                         className="text-[#999] hover:text-[#666] text-xs px-1 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                   title="댓글 삭제"
                                 >
                                          {commentDeleteLoading[r.id] ? "삭제 중..." : "삭제"}
