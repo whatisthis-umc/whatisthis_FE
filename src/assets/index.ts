@@ -17,7 +17,7 @@ export { default as bookmark } from "./bookmark.svg";
 export { default as search } from "./search.svg";
 export { default as backward } from "./backward.svg";
 export { default as forward } from "./forward.svg";
-export { default as more } from "./more.svg";
+export { default as more } from "./more.png";
 export { default as whitescrap } from "./whitescrap.svg";
 export { default as bestBadge } from "./best.svg";
 export { default as writeIcon } from "./pencil.svg";
