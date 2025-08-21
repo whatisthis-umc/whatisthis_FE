@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logo } from "../assets";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,31 +11,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // 로그인 상태 확인
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const accessToken = localStorage.getItem("accessToken");
-      setIsLoggedIn(!!accessToken);
-    };
-
-    checkLoginStatus();
-
-    // 주기적으로 로그인 상태 확인 (0.5초마다)
-    const interval = setInterval(checkLoginStatus, 500);
-
-    const handleStorageChange = () => {
-      checkLoginStatus();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
+  const { isLoggedIn, logout } = useAuth();
 
   const handleClick = (path: string) => {
     navigate(path);
@@ -52,12 +29,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   };
   
   // 로그아웃
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await logout(); // useAuth의 logout 함수 사용 (API 호출 + localStorage 삭제)
     onClose();
-
     // 홈페이지로 이동
     navigate("/");
   };

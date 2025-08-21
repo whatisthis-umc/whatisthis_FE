@@ -12,9 +12,9 @@ export const useAuth = () => {
     try {
       // 로그아웃 API 호출
       await axiosInstance.post('/members/logout');
-      console.log('로그아웃 API 호출 성공');
+      console.log('✅ 로그아웃 API 호출 성공');
     } catch (error) {
-      console.error(' 로그아웃 API 호출 실패:', error);
+      console.error('❌ 로그아웃 API 호출 실패:', error);
       // API 호출 실패해도 클라이언트에서는 로그아웃 처리
     } finally {
       // localStorage에서 토큰 삭제
@@ -33,10 +33,16 @@ export const useAuth = () => {
 
     checkLoginStatus();
     
-    // 주기적으로 로그인 상태 확인
-    const interval = setInterval(checkLoginStatus, 1000);
+    // 로그인 상태 변경 감지를 위한 이벤트 리스너
+    const handleStorageChange = () => {
+      checkLoginStatus();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
     
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return {
