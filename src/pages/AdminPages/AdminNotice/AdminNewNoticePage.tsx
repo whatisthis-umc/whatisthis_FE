@@ -73,13 +73,19 @@ export default function AdminNewNoticePage() {
       </div>
 
       {/* 내용 입력란 */}
-      <div className="w-[1023px] h-[78px] border border-[#E6E6E6] rounded-[40px]">
+      <div className="w-[1023px] border border-[#E6E6E6] rounded-[40px]">
         <textarea
           placeholder="내용을 입력하세요."
-          className="w-full h-[100px] resize-none text-[20px] font-medium leading-[150%] tracking-[-0.02em] text-[#333333] font-[Pretendard] outline-none
-          px-6 py-4 box-border"
+          className="w-full min-h-[78px] max-h-[400px] resize-none text-[20px] font-medium leading-[150%] tracking-[-0.02em] text-[#333333] font-[Pretendard] outline-none
+          px-6 py-4 box-border overflow-y-auto"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          style={{ height: 'auto' }}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = Math.min(target.scrollHeight, 400) + 'px';
+          }}
 />
       </div>
 
