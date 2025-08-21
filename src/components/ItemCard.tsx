@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { eye } from "../assets";
 import { scrap } from "../assets";
 
@@ -18,49 +19,66 @@ const ItemCard = ({
   views,
   scraps,
 }: ItemCardProps) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getImageUrl = () => {
     if (!imageUrl) {
-      console.log("No imageUrl provided");
       return "";
     }
     if (typeof imageUrl === "string") {
-      console.log("String imageUrl:", imageUrl);
       return imageUrl;
     }
 
     if (Array.isArray(imageUrl)) {
-      console.log("Array imageUrl:", imageUrl);
       const validUrl = imageUrl.find((url) => url && url.trim() !== "");
-      console.log("Valid URL found:", validUrl);
       return validUrl || "";
     }
 
-    console.log("Unknown imageUrl format");
     return "";
   };
 
   const firstImage = getImageUrl();
-  console.log("Final firstImage:", firstImage);
   return (
     <div className="flex flex-col justify-center w-[90px]  md:w-57 h-[225px] md:h-96 bg-transparent gap-2  ml-1 md:ml-2 mr-0 md:mr-2 mt-4 md:mt-7 ">
       {/* 해시태그 */}
-      {(() => { console.log("ItemCard hashtag prop:", hashtag); return null; })()}
       <div className="flex flex-row gap-1 md:gap-2 ml-1 md:ml-2 md:mt-1">
         {Array.isArray(hashtag) && hashtag.length > 0 ? (
           hashtag.slice(0, 2).map((tag, idx) => (
             <div
               key={idx}
-              className="w-fit px-1 md:px-3 h-[16px] md:h-[29px] items-start rounded-4xl mt-1 bg-[#CCE5FF] text-[8px] md:text-[16px] md:text-[#666666]"
+              className="flex-shrink-0 px-1 md:px-3 h-[16px] md:h-[29px] flex items-center justify-center rounded-4xl mt-1 bg-[#CCE5FF] text-[#666666] whitespace-nowrap"
+              style={{
+                fontSize: !isMobile 
+                  ? `${Math.max(10, Math.min(16, 120 / tag.length))}px`
+                  : `${Math.max(5, Math.min(8, 50 / tag.length))}px`
+              }}
             >
               #{tag}
             </div>
           ))
         ) : hashtag && typeof hashtag === 'string' && hashtag.trim() !== '' ? (
-          <div className=" w-fit px-1.5 md:px-3 h-[16px] md:h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[10px] md:text-[16px] md: text-[#666666]">
+          <div 
+            className="flex-shrink-0 px-1.5 md:px-3 h-[16px] md:h-[29px] flex items-center justify-center rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[#666666] whitespace-nowrap"
+            style={{
+              fontSize: !isMobile 
+                ? `${Math.max(10, Math.min(16, 120 / hashtag.length))}px`
+                : `${Math.max(5, Math.min(8, 50 / hashtag.length))}px`
+            }}
+          >
             #{hashtag}
           </div>
         ) : (
-          <div className=" w-fit px-1.5 md:px-3 h-[16px] md:h-[29px] items-start rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[10px] md:text-[16px] md: text-[#666666]">
+          <div className="flex-shrink-0 px-1.5 md:px-3 h-[16px] md:h-[29px] flex items-center justify-center rounded-4xl mt-1 ml-2 bg-[#CCE5FF] text-[8px] md:text-[16px] text-[#666666] whitespace-nowrap">
             #라이프팁
           </div>
         )}
