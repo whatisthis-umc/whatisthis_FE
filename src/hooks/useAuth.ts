@@ -18,22 +18,13 @@ export const useAuth = () => {
 
   // 로그인 함수
   const login = useCallback((accessToken: string, refreshToken?: string) => {
-    return new Promise<void>((resolve) => {
-      // 먼저 상태 업데이트
-      setIsLoggedIn(true);
-      setIsLoading(false);
-      
-      // 그 다음 localStorage 저장
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      
-      console.log('✅ 로그인 상태 설정 완료');
-      
-      // 상태 업데이트가 완료된 후 resolve
-      setTimeout(resolve, 0);
-    });
+    localStorage.setItem('accessToken', accessToken);
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    }
+    setIsLoggedIn(true);
+    setIsLoading(false);
+    console.log('✅ 로그인 상태 설정 완료');
   }, []);
 
   // 로그아웃 함수

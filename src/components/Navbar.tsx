@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { profile, favorite, bookmark, logo, logo2, menu } from "../assets";
 import Searchbar from "./Searchbar";
@@ -9,11 +9,27 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { logout } = useAuth(); // logout 함수만 사용
+
+  // 로그인 상태 체크
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem('accessToken');
+      setIsLoggedIn(!!token);
+    };
+
+    checkLoginStatus();
+
+    // 주기적으로 체크 (간단하게)
+    const interval = setInterval(checkLoginStatus, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const isAdmin =
     location.pathname.startsWith("/admin") ||
-    location.pathname === "/adminlogin"; //admin관리자 부분은 navbar 숨겨야해서
+    location.pathname === "/adminlogin"; //admin관리자 부분은 navbar 적용 안해야함
   const currentPath = location.pathname;
   // 커뮤니티 활성 조건: /community* 또는 /post/:id (단수) /posts/:id (복수) 모두 허용
   const isCommunityActivePath =
@@ -28,6 +44,7 @@ const Navbar = () => {
   const handleLoginLogout = async () => {
     if (isLoggedIn) {
       await logout(); // useAuth의 logout 함수 사용 (API 호출 + localStorage 삭제)
+      setIsLoggedIn(false); // 로컬 상태도 업데이트
       navigate("/");
     } else {
       navigate("/login");
