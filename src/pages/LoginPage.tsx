@@ -6,10 +6,12 @@ import errorIcon from '/src/assets/error.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { login } from '../api/auth/login';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth(); // useAuth의 login 함수 사용
   // 배포주소로 
   const API = import.meta.env.VITE_API_BASE_URL ;
 
@@ -34,8 +36,7 @@ export default function LoginPage() {
 
     if (data.isSuccess) {
       const { accessToken, refreshToken } = data.result;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      authLogin(accessToken, refreshToken); // useAuth의 login 함수 사용
       navigate('/community');
     } else {
       setLoginError(data.message);
