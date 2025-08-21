@@ -2,23 +2,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../../../api/axiosInstance';
+import { useAuth } from '../../../hooks/useAuth';
 
 export default function LinkSocialPage() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth(); // useAuth의 login 함수 사용
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // 절대주소 보장 (환경변수 잘못된 경우 대비)
-  const ENV = import.meta.env.VITE_API_BASE_URL as string | undefined;
-  const API_BASE = ENV && ENV.startsWith('http') ? ENV : 'https://api.whatisthis.co.kr';
-
-  // 주소 정리: conflict=true만 남기기
+  // URL 정리: conflict=true만 남기고 다른 파라미터들 모두 제거
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('conflict') === 'true') {
-      url.search = '?conflict=true';
-      if (url.toString() !== window.location.href) {
-        window.history.replaceState({}, '', url.toString());
+    const currentUrl = new URL(window.location.href);
+    const hasConflict = currentUrl.searchParams.get('conflict') === 'true';
+    
+    // conflict=true가 있으면 다른 파라미터들 모두 제거
+    if (hasConflict) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.search = '?conflict=true';
+      
+      // 현재 URL과 다르면 교체
+      if (cleanUrl.toString() !== window.location.href) {
+        window.history.replaceState({}, '', cleanUrl.toString());
       }
     }
   }, []);
@@ -31,26 +35,18 @@ export default function LinkSocialPage() {
       
       // 1) 연동 (서버에서 /auth/bootstrap 호출하여 토큰 발급)
       const linkRes = await axiosInstance.post('/members/link-social'); // 바디 없음, 쿠키 기반
-      console.log('연동 API 응답:', linkRes.data);
+      console.log('✅ 연동 API 응답:', linkRes.data);
       
       // 2) /auth/bootstrap 호출하여 토큰 발급
-      console.log(' 토큰 발급 중...');
+      console.log('🔑 토큰 발급 중...');
       const bootstrapRes = await axiosInstance.post('/auth/bootstrap');
-      console.log('/auth/bootstrap 응답:', bootstrapRes.data);
+      console.log('✅ /auth/bootstrap 응답:', bootstrapRes.data);
       
       if (bootstrapRes.data?.isSuccess && bootstrapRes.data?.result) {
-        // 토큰을 localStorage에 저장
+        // useAuth의 login 함수 사용
         const { accessToken, refreshToken } = bootstrapRes.data.result;
-        if (accessToken) {
-          localStorage.setItem('accessToken', accessToken);
-          console.log('accessToken 저장됨');
-        }
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
-          console.log(' refreshToken 저장됨');
-        }
-        
-        console.log('연동 및 로그인 완료!');
+        authLogin(accessToken, refreshToken);
+        console.log('✅ 연동 및 로그인 완료!');
         navigate('/community', { replace: true });
         return;
       }
@@ -58,8 +54,8 @@ export default function LinkSocialPage() {
       // 토큰 발급 실패
       throw new Error('토큰 발급에 실패했습니다.');
     } catch (err: any) {
-      console.error(' 연동 실패:', err);
-      console.error('에러 응답:', err?.response?.data);
+      console.error('❌ 연동 실패:', err);
+      console.error('❌ 에러 응답:', err?.response?.data);
       
       const status = err?.response?.status;
       const msg = err?.response?.data?.message;
