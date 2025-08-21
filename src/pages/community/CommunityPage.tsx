@@ -5,6 +5,7 @@ import useGetCommunity from "../../hooks/queries/useGetCommunity";
 import SortDropdown from "../../components/common/SortDropdown";
 import Pagination from "../../components/customer/Pagination";
 import LoginModal from "../../components/modals/LoginModal";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 
 import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
 import type { CommunityPost, CommunitySortType } from "../../types/community";
@@ -17,22 +18,9 @@ const toAbs = (u?: string) => {
   return `${API_BASE}${u.startsWith("/") ? "" : "/"}${u}`;
 };
 
-const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const formatKST = (isoLike?: string) => {
   if (!isoLike) return "";
-  const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) return isoLike;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}시간 전`;
-  if (diffHr < 48) return "1일 전";
-  const yy = d.getFullYear() % 100;
-  const mm = d.getMonth() + 1;
-  const dd = d.getDate();
-  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+  return formatTimeAgo(isoLike);
 };
 
 /* ================= 정렬 UI ⇄ API ================= */
