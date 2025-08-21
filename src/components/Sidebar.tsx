@@ -1,7 +1,7 @@
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { logo } from "../assets";
-import { useState, useEffect } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -50,6 +50,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     navigate("/signup");
     onClose();
   };
+  
   // 로그아웃
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
