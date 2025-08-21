@@ -19,9 +19,9 @@ const ScrapPage = () => {
     try {
       setLoading(true);
       setError(null);
-
-      // 스웨거 기본값에 맞춰 조회 (page=1, size=5)
-      const result = await getScrapList(1, 5);
+      
+      // 더 많은 데이터를 가져오기 위해 size를 늘림
+      const result = await getScrapList(1, 50); // size를 50으로 늘림
 
       // 중복 제거 (id 기준으로 중복 제거)
       const uniqueScraps = result.scraps.reduce(
