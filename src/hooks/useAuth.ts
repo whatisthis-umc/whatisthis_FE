@@ -1,6 +1,6 @@
 // src/hooks/useAuth.ts
 //전역 상태로 로그인 여부를 관리
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { axiosInstance } from '../api/axiosInstance';
 
 export const useAuth = () => {
@@ -8,25 +8,36 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // 로그인 상태 체크 함수
-  const checkLoginStatus = () => {
+  const checkLoginStatus = useCallback(() => {
     const token = localStorage.getItem('accessToken');
-    setIsLoggedIn(!!token);
+    const newLoginStatus = !!token;
+    setIsLoggedIn(newLoginStatus);
     setIsLoading(false);
-  };
+    console.log('🔍 로그인 상태 체크:', newLoginStatus);
+  }, []);
 
   // 로그인 함수
-  const login = (accessToken: string, refreshToken?: string) => {
-    localStorage.setItem('accessToken', accessToken);
-    if (refreshToken) {
-      localStorage.setItem('refreshToken', refreshToken);
-    }
-    setIsLoggedIn(true);
-    setIsLoading(false);
-    console.log('✅ 로그인 상태 설정 완료');
-  };
+  const login = useCallback((accessToken: string, refreshToken?: string) => {
+    return new Promise<void>((resolve) => {
+      // 먼저 상태 업데이트
+      setIsLoggedIn(true);
+      setIsLoading(false);
+      
+      // 그 다음 localStorage 저장
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+      
+      console.log('✅ 로그인 상태 설정 완료');
+      
+      // 상태 업데이트가 완료된 후 resolve
+      setTimeout(resolve, 0);
+    });
+  }, []);
 
   // 로그아웃 함수
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // 로그아웃 API 호출
       await axiosInstance.post('/members/logout');
@@ -41,13 +52,15 @@ export const useAuth = () => {
       setIsLoggedIn(false);
       console.log('✅ 로그아웃 상태 설정 완료');
     }
-  };
+  }, []);
 
   useEffect(() => {
+    console.log('🚀 useAuth 마운트');
     checkLoginStatus();
     
     // 로그인 상태 변경 감지를 위한 이벤트 리스너
     const handleStorageChange = () => {
+      console.log('📦 storage 이벤트 발생');
       checkLoginStatus();
     };
 
@@ -56,7 +69,11 @@ export const useAuth = () => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [checkLoginStatus]);
+
+  useEffect(() => {
+    console.log('🔄 isLoggedIn 상태 변경:', isLoggedIn);
+  }, [isLoggedIn]);
 
   return {
     isLoggedIn,
