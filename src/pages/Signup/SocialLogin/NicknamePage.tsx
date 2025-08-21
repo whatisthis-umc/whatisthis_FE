@@ -14,7 +14,32 @@ export default function SocialNickNamePage() {
   const providerId = state?.providerId ?? '';
   const API = import.meta.env.VITE_API_BASE_URL;
 
-   const handleSignupSocial = async () => {
+  // 닉네임 중복확인
+  const handleCheckNickname = async () => {
+    if (!nickname.trim()) {
+      alert('닉네임을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/members/nickname-available?nickname=${encodeURIComponent(nickname.trim())}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.isSuccess) {
+        alert('사용 가능한 닉네임입니다.');
+      } else {
+        alert('이미 사용 중인 닉네임입니다.');
+      }
+    } catch (error) {
+      alert('중복확인 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleSignupSocial = async () => {
     try {
       const res = await fetch(`${API}/members/signup/social`, {
         method: 'POST',
@@ -132,14 +157,18 @@ export default function SocialNickNamePage() {
 
 
         <button
-          className="
-            whitespace-nowrap text-[14px] text-[#A1A1A1] bg-[#E6E6E6] rounded-[32px] px-[12px] py-[4px]
-
+          className={`
+            whitespace-nowrap text-[14px] rounded-[32px] px-[12px] py-[4px] transition-colors duration-200
+            ${nickname.trim() 
+              ? 'text-white bg-[#007AFF] hover:bg-[#0056CC]' 
+              : 'text-[#A1A1A1] bg-[#E6E6E6] cursor-not-allowed'
+            }
             /* 모바일 전용 */
-            max-md:w-[62px] max-md:h-[25px] max-md:text-[11px] max-md:font-[500] max-md:text-[#999999] max-md:pr-[-20px]
-          "
+            max-md:w-[62px] max-md:h-[25px] max-md:text-[11px] max-md:font-[500] max-md:pr-[-20px]
+          `}
           style={{ fontWeight: 500 }}
-          onClick={() => alert('중복확인 로직은 추후 구현됩니다.')}
+          onClick={handleCheckNickname}
+          disabled={!nickname.trim()}
         >
           중복확인
         </button>
