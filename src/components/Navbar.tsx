@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { profile, favorite, bookmark, logo, logo2, menu } from "../assets";
 import Searchbar from "./Searchbar";
@@ -10,30 +10,6 @@ const Navbar = () => {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isLoggedIn, logout } = useAuth();
-
-  // 로그인
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const accessToken = localStorage.getItem("accessToken");
-      // useAuth에서 관리하므로 제거
-    };
-
-    checkLoginStatus();
-
-    // 주기적으로 로그인 상태 확인
-    const interval = setInterval(checkLoginStatus, 100);
-
-    const handleStorageChange = () => {
-      checkLoginStatus();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
 
   const isAdmin =
     location.pathname.startsWith("/admin") ||

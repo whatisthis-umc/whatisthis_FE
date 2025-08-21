@@ -7,6 +7,16 @@ export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 로그인 함수
+  const login = (accessToken: string, refreshToken?: string) => {
+    localStorage.setItem('accessToken', accessToken);
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    }
+    setIsLoggedIn(true);
+    console.log('✅ 로그인 상태 설정 완료');
+  };
+
   // 로그아웃 함수
   const logout = async () => {
     try {
@@ -21,6 +31,7 @@ export const useAuth = () => {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       setIsLoggedIn(false);
+      console.log('✅ 로그아웃 상태 설정 완료');
     }
   };
 
@@ -48,6 +59,7 @@ export const useAuth = () => {
   return {
     isLoggedIn,
     isLoading,
+    login,  // 로그인 함수 제공
     logout, // 로그아웃 함수 제공
   };
 };

@@ -2,6 +2,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../../../api/axiosInstance';
+import { useAuth } from '../../../hooks/useAuth';
 
 function toBool(v: string | null): boolean | null {
   if (v === null) return null;
@@ -73,6 +74,7 @@ const sendErrorReport = async (error: any, browserInfo: any, oauthParams: any) =
 export default function OAuthCallbackPage() {
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth(); // useAuth의 login 함수 사용
   const qp = useMemo(() => new URLSearchParams(search), [search]);
 
   const isNew        = toBool(qp.get('isNew'));            // true | false | null
@@ -86,16 +88,10 @@ export default function OAuthCallbackPage() {
         const bootstrapRes = await axiosInstance.post('/auth/bootstrap');
         
         if (bootstrapRes.data?.isSuccess && bootstrapRes.data?.result) {
-          // 토큰을 localStorage에 저장
+          // useAuth의 login 함수 사용
           const { accessToken, refreshToken } = bootstrapRes.data.result;
-          if (accessToken) {
-            localStorage.setItem('accessToken', accessToken);
-            console.log('accessToken 저장됨');
-          }
-          if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
-            console.log('refreshToken 저장됨');
-          }
+          authLogin(accessToken, refreshToken);
+          console.log('✅ 소셜 로그인 토큰 저장 완료');
         }
 
         // 3) 다른 소셜과 이미 연동된 이메일
@@ -164,7 +160,7 @@ export default function OAuthCallbackPage() {
     };
 
     handleOAuthCallback();
-  }, [isNew, conflict, error, navigate]);
+  }, [isNew, conflict, error, navigate, authLogin]);
 
   return (
     <div className="w-full h-screen flex items-center justify-center text-[#666]">
