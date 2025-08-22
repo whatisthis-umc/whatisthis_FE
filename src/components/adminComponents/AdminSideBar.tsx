@@ -14,20 +14,21 @@ export default function AdminSidebar() {
 
   return (
     <div className="w-[200px] px-6 pt-8 pb-4 bg-white flex flex-col items-start gap-4 font-[Pretendard]">
-      {/* 관리자 모드 pill */}
-      <div
+      {/* 관리자 모드 pill - 클릭 가능 */}
+      <button
+        onClick={() => navigate("/admin")}
         className="rounded-[19px] border border-[#8E9BAA] w-[134px] h-[38px]
-                   flex justify-center items-center text-[#333333]"
+                   flex justify-center items-center text-[#333333] hover:bg-[#F5F5F5] 
+                   transition-colors duration-200 cursor-pointer"
         style={{
           fontSize: "20px",
           fontWeight: 500,
           lineHeight: "150%",
           letterSpacing: "-0.02em",
-          
         }}
       >
         관리자 모드
-      </div>
+      </button>
 
       {/* 메뉴 리스트 */}
       <div className="flex flex-col gap-2 mt-4">

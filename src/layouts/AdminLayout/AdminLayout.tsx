@@ -10,16 +10,17 @@ type AdminLayoutProps = {
 
 export default function AdminLayout({ children, showSidebar = true }: AdminLayoutProps) {
   const location = useLocation();
-  const isLoginPage= location.pathname==="/admin/login";
+  const isLoginPage = location.pathname === "/admin/login";
 
-  if (isLoginPage){
+  if (isLoginPage) {
     return (
       <div className="min-h-screen bg-white px-6 py-4">
-        <AdminLoginNavbar/>
+        <AdminLoginNavbar />
         <main className="mt-6">{children}</main>
       </div>
-    )
+    );
   }
+
   return (
     <div className="min-h-screen bg-white px-6 py-4">
       {/* ✅ 항상 상단에 네브바 */}
