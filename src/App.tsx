@@ -51,6 +51,7 @@ import LinkSocialPage from "./pages/Signup/SocialLogin/LinkSocialPage";
 import SearchPage from "./pages/SearchPage";
 import CommonProtectedRoute from "./routes/CommonProtectedRoute";
 import AdminDashboard from "./pages/AdminPages/AdminDashboard";
+import EventPage from "./pages/EventPage";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
             <main className="flex-grow pb-60">
               <Routes>
                 <Route path="/" element={<MainPage />} />
+                <Route path="/event" element={<EventPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
