@@ -159,7 +159,9 @@ export const updateInquiryAnswer = async (
 export const getInquiryAnswer = async (inquiryId: number): Promise<InquiryAnswerResponse & { result: { answer?: string } }> => {
   console.log("✅ 문의 답변 조회 URL:", `${API_URL}/admin/inquiries/${inquiryId}/answer`);
 
-  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}/answer`);
+  const response = await axiosInstance.get(`/admin/inquiries/${inquiryId}/answer`, {
+    skipTokenRefresh: true // 403/401 에러 시 토큰 재발급 시도하지 않음
+  } as PublicAxiosConfig);
 
   console.log("🔥 문의 답변 조회 API 응답 데이터", response.data);
   return response.data;

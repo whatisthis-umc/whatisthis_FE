@@ -19,6 +19,17 @@ export default function AdminInquiryDetailPage() {
   const [answer, setAnswer] = useState<string>("");
   const [answeredAt, setAnsweredAt] = useState<string | null>(null);
 
+  // 관리자 인증 상태 확인
+  useEffect(() => {
+    const adminAccessToken = localStorage.getItem("adminAccessToken");
+    
+    if (!adminAccessToken) {
+      console.warn("❌ 관리자 인증 토큰이 없습니다. 로그인 페이지로 이동합니다.");
+      navigate('/admin/login');
+      return;
+    }
+  }, [navigate]);
+
   const formatKoreanDateTime = (iso: string) => {
     try {
       const d = new Date(iso);
@@ -69,6 +80,7 @@ export default function AdminInquiryDetailPage() {
 
       // 문의 정보 처리
       if (inquiryResponse.status === 'fulfilled' && inquiryResponse.value.isSuccess) {
+        console.log("✅ 문의 상세 정보 조회 성공:", inquiryResponse.value.result);
         setInquiry(inquiryResponse.value.result);
         // 상세 응답에 답변이 포함되어 있는 경우 대비해 바로 세팅
         try {
@@ -81,6 +93,7 @@ export default function AdminInquiryDetailPage() {
           }
         } catch {}
       } else {
+        console.error("❌ 문의 상세 정보 조회 실패:", inquiryResponse);
         setError("문의 정보를 불러오는데 실패했습니다.");
         return;
       }
@@ -90,6 +103,7 @@ export default function AdminInquiryDetailPage() {
         const maybe = (answerResponse.value as any)?.result ?? (answerResponse.value as any);
         if (maybe && typeof maybe === 'object' && 'isSuccess' in maybe && !(maybe as any).isSuccess) {
           // 실패 응답은 무시
+          console.log("답변 정보 조회 실패, 무시 처리");
         } else {
           const result: any = (answerResponse.value as any)?.result ?? {};
           const answerData =
@@ -111,6 +125,9 @@ export default function AdminInquiryDetailPage() {
             }
           }
         }
+      } else {
+        // 답변 조회 실패 - 401/403 등의 에러로 인한 실패를 무시
+        console.log("답변 조회 실패:", answerResponse.reason);
       }
 
       // 폴백: 아직 answer가 없으면 고객센터 상세에서 answerContent 사용
@@ -219,10 +236,7 @@ export default function AdminInquiryDetailPage() {
     navigate('/admin/inquiry');
   };
 
-  const contentLines = inquiry.content ? inquiry.content.split('\n') : [];
-  const firstLine = contentLines[0] || "";
-  const restContent = contentLines.slice(1).join('\n');
-  const contentImageUrls = extractImageUrls(inquiry.content);
+  const contentImageUrls = extractImageUrls(inquiry?.content || "");
 
   return (
     <AdminLayout>
@@ -258,9 +272,9 @@ export default function AdminInquiryDetailPage() {
           <div className="flex w-full p-6 items-start gap-6 self-stretch rounded-[32px] border border-[#E6E6E6]">
             <div className="text-[#333333] font-[Pretendard] text-[20px] font-[700] leading-[30px] tracking-[-0.4px] shrink-0">Q</div>
             <div className="flex-1">
-              <h3 className="text-[#333333] font-[Pretendard] text-[20px] font-[700] leading-[30px] tracking-[-0.4px] mb-2">{firstLine || inquiry.title}</h3>
-              {restContent && (
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{restContent}</p>
+              <h3 className="text-[#333333] font-[Pretendard] text-[20px] font-[700] leading-[30px] tracking-[-0.4px] mb-2">{inquiry.title}</h3>
+              {inquiry.content && (
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{inquiry.content}</p>
               )}
             </div>
           </div>
