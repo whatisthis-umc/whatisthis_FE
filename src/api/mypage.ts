@@ -86,13 +86,11 @@ export async function patchMyAccount(payload: {
   };
   form.append("request", new Blob([JSON.stringify(request)], { type: "application/json" }));
   
-  // image가 없어도 multipart/form-data 형식을 위해 빈 파일이나 null 값을 추가
-  if (payload.image) {
+  // modifyProfileImage가 true이고 실제 이미지가 있을 때만 image 필드 추가
+  if (payload.modifyProfileImage && payload.image) {
     form.append("image", payload.image, payload.image.name);
-  } else {
-    // image가 없을 때는 빈 Blob을 추가하여 multipart/form-data 형식 유지
-    form.append("image", new Blob([], { type: "application/octet-stream" }));
   }
+  // 이미지가 없으면 image 필드를 아예 추가하지 않음
 
   const res = await axiosInstance.patch("/my-page/account", form);
   const data = res.data?.result ?? res.data;
