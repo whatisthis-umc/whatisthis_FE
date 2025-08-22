@@ -13,6 +13,7 @@ import type {
   MyInquiryItem,
 } from "../../api/mypage";
 import useMyAccount from "../../hooks/queries/useMyAccount";
+import useInquiryDetail from "../../hooks/queries/useInquiryDetail";
 
 /* ===== 시간 규칙 ===== */
 const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
@@ -185,6 +186,92 @@ type DeleteTarget =
   | { kind: "inquiry"; id: number }
   | null;
 
+// 문의 답변 표시 컴포넌트
+const InquiryAnswerContent = ({ inquiryId, isExpanded, title }: { inquiryId: number; isExpanded: boolean; title: string }) => {
+  const { data: inquiryDetail, isLoading, error } = useInquiryDetail(inquiryId);
+
+  if (!isExpanded) return null;
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            질문
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            로딩 중...
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            답변
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            답변을 불러오는 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            질문
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            {title}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            답변
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            답변을 불러올 수 없습니다.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnswer = inquiryDetail?.answerContent;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+          질문
+        </div>
+        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+          {inquiryDetail?.inquiryContent || title}
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+          답변
+        </div>
+        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+          {hasAnswer ? (
+            inquiryDetail.answerContent
+          ) : (
+            "아직 답변이 등록되지 않았습니다."
+          )}
+        </div>
+        <div className="text-[12px] text-[#999] mt-3">
+          {formatKST(inquiryDetail?.createdAt)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MyPage = () => {
   const navigate = useNavigate();
 
@@ -338,8 +425,8 @@ const MyPage = () => {
           </div>
           <button
             onClick={() => navigate("/myinfo")}
-            className="bg-[#0080FF] text-white text-[15px] px-5 py-2.5 rounded-full font-normal
-                       sm:text-[16px] sm:px-[20px] sm:py-[12px] sm:w-[200px] sm:h-[54px] sm:rounded-[32px] w-full sm:w-auto
+            className="bg-[#0080FF] text-white text-[15px] px-5 py-2.5 rounded-full font-normal w-full
+                       sm:text-[16px] sm:px-[20px] sm:py-[12px] sm:w-[200px] sm:h-[54px] sm:rounded-[32px]
                        md:text-[17px] md:px-[22px] md:py-[13px] md:w-[220px] md:h-[58px] md:rounded-[32px]"
           >
             계정 관리
@@ -538,32 +625,11 @@ const MyPage = () => {
                   </div>
 
                   {/* 펼침 영역: Q/A 블록 */}
-                  {open && (
-                    <div className="flex flex-col gap-3">
-                      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
-                        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
-                          질문
-                        </div>
-                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
-                          {q.title}
-                        </div>
-                      </div>
-
-                      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
-                        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
-                          답변
-                        </div>
-                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
-                          {statusLabel(q.status) === "답변완료"
-                            ? "답변이 등록되었습니다. (필요 시 상세 API로 실제 답변 본문을 붙여주세요)"
-                            : "아직 답변이 등록되지 않았습니다."}
-                        </div>
-                        <div className="text-[12px] text-[#999] mt-3">
-                          {formatKST(q.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <InquiryAnswerContent 
+                    inquiryId={q.inquiryId} 
+                    isExpanded={open}
+                    title={q.title}
+                  />
                 </div>
               );
             })

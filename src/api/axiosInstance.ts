@@ -159,7 +159,7 @@ axiosInstance.interceptors.response.use(
 
     if (original?.isPublic) return Promise.reject(error);
     if ((original as any).__retry) return Promise.reject(error);
-    if (original?.skipTokenRefresh) return Promise.reject(error);
+    if (original?.skipTokenRefresh === true) return Promise.reject(error);
 
     if (status === 401 || status === 403) {
       const originalUrl = (original?.url ?? "").toString();
