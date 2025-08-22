@@ -16,7 +16,6 @@ const MyInfoEditPage = () => {
   const [nickname, setNickname] = useState("");
   const [emailLocal, setEmailLocal] = useState("");
   const [emailDomain, setEmailDomain] = useState("");
-  const [isNicknameChecked, setIsNicknameChecked] = useState(false);
   const [originalNickname, setOriginalNickname] = useState("");
 
   const composedEmail = useMemo(
@@ -26,40 +25,7 @@ const MyInfoEditPage = () => {
 
   const API = import.meta.env.VITE_API_BASE_URL;
 
-  // 닉네임 중복확인
-  const handleCheckNickname = async () => {
-    if (!nickname.trim()) {
-      alert('닉네임을 입력해주세요.');
-      return;
-    }
 
-    // 원래 닉네임과 같으면 중복확인 불필요
-    if (nickname.trim() === originalNickname) {
-      setIsNicknameChecked(true);
-      alert('현재 사용 중인 닉네임입니다.');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API}/members/nickname-available?nickname=${encodeURIComponent(nickname.trim())}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.isSuccess) {
-        setIsNicknameChecked(true);
-        alert('사용 가능한 닉네임입니다.');
-      } else {
-        setIsNicknameChecked(false);
-        alert('이미 사용 중인 닉네임입니다.');
-      }
-    } catch (error) {
-      setIsNicknameChecked(false);
-      alert('중복확인 중 오류가 발생했습니다.');
-    }
-  };
 
   useEffect(() => {
     if (!data) return;
@@ -77,7 +43,6 @@ const MyInfoEditPage = () => {
 
     setImagePreview(data.profileImage || null);
     setImageFile(null);
-    setIsNicknameChecked(false);
   }, [data]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,18 +71,14 @@ const MyInfoEditPage = () => {
       composedEmail && composedEmail !== data.email ? composedEmail : null;
 
     // 이미지가 변경되었는지 확인
-    const hasImageChanged = imageFile !== null || (imagePreview !== data.profileImage);
+    const hasImageChanged = imageFile !== null;
     
     if (!nicknameToSend && !emailToSend && !hasImageChanged) {
       alert("변경된 내용이 없습니다.");
       return;
     }
 
-    // 닉네임이 변경되었는데 중복확인을 하지 않은 경우
-    if (nicknameToSend && !isNicknameChecked) {
-      alert("닉네임 중복확인을 해주세요.");
-      return;
-    }
+
 
     patchMutation.mutate(
       {
@@ -130,7 +91,6 @@ const MyInfoEditPage = () => {
       {
         onSuccess: () => {
           alert("저장했습니다.");
-          setIsNicknameChecked(false);
           setOriginalNickname(nickname);
         },
         onError: (err: any) => {
@@ -143,12 +103,7 @@ const MyInfoEditPage = () => {
     );
   };
 
-  // 닉네임이 변경되면 중복확인 상태 초기화
-  useEffect(() => {
-    if (nickname !== originalNickname) {
-      setIsNicknameChecked(false);
-    }
-  }, [nickname, originalNickname]);
+
 
   if (isLoading)
     return (
@@ -219,7 +174,7 @@ const MyInfoEditPage = () => {
         <div className="flex flex-col mt-6 justify-between w-full lg:w-[300px]">
           <div>
             <div className="text-[16px] mb-4">이름</div>
-            <div className="flex items-center gap-2 mb-10">
+            <div className="mb-10">
               <input
                 type="text"
                 placeholder="입력"
@@ -233,19 +188,6 @@ const MyInfoEditPage = () => {
                   fontSize: "16px",
                 }}
               />
-              <button
-                type="button"
-                className={`text-[12px] rounded-[32px] px-3 py-1 transition-colors duration-200 ${
-                  nickname.trim() && nickname.trim() !== originalNickname
-                    ? 'bg-[#0080FF] text-white hover:bg-[#0056CC]'
-                    : 'bg-[#E6E6E6] text-[#999999]'
-                }`}
-                style={{ width: "90px", height: "29px", fontWeight: 400 }}
-                onClick={handleCheckNickname}
-                disabled={!nickname.trim() || nickname.trim() === originalNickname}
-              >
-                중복확인
-              </button>
             </div>
 
             <div className="text-[16px] mb-4">이메일</div>
