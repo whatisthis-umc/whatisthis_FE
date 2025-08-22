@@ -166,7 +166,7 @@ const Navbar = () => {
           />
           <img
             src={bookmark}
-            className="w-14 h-14 cursor-pointer"
+            className="w-12 h-12 cursor-pointer"
             onClick={() => navigate("/scrap")}
           />
         </div>

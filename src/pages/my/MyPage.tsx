@@ -7,30 +7,19 @@ import useDeleteMyPost from "../../hooks/mutations/useDeleteMyPost";
 import useDeleteMyInquiry from "../../hooks/mutations/useDeleteMyInquiry";
 import Pagination from "../../components/customer/Pagination";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 import type {
   InquiryStatus,
   MyPostItem,
   MyInquiryItem,
 } from "../../api/mypage";
 import useMyAccount from "../../hooks/queries/useMyAccount";
+import useInquiryDetail from "../../hooks/queries/useInquiryDetail";
 
 /* ===== 시간 규칙 ===== */
-const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const formatKST = (isoLike?: string) => {
   if (!isoLike) return "";
-  const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) return isoLike;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}시간 전`;
-  if (diffHr < 48) return "1일 전";
-  const yy = d.getFullYear() % 100;
-  const mm = d.getMonth() + 1;
-  const dd = d.getDate();
-  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+  return formatTimeAgo(isoLike);
 };
 
 /* ===== 미리보기 정리(커뮤니티와 동일) ===== */
@@ -185,6 +174,92 @@ type DeleteTarget =
   | { kind: "inquiry"; id: number }
   | null;
 
+// 문의 답변 표시 컴포넌트
+const InquiryAnswerContent = ({ inquiryId, isExpanded, title }: { inquiryId: number; isExpanded: boolean; title: string }) => {
+  const { data: inquiryDetail, isLoading, error } = useInquiryDetail(inquiryId);
+
+  if (!isExpanded) return null;
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            질문
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            로딩 중...
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            답변
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            답변을 불러오는 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            질문
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            {title}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+          <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+            답변
+          </div>
+          <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+            답변을 불러올 수 없습니다.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnswer = inquiryDetail?.answerContent;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+          질문
+        </div>
+        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+          {inquiryDetail?.inquiryContent || title}
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
+        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
+          답변
+        </div>
+        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
+          {hasAnswer ? (
+            inquiryDetail.answerContent
+          ) : (
+            "아직 답변이 등록되지 않았습니다."
+          )}
+        </div>
+        <div className="text-[12px] text-[#999] mt-3">
+          {formatKST(inquiryDetail?.createdAt)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MyPage = () => {
   const navigate = useNavigate();
 
@@ -198,17 +273,22 @@ const MyPage = () => {
   const { data: account } = useMyAccount();
 
   // 데이터
+  const hasAccount = Boolean(account && (account.nickname || account.email));
+
+  // 계정 정보가 있을 때만 API 호출
+  const enablePosts = hasAccount && tab === "나의 작성내역";
   const {
     data: postData,
     isLoading: loadingPosts,
     isError: errorPosts,
-  } = useMyPosts(postPage, pageSize);
+  } = useMyPosts(postPage, pageSize, enablePosts);
 
+  const enableInq = hasAccount && tab === "나의 문의내역";
   const {
     data: inqData,
     isLoading: loadingInq,
     isError: errorInq,
-  } = useMyInquiries(inqPage, pageSize);
+  } = useMyInquiries(inqPage, pageSize, enableInq);
   const posts: MyPostItem[] = Array.isArray(postData?.posts)
     ? postData!.posts
     : [];
@@ -247,8 +327,20 @@ const MyPage = () => {
     }
   };
 
-  // 프로필(현재 탭 기준 우선)
+  // 프로필: 계정 정보 우선, 없으면 현재 탭 데이터로 폴백
   const profile = useMemo(() => {
+    const fromAccount = account
+      ? {
+          nickname: account.nickname ?? "",
+          email: account.email ?? "",
+          profileImageUrl: (account.profileImage ?? null) as string | null,
+        }
+      : null;
+
+    if (fromAccount && (fromAccount.nickname || fromAccount.email || fromAccount.profileImageUrl)) {
+      return fromAccount;
+    }
+
     if (tab === "나의 작성내역" && postData) {
       return {
         nickname: postData.nickname,
@@ -264,7 +356,7 @@ const MyPage = () => {
       };
     }
     return { nickname: "", email: "", profileImageUrl: null as string | null };
-  }, [tab, postData, inqData]);
+  }, [account, tab, postData, inqData]);
 
   // 다음 페이지 존재 여부(총 개수 없음 → size 기준)
   const hasNextPosts = !!postData && postData.posts.length === pageSize;
@@ -293,15 +385,15 @@ const MyPage = () => {
   const isError = tab === "나의 작성내역" ? errorPosts : errorInq;
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-4 py-8 font-[Pretendard]">
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-6 sm:py-8 font-[Pretendard]">
       {/* 상단 제목 */}
-      <h1 className="text-[24px] md:text-[32px] font-bold text-[#333] mb-10">
+      <h1 className="text-[28px] sm:text-[32px] font-bold text-[#333] mb-8 sm:mb-10">
         마이페이지
       </h1>
 
       {/* 프로필 */}
-      <div className="flex items-center gap-4 mb-10">
-        <div className="w-[80px] h-[80px] rounded-full bg-[#D9D9D9] overflow-hidden">
+      <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+        <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full bg-[#D9D9D9] overflow-hidden flex-shrink-0">
           {profile.profileImageUrl && (
             <img
               src={profile.profileImageUrl}
@@ -310,19 +402,20 @@ const MyPage = () => {
             />
           )}
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full justify-between">
           <div>
-            <p className="text-[18px] sm:text-[20px] font-bold">
+            <p className="text-[20px] sm:text-[22px] font-bold leading-tight">
               {profile.nickname || "닉네임"}
             </p>
-            <p className="text-[14px] text-[#999]">
+            <p className="text-[15px] sm:text-[16px] text-[#999] mt-1">
               {profile.email || "이메일"}
             </p>
           </div>
           <button
             onClick={() => navigate("/myinfo")}
-            className="bg-[#0080FF] text-white text-[14px] px-6 py-2 rounded-full font-medium
-                       sm:text-[16px] sm:px-[16px] sm:py-[12px] sm:w-[180px] sm:h-[54px] sm:rounded-[32px]"
+            className="bg-[#0080FF] text-white text-[15px] px-5 py-2.5 rounded-full font-normal w-full
+                       sm:text-[16px] sm:px-[20px] sm:py-[12px] sm:w-[200px] sm:h-[54px] sm:rounded-[32px]
+                       md:text-[17px] md:px-[22px] md:py-[13px] md:w-[220px] md:h-[58px] md:rounded-[32px]"
           >
             계정 관리
           </button>
@@ -330,12 +423,12 @@ const MyPage = () => {
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-3 mb-8">
+      <div className="flex gap-2 sm:gap-3 mb-6 sm:mb-8">
         {(["나의 작성내역", "나의 문의내역"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setTab(type)}
-            className={`text-[14px] sm:text-[16px] font-medium rounded-full px-6 py-3 w-[140px] sm:w-[155px] h-[48px] sm:h-[54px] ${
+            className={`text-[15px] sm:text-[16px] font-normal rounded-full px-4 py-2.5 w-[130px] sm:w-[155px] h-[44px] sm:h-[54px] ${
               tab === type
                 ? "bg-[#333333] text-white"
                 : "bg-[#F5F5F5] text-[#999]"
@@ -365,13 +458,13 @@ const MyPage = () => {
             postData?.posts.map((item: MyPostItem) => (
               <div
                 key={item.postId}
-                className="relative border border-[#CCCCCC] rounded-[32px] p-6 pr-8 hover:shadow-md transition-all duration-150 cursor-pointer"
+                className="relative border border-[#CCCCCC] rounded-[24px] sm:rounded-[32px] p-4 sm:p-6 pr-6 sm:pr-8 hover:shadow-md transition-all duration-150 cursor-pointer"
                 onClick={() => navigate(`/post/${item.postId}`)}
               >
                 {/* 수정/삭제 */}
-                <div className="absolute top-4 right-4 flex gap-2 text-[14px] text-[#999] z-10">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex gap-2 text-[13px] sm:text-[14px] text-[#999] z-10">
                   <button
-                    className="hover:underline"
+                    className="hover:underline px-1 py-0.5"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/post/${item.postId}/edit`);
@@ -381,7 +474,7 @@ const MyPage = () => {
                   </button>
                   <span>|</span>
                   <button
-                    className="hover:underline"
+                    className="hover:underline px-1 py-0.5"
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteTarget({ kind: "post", id: item.postId });
@@ -392,24 +485,24 @@ const MyPage = () => {
                 </div>
 
                 {/* 카테고리/Best/해시태그 뱃지 */}
-                <div className="flex items-center gap-2 flex-wrap mb-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-3 sm:mb-2">
                   {badgesFor(item).map((label) => (
                     <div
                       key={`cat-${label}`}
-                      className="flex items-center px-3 py-1 border rounded-[32px] text-[12px] border-[#999999] text-[#333333]"
+                      className="flex items-center px-2 py-0.5 sm:px-3 sm:py-1 border rounded-[20px] sm:rounded-[32px] text-[11px] sm:text-[12px] border-[#999999] text-[#333333]"
                     >
                       {label}
                     </div>
                   ))}
                   {Boolean((item as any)?.isBest) && (
-                    <div className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#66B2FF] text-white">
+                    <div className="flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-[20px] sm:rounded-[32px] text-[11px] sm:text-[12px] bg-[#66B2FF] text-white">
                       Best
                     </div>
                   )}
                   {extractHashtags(item).map((tag, idx) => (
                     <div
                       key={`${tag}-${idx}`}
-                      className="flex items-center px-3 py-1 rounded-[32px] text-[12px] bg-[#CCE5FF] text-[#666666]"
+                      className="flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-[20px] sm:rounded-[32px] text-[11px] sm:text-[12px] bg-[#CCE5FF] text-[#666666]"
                     >
                       #{tag}
                     </div>
@@ -417,40 +510,40 @@ const MyPage = () => {
                 </div>
 
                 {/* 제목/본문 */}
-                <div className="mt-1">
-                  <div className="text-[18px] sm:text-[20px] font-bold truncate w-full">
+                <div className="mt-2 sm:mt-1">
+                  <div className="text-[17px] sm:text-[20px] font-bold line-clamp-2 sm:truncate w-full leading-tight">
                     {item.title}
                   </div>
-                  <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2 whitespace-pre-wrap">
+                  <div className="text-[14px] sm:text-[16px] text-[#666] line-clamp-2 whitespace-pre-wrap mt-1 sm:mt-0">
                     {tidyPreview(item.content)}
                   </div>
                 </div>
 
                 {/* 메타 */}
-                <div className="flex gap-4 mt-3 text-[#999] text-[14px] flex-wrap">
+                <div className="flex gap-3 sm:gap-4 mt-3 sm:mt-3 text-[#999] text-[13px] sm:text-[14px] flex-wrap">
                   <span className="flex items-center gap-1 text-[#333]">
                     {Boolean((item as any)?.isBest) && (
                       <img
                         src={bestBadge}
                         alt="best"
-                        className="w-[16px] h-[16px]"
+                        className="w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]"
                       />
                     )}
                     {item.nickname} · {formatKST(item.createdAt)}
                   </span>
                   <div className="flex items-center gap-1">
-                    <img src={eye} alt="views" className="w-4 h-4" />
+                    <img src={eye} alt="views" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {item.viewCount}
                   </div>
                   <div className="flex items-center gap-1">
-                    <img src={like} alt="likes" className="w-4 h-4" />
+                    <img src={like} alt="likes" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {item.likeCount}
                   </div>
                   <div className="flex items-center gap-1">
                     <img
                       src={commentIcon}
                       alt="comments"
-                      className="w-4 h-4"
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                     />
                     {item.commentCount}
                   </div>
@@ -520,32 +613,11 @@ const MyPage = () => {
                   </div>
 
                   {/* 펼침 영역: Q/A 블록 */}
-                  {open && (
-                    <div className="flex flex-col gap-3">
-                      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
-                        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
-                          질문
-                        </div>
-                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
-                          {q.title}
-                        </div>
-                      </div>
-
-                      <div className="rounded-[24px] border border-[#E6E6E6] bg-white px-5 py-4">
-                        <div className="inline-block text-[12px] px-2 py-[2px] rounded-[999px] bg-[#E6E6E6] text-[#444] mb-2">
-                          답변
-                        </div>
-                        <div className="text-[15px] text-[#333] whitespace-pre-wrap">
-                          {statusLabel(q.status) === "답변완료"
-                            ? "답변이 등록되었습니다. (필요 시 상세 API로 실제 답변 본문을 붙여주세요)"
-                            : "아직 답변이 등록되지 않았습니다."}
-                        </div>
-                        <div className="text-[12px] text-[#999] mt-3">
-                          {formatKST(q.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <InquiryAnswerContent 
+                    inquiryId={q.inquiryId} 
+                    isExpanded={open}
+                    title={q.title}
+                  />
                 </div>
               );
             })

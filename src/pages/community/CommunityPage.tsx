@@ -5,6 +5,7 @@ import useGetCommunity from "../../hooks/queries/useGetCommunity";
 import SortDropdown from "../../components/common/SortDropdown";
 import Pagination from "../../components/customer/Pagination";
 import LoginModal from "../../components/modals/LoginModal";
+import { formatTimeAgo } from "../../utils/timeFormatter";
 
 import { eye, like, commentIcon, bestBadge, writeIcon } from "../../assets";
 import type { CommunityPost, CommunitySortType } from "../../types/community";
@@ -17,22 +18,9 @@ const toAbs = (u?: string) => {
   return `${API_BASE}${u.startsWith("/") ? "" : "/"}${u}`;
 };
 
-const fmt2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const formatKST = (isoLike?: string) => {
   if (!isoLike) return "";
-  const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) return isoLike;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return `${Math.max(1, diffMin)}분 전`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}시간 전`;
-  if (diffHr < 48) return "1일 전";
-  const yy = d.getFullYear() % 100;
-  const mm = d.getMonth() + 1;
-  const dd = d.getDate();
-  return `${fmt2(yy)}.${fmt2(mm)}.${fmt2(dd)}`;
+  return formatTimeAgo(isoLike);
 };
 
 /* ================= 정렬 UI ⇄ API ================= */
@@ -277,9 +265,9 @@ const CommunityPage = () => {
       : totalPagesFromApi;
 
   return (
-    <div className="font-[Pretendard] px-4 md:px-8 py-6 w-full relative z-0">
+    <div className="font-[Pretendard] px-4 sm:px-6 md:px-8 py-4 sm:py-6 w-full relative z-0">
       {/* 카테고리 탭 */}
-      <div className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-6">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 mb-4 sm:mb-5 md:mb-6">
         {UI_CATEGORIES.map((cat) => (
           <div
             key={cat}
@@ -287,7 +275,7 @@ const CommunityPage = () => {
               setSelectedCategory(cat);
               setCurrentPage(1);
             }}
-            className={`cursor-pointer px-3 py-1 md:px-4 md:py-2 rounded-full border text-[12px] md:text-[14px] ${
+            className={`cursor-pointer px-2.5 py-1.5 sm:px-3 sm:py-1 md:px-4 md:py-2 rounded-full border text-[13px] sm:text-[13px] md:text-[14px] ${
               selectedCategory === cat ? "border-[#0080FF] text-[#0080FF]" : "border-[#E6E6E6] text-[#999999]"
             }`}
           >
@@ -297,7 +285,7 @@ const CommunityPage = () => {
       </div>
 
       {/* 정렬 */}
-      <div className="flex justify-end mb-7">
+      <div className="flex justify-end mb-5 sm:mb-6 md:mb-7">
         <SortDropdown
           defaultValue={uiToApi(sortType)}
           onChange={(apiValue: CommunitySortType) => {
@@ -308,13 +296,13 @@ const CommunityPage = () => {
       </div>
 
       {/* 리스트 */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         {isLoading ? (
-          <div className="text-center text-[#999] text-[14px] mt-10">불러오는 중…</div>
+          <div className="text-center text-[#999] text-[14px] mt-8 sm:mt-10">불러오는 중…</div>
         ) : isError ? (
-          <div className="text-center text-red-500 text-[14px] mt-10">목록을 불러오지 못했습니다.</div>
+          <div className="text-center text-red-500 text-[14px] mt-8 sm:mt-10">목록을 불러오지 못했습니다.</div>
         ) : displayed.length === 0 ? (
-          <div className="text-center text-[#999] text-[14px] mt-10">게시글이 없습니다.</div>
+          <div className="text-center text-[#999] text-[14px] mt-8 sm:mt-10">게시글이 없습니다.</div>
         ) : (
           displayed.map((item: any, index: number) => {
             const thumb = getThumb(item);
@@ -327,18 +315,18 @@ const CommunityPage = () => {
               <div
                 key={`${item.id}-${index}`}
                 onClick={() => navigate(`/post/${item.id}`)}
-                className="grid grid-cols-[1fr_110px] sm:grid-cols-[1fr_140px] md:grid-cols-[1fr_220px] gap-4 sm:gap-5 md:gap-6 items-start cursor-pointer"
+                className="grid grid-cols-[1fr_100px] sm:grid-cols-[1fr_120px] md:grid-cols-[1fr_220px] gap-3 sm:gap-4 md:gap-6 items-start cursor-pointer"
               >
                 {/* 좌측 카드 */}
                 <div
-                  className={`${isBest ? "bg-[#CCE5FF] border-none" : "bg-white border border-[#CCCCCC]"} rounded-[32px] p-4 md:p-6 w-full min-h-[110px] sm:min-h-[140px] md:min-h-[220px]`}
+                  className={`${isBest ? "bg-[#CCE5FF] border-none" : "bg-white border border-[#CCCCCC]"} rounded-[20px] sm:rounded-[24px] md:rounded-[32px] p-3 sm:p-4 md:p-6 w-full min-h-[100px] sm:min-h-[120px] md:min-h-[220px]`}
                 >
                   {/* 카테고리/Best/해시태그 뱃지들 */}
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-2 sm:mb-2">
                     {badges.map((label) => (
                       <div
                         key={`cat-${label}`}
-                        className="flex items-center px-2 py-[2px] md:px-3 md:py-1 border rounded-[32px] text-[10px] md:text-[14px] border-[#999999] text-[#333333]"
+                        className="flex items-center px-1.5 py-0.5 sm:px-2 sm:py-[2px] md:px-3 md:py-1 border rounded-[16px] sm:rounded-[20px] md:rounded-[32px] text-[10px] sm:text-[11px] md:text-[14px] border-[#999999] text-[#333333]"
                       >
                         {label}
                       </div>
@@ -346,7 +334,7 @@ const CommunityPage = () => {
 
                     {/* Best만 표시(‘인기글’ 배지는 없음) */}
                     {isBest && (
-                      <div className="flex items-center px-2 py-[2px] md:px-3 md:py-1 rounded-[32px] text-[10px] md:text-[14px] bg-[#66B2FF] text-white">
+                      <div className="flex items-center px-1.5 py-0.5 sm:px-2 sm:py-[2px] md:px-3 md:py-1 rounded-[16px] sm:rounded-[20px] md:rounded-[32px] text-[10px] sm:text-[11px] md:text-[14px] bg-[#66B2FF] text-white">
                         Best
                       </div>
                     )}
@@ -354,7 +342,7 @@ const CommunityPage = () => {
                     {hashtags.map((tag: string, idx: number) => (
                       <div
                         key={`${tag}-${idx}`}
-                        className="flex items-center px-2 py-[2px] md:px-3 md:py-1 rounded-[32px] text-[10px] md:text-[14px] bg-[#CCE5FF] text-[#666666]"
+                        className="flex items-center px-1.5 py-0.5 sm:px-2 sm:py-[2px] md:px-3 md:py-1 rounded-[16px] sm:rounded-[20px] md:rounded-[32px] text-[10px] sm:text-[11px] md:text-[14px] bg-[#CCE5FF] text-[#666666]"
                       >
                         #{tag}
                       </div>
@@ -362,7 +350,7 @@ const CommunityPage = () => {
                   </div>
 
                   {/* 제목/본문 미리보기 */}
-                  <div className="text-[15px] sm:text-[16px] md:text-[18px] font-medium mb-1 line-clamp-2">
+                  <div className="text-[15px] sm:text-[16px] md:text-[18px] font-medium mb-1 line-clamp-2 leading-tight">
                     {item.title}
                   </div>
                   <div className="text-[12px] sm:text-[13px] md:text-[14px] text-[#666666] line-clamp-2 md:line-clamp-3 whitespace-pre-wrap">
@@ -370,21 +358,21 @@ const CommunityPage = () => {
                   </div>
 
                   {/* 메타 */}
-                  <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-3 text-[12px] md:text-[14px] text-[#999]">
+                  <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-[12px] md:text-[14px] text-[#999]">
                     <span className="flex items-center gap-1 text-[#333333]">
-                      {isBest && <img src={bestBadge} alt="best" className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />}
+                      {isBest && <img src={bestBadge} alt="best" className="w-[12px] h-[12px] sm:w-[14px] sm:h-[14px] md:w-[16px] md:h-[16px]" />}
                       {item.nickname} · {formatKST(item.createdAt)}
                     </span>
                     <div className="flex items-center gap-1">
-                      <img src={eye} alt="views" className="w-3 h-3 md:w-4 md:h-4" />
+                      <img src={eye} alt="views" className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4" />
                       <span>{(item as any)?.views ?? (item as any)?.viewCount ?? 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <img src={like} alt="likes" className="w-3 h-3 md:w-4 md:h-4" />
+                      <img src={like} alt="likes" className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4" />
                       <span>{(item as any)?.likes ?? (item as any)?.likeCount ?? 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <img src={commentIcon} alt="comments" className="w-3 h-3 md:w-4 md:h-4" />
+                      <img src={commentIcon} alt="comments" className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4" />
                       <span>{(item as any)?.comments ?? (item as any)?.commentCount ?? 0}</span>
                     </div>
                   </div>
@@ -392,7 +380,7 @@ const CommunityPage = () => {
 
                 {/* 우측 썸네일 */}
                 <div className="justify-self-end">
-                  <div className="w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] md:w-[220px] md:h-[220px] rounded-[32px] overflow-hidden bg-[#E6E6E6]">
+                  <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[220px] md:h-[220px] rounded-[20px] sm:rounded-[24px] md:rounded-[32px] overflow-hidden bg-[#E6E6E6]">
                     {thumb ? (
                       <img src={thumb} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
@@ -414,7 +402,7 @@ const CommunityPage = () => {
       </div>
 
       {/* 글쓰기 */}
-      <div className="fixed bottom-5 right-5 md:static md:mt-10 flex justify-end z-[50]">
+      <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 md:static md:mt-8 sm:mt-10 flex justify-end z-[50]">
         <button
           onClick={() => {
             const accessToken = localStorage.getItem("accessToken");
@@ -424,9 +412,9 @@ const CommunityPage = () => {
             }
             navigate("/communitypost");
           }}
-          className="bg-[#0080FF] text-white flex items-center gap-2 rounded-[32px] px-6 py-3 text-sm md:text-base"
+          className="bg-[#0080FF] text-white flex items-center gap-1.5 sm:gap-2 rounded-[24px] sm:rounded-[32px] px-4 py-2.5 sm:px-6 sm:py-3 text-[14px] sm:text-[15px] md:text-base font-normal shadow-lg"
         >
-          <img src={writeIcon} alt="write" className="w-5 h-5" />
+          <img src={writeIcon} alt="write" className="w-4 h-4 sm:w-5 sm:h-5" />
           글쓰기
         </button>
       </div>

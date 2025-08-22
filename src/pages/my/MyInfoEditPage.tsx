@@ -1,10 +1,12 @@
 // src/pages/MyInfoEditPage.tsx
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { addPhotoIcon, cancelIcon } from "../../assets";
 import useMyAccount from "../../hooks/queries/useMyAccount";
 import usePatchMyAccount from "../../hooks/queries/usePatchMyAccount";
 
 const MyInfoEditPage = () => {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useMyAccount();
   const patchMutation = usePatchMyAccount();
 
@@ -103,7 +105,10 @@ const MyInfoEditPage = () => {
     const emailToSend =
       composedEmail && composedEmail !== data.email ? composedEmail : null;
 
-    if (!nicknameToSend && !emailToSend && !imageFile) {
+    // 이미지가 변경되었는지 확인
+    const hasImageChanged = imageFile !== null || (imagePreview !== data.profileImage);
+    
+    if (!nicknameToSend && !emailToSend && !hasImageChanged) {
       alert("변경된 내용이 없습니다.");
       return;
     }
@@ -120,6 +125,7 @@ const MyInfoEditPage = () => {
         nickname: nicknameToSend,
         email: emailToSend,
         image: imageFile ?? undefined,
+        modifyProfileImage: hasImageChanged,
       },
       {
         onSuccess: () => {
@@ -194,10 +200,10 @@ const MyInfoEditPage = () => {
 
           <label
             htmlFor="fileInput"
-            className="flex items-center justify-center bg-[#0080FF] text-white text-[20px] mt-4 rounded-[32px] cursor-pointer w/full lg:w-[290px]"
-            style={{ height: "54px", fontWeight: 500 }}
+            className="flex items-center justify-center bg-[#0080FF] text-white text-[15px] sm:text-[16px] lg:text-[20px] mt-4 rounded-[20px] sm:rounded-[24px] lg:rounded-[32px] cursor-pointer w-full lg:w-[290px] px-3 sm:px-4 h-[48px] sm:h-[52px] lg:h-[54px]"
+            style={{ fontWeight: 400 }}
           >
-            <img src={addPhotoIcon} alt="add" className="w-5 h-5 mr-2" />
+            <img src={addPhotoIcon} alt="add" className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
             파일에서 업로드
           </label>
           <input
@@ -283,12 +289,20 @@ const MyInfoEditPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-end gap-4 mt-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="bg-[#E6E6E6] text-[#666] text-[16px] lg:text-[20px] rounded-[32px] w-[120px] lg:w-[160px]"
+              style={{ height: "54px", fontWeight: 400 }}
+              type="button"
+            >
+              취소
+            </button>
             <button
               onClick={handleSave}
               disabled={patchMutation.isPending}
               className="bg-[#0080FF] text-white text-[16px] lg:text-[20px] rounded-[32px] w-[120px] lg:w-[160px] disabled:opacity-50"
-              style={{ height: "54px", fontWeight: 500 }}
+              style={{ height: "54px", fontWeight: 400 }}
               type="button"
             >
               저장

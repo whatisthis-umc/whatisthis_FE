@@ -22,8 +22,8 @@ const mapToCategoryEnumForCreate = (
 function packExtraToContent(content: string, features: string[], source: string) {
   const trimmedFeatures = features.map((f) => f.trim()).filter(Boolean);
   const extra = { features: trimmedFeatures, source: (source || "").trim() };
-  const marker = `<!--EXTRA:${JSON.stringify(extra)}-->`;
-  return `${content}\n\n${marker}`;
+  const marker = `\n\n[EXTRA:${JSON.stringify(extra)}]`;
+  return `${content}${marker}`;
 }
 
 const CommunityPostPage = () => {
@@ -73,7 +73,7 @@ const CommunityPostPage = () => {
     setTags(updated);
   };
 
-  const isSaveDisabled = !title.trim() || !category.trim() || isPending;
+  const isSaveDisabled = !title.trim() || !category.trim() || title.trim().length > 20 || isPending;
 
   const handleSave = () => {
     if (!title.trim() || !category.trim() || isPending) return;
@@ -152,7 +152,8 @@ const CommunityPostPage = () => {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="제목을 입력해주세요."
+            placeholder="제목을 입력해주세요. (20자 이내)"
+            maxLength={20}
             className="text-[24px] font-bold text-[#1d1d1d] placeholder:text-[#3e3e3e] border border-[#E6E6E6] rounded-[32px] px-[24px] py-[12px]"
           />
 
