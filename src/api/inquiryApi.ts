@@ -72,11 +72,22 @@ export const getSupportInquiryDetail = async (
   inquiryId: number
 ): Promise<SupportInquiryDetailResponse> => {
   console.log("✅ 고객 문의 상세 조회 URL:", `${API_URL}/support/inquiries/${inquiryId}`);
-  const response = await axiosInstance.get(`/support/inquiries/${inquiryId}`, {
-    skipTokenRefresh: true // 403 에러 시 토큰 재발급 시도하지 않음
-  } as PublicAxiosConfig);
-  console.log("🔥 고객 문의 상세 API 응답 데이터", response.data);
-  return response.data;
+  
+  try {
+    const response = await axiosInstance.get(`/support/inquiries/${inquiryId}`, {
+      skipTokenRefresh: true, // 403 에러 시 토큰 재발급 시도하지 않음
+      timeout: 10000 // 10초 타임아웃 추가
+    } as PublicAxiosConfig);
+    console.log("🔥 고객 문의 상세 API 응답 데이터", response.data);
+    return response.data;
+  } catch (error: any) {
+    // 권한 관련 에러(401, 403, 500)는 바로 throw하여 재발급 시도 방지
+    if (error?.response?.status === 401 || error?.response?.status === 403 || error?.response?.status === 500) {
+      console.log("🚫 권한 없음 - 토큰 재발급 시도하지 않음:", error?.response?.status);
+      throw error;
+    }
+    throw error;
+  }
 };
 
 // 고객 문의 작성
