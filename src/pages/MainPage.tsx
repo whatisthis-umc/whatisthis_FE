@@ -48,7 +48,8 @@ const MainPage = () => {
             <img
               src={banner}
               alt="여름맞이 꿀팁 요음전"
-              className="w-full max-w-[1400px] h-auto rounded-2xl"
+              className="w-full max-w-[1400px] h-auto rounded-2xl cursor-pointer"
+              onClick={() => navigate("/event")}
             />
           </div>
 

@@ -37,3 +37,4 @@ export {default as likesIcon} from "./emptyHeart.svg";
 export {default as likes} from "./heart.svg";
 export {default as logo2} from "./logo2.svg"
 export {default as whiteHeart} from "./whiteHeart.svg"
+export {default as event} from "./event.png";

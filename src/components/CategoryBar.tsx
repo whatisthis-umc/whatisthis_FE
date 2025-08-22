@@ -23,7 +23,7 @@ const CategoryBar = ({ categories, selected, onSelect }: CategoryBarProps) => {
            ${
              selected === category
                ? "border-[#0080FF] text-[#0080FF]"
-               : "border-[#E6E6E6] text-[#E6E6E6]"
+               : "border-[#E6E6E6] text-[#b8b8b8]"
            }`}
           onClick={() => onSelect(category)}
         >

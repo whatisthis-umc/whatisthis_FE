@@ -8,7 +8,7 @@ export default function AdminNavbar() {
       localStorage.removeItem("adminAccessToken");
       navigate("/admin/login");
     } catch (err) {
-      console.error("로그인 실패:", err);
+      console.error("로그아웃 실패:", err);
     }
   };
 
